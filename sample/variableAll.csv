@@ -1,0 +1,31 @@
+Symbol,Name,Unit,Parameter type,Value
+N,# of ship in fleet,-,Constant parameter,1
+kDWT1,1st DWT coefficients,-,Constant parameter,10.8
+kDWT2,2nd DWT coefficients,-,Constant parameter,12400
+kFLD1,1st FLD coefficient,-,Constant parameter,1.37
+kFLD2,2nd FLD coefficient,-,Constant parameter,1660
+Dyear,Days in a year,day,Constant parameter,365
+Hday,Hours in a day,hour,Constant parameter,24
+Rrun,Running rate (operational days/year),-,Constant parameter,0.8
+kship1,1st ship fuel coefficient,-,Constant parameter,0.0000687
+kship2,2nd ship fuel coefficient,-,Constant parameter,0.65
+CNM2km,Conversion coefficient (NM to km),-,Constant parameter,1.852
+Rwind,Fuel reduction rate of wind propulsion system,-,Constant parameter,0.3
+CeqLHV,Equivalent lower heating value coefficient,-,Constant parameter,
+kaux1,1st fuel coefficient of auxiliary machinery,-,Constant parameter,7.01
+kaux2,2nd fuel coefficients of auxiliary machinery,-,Constant parameter,0.0000868
+Rsol,Fuel reduction rate of solar power system,-,Constant parameter,0.3
+CCO2,CO2 coefficient,-,Constant parameter,
+"CCO2,DF",CO2 coefficient of diesel fuel,-,Constant parameter,2.816
+RCCS,Fuel reduction rate of CCS,-,Constant parameter,0.85
+CAPcnt,Container capacity,TEU,Constant input,20000
+v,Service speed,kt,Variable input,18
+rocc,Occupancy rate (loaded container/CAPcnt),-,Variable input,0.7
+wDWT,Deadweight tonnage,ton,State variable,140000
+wFLD,Full load displacement,ton,State variable,197000
+d,Distance,NM,State variable,
+"fship,HFO",Fuel consumption of HFO-powered ship,ton,State variable,
+fship,Fuel consumption of ship,ton,Output,
+faux,Fuel consumption of auxiliary machinery,ton,Output,
+g,CO2 emission,ton,Output,
+cta,Cargo transport amount,TEU*NM,Output,
