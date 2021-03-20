@@ -9,6 +9,7 @@ from matplotlib.figure import Figure
 from tkinter import *
 from tkinter import ttk
 import sys
+import random
 
 def readinput(filename):
     csv_input = pd.read_csv(filepath_or_buffer=filename, encoding="utf_8", sep=",")
@@ -46,6 +47,19 @@ def Cco2Func(filename,fuelName):
         Cco2Dict[i] = float(j)
     return Cco2Dict[fuelName]
 
+def initialFleetFunc(filename):
+    csv_input = pd.read_csv(filepath_or_buffer=filename, encoding="utf_8", sep=",")
+    year = csv_input['Year']
+    TEU = csv_input['TEU']
+    iniFleetDict = {}
+    k = 0
+    for i, j in zip(year, TEU):
+        iniFleetDict.setdefault(k,{})
+        iniFleetDict[k]['year'] = int(i)
+        iniFleetDict[k]['TEU'] = float(j)
+        k += 1
+    return iniFleetDict
+
 def unitCostFuelFunc(filename,fuelName,year):
     csv_input = pd.read_csv(filepath_or_buffer=filename, encoding="utf_8", sep=",")
     #print("unitCostFuel")
@@ -64,23 +78,17 @@ def unitCostFuelFunc(filename,fuelName,year):
         interpHFO = measureHFO[0]
     return interp, interpHFO
 
-def costShipBasicFunc(filename,fuelName,CAPcnt):
+def rShipBasicFunc(filename,fuelName,CAPcnt):
     csv_input = pd.read_csv(filepath_or_buffer=filename, encoding="utf_8", sep=",")
-    #print("costShipBasic")
+    #print("CeqLHV")
     #display(csv_input)
     #print("\n")
-    threshold = np.array(csv_input['Threshold'],dtype='float64')
-    costShipBasicArrHFO = np.array(csv_input['HFO'],dtype='float64')
-    for i,j in zip(threshold,costShipBasicArrHFO):
-        if CAPcnt < i:
-            costShipBasicHFO = j
-            break
-    costShipBasicArr = np.array(csv_input[fuelName],dtype='float64')
-    for i,j in zip(threshold,costShipBasicArr):
-        if CAPcnt < i:
-            costShipBasic = j
-            break
-    return costShipBasic, costShipBasicHFO
+    fuelType = csv_input['Fuel type']
+    rShipBasic = csv_input['rShipBasic']
+    fuelDict = {}
+    for i, j in zip(fuelType, rShipBasic):
+        fuelDict[i] = float(j)
+    return fuelDict[fuelName]
 
 def wDWTFunc(kDWT1,CAPcnt,kDWT2):
     wDWT = kDWT1*CAPcnt+kDWT2
@@ -94,27 +102,27 @@ def dFunc(Dyear,Hday,v,Rrun):
     d = Dyear*Hday*v*Rrun
     return d
 
-def fShipFunc(kShip1,kShip2,wDWT,wFLD,rocc,CNM2km,v,d,Rwind,windPr,CeqLHV):
+def fShipFunc(kShip1,kShip2,wDWT,wFLD,rocc,CNM2km,v,d,rWPS,windPr,CeqLHV):
     fShipORG = (kShip1/1000)*(wFLD-(1-kShip2*rocc)*wDWT)*(wFLD**(-1/3))*((CNM2km*v)**2)*CNM2km*d
     if windPr == '1':
-        fShipORG = fShipORG*(1-Rwind)
+        fShipORG = fShipORG*(1-rWPS)
     else:
         fShipORG = fShipORG
     fShip = CeqLHV*fShipORG
     return fShipORG, fShip
 
-def fAuxFunc(Dyear,Hday,Rrun,kAux1,kAux2,wDWT,Rsol,solar):
+def fAuxFunc(Dyear,Hday,Rrun,kAux1,kAux2,wDWT,rSPS,solar):
     fAuxORG = Dyear*Hday*Rrun*(kAux1+kAux2*wDWT)/1000
     if solar == '1':
-        fAux = fAuxORG*(1-Rsol)
+        fAux = fAuxORG*(1-rSPS)
     else:
         fAux = fAuxORG
     return fAuxORG, fAux
 
-def gFunc(Cco2,fShip,Cco2DF,fAux,RCCS,CCS):
+def gFunc(Cco2,fShip,Cco2DF,fAux,rCCS,CCS):
     gORG = Cco2*fShip+Cco2DF*fAux
     if CCS == '1':
-        g = gORG*(1-RCCS)
+        g = gORG*(1-rCCS)
     else:
         g = gORG
     return gORG, g
@@ -144,9 +152,11 @@ def costFuelAllFunc(costFuelShip, costFuelAux, dcostFuelShip, dcostFuelAux):
     dcostFuelAll = dcostFuelShip+dcostFuelAux
     return costFuelAll, dcostFuelAll
 
-def costShipFunc(costShipBasic, dcostWind, dcostSol, dcostCCS):
-    costShipAll = costShipBasic+dcostWind+dcostSol+dcostCCS
-    return costShipAll
+def costShipFunc(kShipBasic1, CAPcnt, kShipBasic2, rShipBasic, dcostWPS, dcostSPS, dcostCCS):
+    costShipBasicHFO = kShipBasic1 * CAPcnt + kShipBasic2
+    costShipBasic = rShipBasic * costShipBasicHFO
+    costShipAll = (1+dcostWPS+dcostSPS+dcostCCS) * costShipBasic
+    return costShipBasicHFO, costShipBasic, costShipAll
 
 def additionalShippingFeeFunc(tOp, tOpSch, dcostFuelAll, costShipAll, costShipBasicHFO):
     if tOp <= tOpSch:
@@ -155,8 +165,12 @@ def additionalShippingFeeFunc(tOp, tOpSch, dcostFuelAll, costShipAll, costShipBa
         dcostShipping = dcostFuelAll
     return dcostShipping
 
+def demandScenarioFunc(year,kDem1,kDem2,kDem3,kDem4,kDem5):
+    Di = (kDem1*year**2 + kDem2*year + kDem3)*1000000000/kDem4*kDem5
+    return Di
+
 def orderShipFunc(fleetAll,fuelName,WPS,SPS,CCS,CAPcnt,tOpSch,tbid,iniT,currentYear,parameterFile2,parameterFile3,parameterFile5):
-    NumFleet = len(fleetAll)-1
+    NumFleet = len(fleetAll)-2
     fleetAll.setdefault(NumFleet,{})
     fleetAll[NumFleet]['fuelName'] = fuelName
     fleetAll[NumFleet]['WPS'] = WPS
@@ -166,7 +180,7 @@ def orderShipFunc(fleetAll,fuelName,WPS,SPS,CCS,CAPcnt,tOpSch,tbid,iniT,currentY
 
     fleetAll[NumFleet]['CeqLHV'] = CeqLHVFunc(parameterFile2,fleetAll[NumFleet]['fuelName'])
     fleetAll[NumFleet]['Cco2'] = Cco2Func(parameterFile3,fleetAll[NumFleet]['fuelName'])
-    fleetAll[NumFleet]['costShipBasic'], fleetAll[NumFleet]['costShipBasicHFO'] = costShipBasicFunc(parameterFile5,fleetAll[NumFleet]['fuelName'],fleetAll[NumFleet]['CAPcnt'])
+    fleetAll[NumFleet]['rShipBasic'] = rShipBasicFunc(parameterFile5,fleetAll[NumFleet]['fuelName'],fleetAll[NumFleet]['CAPcnt'])
     fleetAll[NumFleet]['delivery'] = currentYear+tbid
     fleetAll[NumFleet]['tOp'] = iniT
     fleetAll[NumFleet]['v'] = np.zeros(tOpSch)
@@ -189,15 +203,17 @@ def orderShipFunc(fleetAll,fuelName,WPS,SPS,CCS,CAPcnt,tOpSch,tbid,iniT,currentY
     fleetAll[NumFleet]['g'] = np.zeros(tOpSch)
     fleetAll[NumFleet]['cta'] = np.zeros(tOpSch)
     fleetAll[NumFleet]['costFuelAll'] = np.zeros(tOpSch)
+    fleetAll[NumFleet]['costShipBasicHFO'] = np.zeros(tOpSch)
+    fleetAll[NumFleet]['costShipBasic'] = np.zeros(tOpSch)
     fleetAll[NumFleet]['costShipAll'] = np.zeros(tOpSch)
     fleetAll[NumFleet]['dcostShipping'] = np.zeros(tOpSch)
     fleetAll[NumFleet]['gTilde'] = np.zeros(tOpSch)
     fleetAll[NumFleet]['dcostShippingTilde'] = np.zeros(tOpSch)
     return fleetAll
 
-def yearlyOperationFunc(fleetAll,Di,startYear,elapsedYear,NShipFleet,Alpha,tOpSch,v,valueDict,parameterFile4):
-    NumFleet = len(fleetAll)-1
-    dcostWind, dcostSol, dcostCCS = 0, 0, 0 # to be extracted from some Table
+#def yearlyOperationFunc(fleetAll,startYear,elapsedYear,NShipFleet,Alpha,tOpSch,v,valueDict,parameterFile4):　# tkinterによるInput用
+def yearlyOperationFunc(fleetAll,startYear,elapsedYear,NShipFleet,Alpha,tOpSch,valueDict,parameterFile4):
+    NumFleet = len(fleetAll)-2
 
     j = 0
     ctaPerRocc = 0
@@ -206,7 +222,8 @@ def yearlyOperationFunc(fleetAll,Di,startYear,elapsedYear,NShipFleet,Alpha,tOpSc
         if fleetAll[i]['delivery'] <= currentYear and fleetAll[i]['tOp'] < tOpSch:
             tOpTemp = fleetAll[i]['tOp']
             unitCostFuel, unitCostFuelHFO = unitCostFuelFunc(parameterFile4,fleetAll[i]['fuelName'],currentYear)
-            fleetAll[i]['v'][tOpTemp] = v[j].get()
+            #fleetAll[i]['v'][tOpTemp] = v[j].get() # tkinterによるInput用
+            fleetAll[i]['v'][tOpTemp] = random.uniform(10,20)
             fleetAll[i]['wDWT'][tOpTemp] = wDWTFunc(valueDict["kDWT1"],fleetAll[i]['CAPcnt'],valueDict["kDWT2"])
             fleetAll[i]['wFLD'][tOpTemp] = wFLDFunc(valueDict["kFLD1"],fleetAll[i]['wDWT'][tOpTemp],valueDict["kFLD2"])
             fleetAll[i]['d'][tOpTemp] = dFunc(valueDict["Dyear"],valueDict["Hday"],fleetAll[i]['v'][tOpTemp],valueDict["Rrun"])
@@ -217,16 +234,18 @@ def yearlyOperationFunc(fleetAll,Di,startYear,elapsedYear,NShipFleet,Alpha,tOpSc
     for i in range(1,NumFleet):
         if fleetAll[i]['delivery'] <= currentYear and fleetAll[i]['tOp'] < tOpSch:
             tOpTemp = fleetAll[i]['tOp']
+            Di = demandScenarioFunc(currentYear,valueDict["kDem1"],valueDict["kDem2"],valueDict["kDem3"],valueDict["kDem4"],valueDict["kDem5"])
             fleetAll[i]['rocc'][tOpTemp] = Di / ctaPerRocc
             fleetAll[i]['cta'][tOpTemp] = ctaFunc(fleetAll[i]['CAPcnt'],fleetAll[i]['rocc'][tOpTemp],fleetAll[i]['d'][tOpTemp])
-            fleetAll[i]['fShipORG'][tOpTemp], fleetAll[i]['fShip'][tOpTemp] = fShipFunc(valueDict["kShip1"],valueDict["kShip2"],fleetAll[i]['wDWT'][tOpTemp],fleetAll[i]['wFLD'][tOpTemp],fleetAll[i]['rocc'][tOpTemp],valueDict["CNM2km"],fleetAll[i]['v'][tOpTemp],fleetAll[i]['d'][tOpTemp],valueDict["Rwind"],fleetAll[i]['WPS'],fleetAll[i]['CeqLHV'])
-            fleetAll[i]['fAuxORG'][tOpTemp], fleetAll[i]['fAux'][tOpTemp] = fAuxFunc(valueDict["Dyear"],valueDict["Hday"],valueDict["Rrun"],valueDict["kAux1"],valueDict["kAux2"],fleetAll[i]['wDWT'][tOpTemp],valueDict["Rsol"],fleetAll[i]['SPS'])
-            fleetAll[i]['gORG'][tOpTemp], fleetAll[i]['g'][tOpTemp] = gFunc(fleetAll[i]['Cco2'],fleetAll[i]['fShip'][tOpTemp],valueDict["Cco2DF"],fleetAll[i]['fAux'][tOpTemp],valueDict["RCCS"],fleetAll[i]['CCS'])
+            fleetAll[i]['fShipORG'][tOpTemp], fleetAll[i]['fShip'][tOpTemp] = fShipFunc(valueDict["kShip1"],valueDict["kShip2"],fleetAll[i]['wDWT'][tOpTemp],fleetAll[i]['wFLD'][tOpTemp],fleetAll[i]['rocc'][tOpTemp],valueDict["CNM2km"],fleetAll[i]['v'][tOpTemp],fleetAll[i]['d'][tOpTemp],valueDict["rWPS"],fleetAll[i]['WPS'],fleetAll[i]['CeqLHV'])
+            fleetAll[i]['fAuxORG'][tOpTemp], fleetAll[i]['fAux'][tOpTemp] = fAuxFunc(valueDict["Dyear"],valueDict["Hday"],valueDict["Rrun"],valueDict["kAux1"],valueDict["kAux2"],fleetAll[i]['wDWT'][tOpTemp],valueDict["rSPS"],fleetAll[i]['SPS'])
+            fleetAll[i]['gORG'][tOpTemp], fleetAll[i]['g'][tOpTemp] = gFunc(fleetAll[i]['Cco2'],fleetAll[i]['fShip'][tOpTemp],valueDict["Cco2DF"],fleetAll[i]['fAux'][tOpTemp],valueDict["rCCS"],fleetAll[i]['CCS'])
+            fleetAll['output']['g'][elapsedYear] += fleetAll[i]['g'][tOpTemp]
             fleetAll[i]['costFuelShipORG'][tOpTemp], fleetAll[i]['costFuelShip'][tOpTemp], fleetAll[i]['dcostFuelShip'][tOpTemp] = costFuelShipFunc(unitCostFuelHFO, unitCostFuel, fleetAll[i]['fShipORG'][tOpTemp], fleetAll[i]['fShip'][tOpTemp])
             fleetAll[i]['costFuelAuxORG'][tOpTemp], fleetAll[i]['costFuelAux'][tOpTemp], fleetAll[i]['dcostFuelAux'][tOpTemp] = costFuelAuxFunc(valueDict["unitCostDF"], fleetAll[i]['fAuxORG'][tOpTemp], fleetAll[i]['fAux'][tOpTemp])
             fleetAll[i]['costFuelAll'][tOpTemp], fleetAll[i]['dcostFuelAll'][tOpTemp] = costFuelAllFunc(fleetAll[i]['costFuelShip'][tOpTemp], fleetAll[i]['costFuelAux'][tOpTemp], fleetAll[i]['dcostFuelShip'][tOpTemp], fleetAll[i]['dcostFuelAux'][tOpTemp])
-            fleetAll[i]['costShipAll'][tOpTemp] = costShipFunc(fleetAll[i]['costShipBasic'], dcostWind, dcostSol, dcostCCS)
-            fleetAll[i]['dcostShipping'][tOpTemp] = additionalShippingFeeFunc(tOpTemp, tOpSch, fleetAll[i]['dcostFuelAll'][tOpTemp], fleetAll[i]['costShipAll'][tOpTemp], fleetAll[i]['costShipBasicHFO'])
+            fleetAll[i]['costShipBasicHFO'][tOpTemp], fleetAll[i]['costShipBasic'][tOpTemp], fleetAll[i]['costShipAll'][tOpTemp] = costShipFunc(valueDict["kShipBasic1"], fleetAll[i]["CAPcnt"], valueDict["kShipBasic2"], fleetAll[i]['rShipBasic'], valueDict["dcostWPS"], valueDict["dcostSPS"], valueDict["dcostCCS"])
+            fleetAll[i]['dcostShipping'][tOpTemp] = additionalShippingFeeFunc(tOpTemp, tOpSch, fleetAll[i]['dcostFuelAll'][tOpTemp], fleetAll[i]['costShipAll'][tOpTemp], fleetAll[i]['costShipBasicHFO'][tOpTemp])
             fleetAll[i]['gTilde'][tOpTemp] = fleetAll[i]['g'][tOpTemp] / fleetAll[i]['cta'][tOpTemp]
             fleetAll[i]['dcostShippingTilde'][tOpTemp] = fleetAll[i]['dcostShipping'][tOpTemp] / fleetAll[i]['cta'][tOpTemp]
             numFleet += 1
@@ -275,12 +294,12 @@ def orderShipInputFunc(fleetAll,tOpSch,tbid,iniT,currentYear,parameterFile2,para
     # Checkbutton WPS
     v2 = StringVar()
     v2.set('0') # 初期化
-    cb2 = ttk.Checkbutton(frame, padding=(10), text='WPS: Wind Propulsion Support', variable=v2)
+    cb2 = ttk.Checkbutton(frame, padding=(10), text='WPS: Wind Propulsion System', variable=v2)
 
     # Checkbutton SPS
     v3 = StringVar()
     v3.set('0') # 初期化
-    cb3 = ttk.Checkbutton(frame, padding=(10), text='SPS: Solar Propulsion Support', variable=v3)
+    cb3 = ttk.Checkbutton(frame, padding=(10), text='SPS: Solar Propulsion System', variable=v3)
 
     # Checkbutton CCS
     v4 = StringVar()
@@ -310,17 +329,17 @@ def orderShipInputFunc(fleetAll,tOpSch,tbid,iniT,currentYear,parameterFile2,para
 
     return fleetAll
 
-def buttonCommandSpeed(fleetAll, Di,startYear,elapsedYear,NShipFleet,Alpha,tOpSch,v,valueDict,parameterFile4,root):
+def buttonCommandSpeed(fleetAll, startYear,elapsedYear,NShipFleet,Alpha,tOpSch,v,valueDict,parameterFile4,root):
     def inner():
         fleetTemp = fleetAll
-        fleetTemp = yearlyOperationFunc(fleetTemp,Di,startYear,elapsedYear,NShipFleet,Alpha,tOpSch,v,valueDict,parameterFile4)
+        fleetTemp = yearlyOperationFunc(fleetTemp,startYear,elapsedYear,NShipFleet,Alpha,tOpSch,v,valueDict,parameterFile4)
         root.quit()
         root.destroy()
         return fleetTemp
     return inner
 
-def yearlyOperationInputFunc(fleetAll,Di,startYear,elapsedYear,NShipFleet,Alpha,tOpSch,valueDict,parameterFile4):
-    NumFleet = len(fleetAll)-1
+def yearlyOperationInputFunc(fleetAll,startYear,elapsedYear,NShipFleet,Alpha,tOpSch,valueDict,parameterFile4):
+    NumFleet = len(fleetAll)-2
     currentYear = startYear+elapsedYear
 
     root = Tk()
@@ -348,7 +367,7 @@ def yearlyOperationInputFunc(fleetAll,Di,startYear,elapsedYear,NShipFleet,Alpha,
             j += 1
 
     # Button
-    button = ttk.Button(frame, text='Complete', command=buttonCommandSpeed(fleetAll,Di,startYear,elapsedYear,NShipFleet,Alpha,tOpSch,v,valueDict,parameterFile4,root))
+    button = ttk.Button(frame, text='Complete', command=buttonCommandSpeed(fleetAll,startYear,elapsedYear,NShipFleet,Alpha,tOpSch,v,valueDict,parameterFile4,root))
 
     # Layout
     button.grid(row=i+1, column=0, columnspan=2)
@@ -363,14 +382,14 @@ def buttonCommandOutput(root):
         root.destroy()
     return inner
 
-def outputFunc(fleetAll,startYear,elapsedYear,tOpSch):
+def outputGUIFunc(fleetAll,startYear,elapsedYear,tOpSch):
     #fig = plt.figure()
     fig = Figure(figsize=(5, 4), dpi=100)
     ax1 = fig.add_subplot(121)
     ax1.plot(fleetAll['year'][0:elapsedYear],fleetAll['S'][0:elapsedYear])
 
     ax2 = fig.add_subplot(122)
-    NumFleet = len(fleetAll)-1
+    NumFleet = len(fleetAll)-2
     currentYear = startYear+elapsedYear
     for i in range(1,NumFleet):
         if fleetAll[i]['delivery'] <= currentYear and fleetAll[i]['tOp'] < tOpSch:
@@ -412,3 +431,20 @@ def outputFunc(fleetAll,startYear,elapsedYear,tOpSch):
 
     # root
     mainloop()
+
+def outputFunc(fleetAll,startYear,elapsedYear,lastYear,tOpSch):
+    fig = plt.figure()
+    ax1 = fig.add_subplot(131)
+    ax1.plot(fleetAll['year'][:elapsedYear+1],fleetAll['S'][:elapsedYear+1])
+
+    ax2 = fig.add_subplot(132)
+
+    ax3 = fig.add_subplot(133)
+    ax3.plot(fleetAll['year'][:elapsedYear+1],fleetAll['output']['g'][:elapsedYear+1])
+                #if i == 1:
+                #    ax2.bar(fleetAll['year'][:elapsedYear+1], simu)
+                #else:
+                #    ax2.bar(fleetAll['year'][:elapsedYear+1], simu, bottom=simuSum)
+    
+    
+    plt.show()
