@@ -29,13 +29,12 @@ def roleplayRun():
 
     variableAll, valueDict = rs.readinput(parameterFile1)
 
-    # prepare initial fleets
+    # prepare fleets
     fleets = {'S': np.zeros(lastYear-startYear+1)}
     fleets['year'] = np.zeros(lastYear-startYear+1)
     fleets.setdefault('output',{})
     fleets['output']['g'] = np.zeros(lastYear-startYear+1)
-    orderYear = 2016 # must be less than startYear - tbid
-    iniT = startYear-orderYear-tbid
+    fleets['output']['gTilde'] = np.zeros(lastYear-startYear+1)
     initialFleets = rs.initialFleetFunc(parameterFile6)
     for i in range(len(initialFleets)):
         orderYear = initialFleets[i]['year'] - tbid
@@ -47,10 +46,10 @@ def roleplayRun():
     for elapsedYear in range(lastYear-startYear+1):
         cerrentYear = startYear+elapsedYear
         # scrap old fleet
-        numFleet = len(fleets)-2
-        for currentFleet in range(1,numFleet):
-            if fleets[currentFleet]['tOp'] == tOpSch:
-                print('    Fleet',currentFleet,'was scrapped due to too old.')
+        #numFleet = len(fleets)-2
+        #for currentFleet in range(1,numFleet):
+        #    if fleets[currentFleet]['tOp'] == tOpSch:
+        #        print('    Fleet',currentFleet,'was scrapped due to too old.')
 
         # order & operate fleet by GUI
         #fleets = rs.orderShipInputFunc(fleets,tOpSch,tbid,0,startYear+elapsedYear,parameterFile2,parameterFile3,parameterFile5)

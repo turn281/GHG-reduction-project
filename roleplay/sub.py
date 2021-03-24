@@ -6,6 +6,8 @@ import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import (FigureCanvasTkAgg, NavigationToolbar2Tk)
 from matplotlib.backend_bases import key_press_handler
 from matplotlib.figure import Figure
+from matplotlib.font_manager import FontProperties
+from matplotlib.ticker import ScalarFormatter
 from tkinter import *
 from tkinter import ttk
 import sys
@@ -247,6 +249,7 @@ def yearlyOperationFunc(fleetAll,startYear,elapsedYear,NShipFleet,Alpha,tOpSch,v
             fleetAll[i]['costShipBasicHFO'][tOpTemp], fleetAll[i]['costShipBasic'][tOpTemp], fleetAll[i]['costShipAll'][tOpTemp] = costShipFunc(valueDict["kShipBasic1"], fleetAll[i]["CAPcnt"], valueDict["kShipBasic2"], fleetAll[i]['rShipBasic'], valueDict["dcostWPS"], valueDict["dcostSPS"], valueDict["dcostCCS"])
             fleetAll[i]['dcostShipping'][tOpTemp] = additionalShippingFeeFunc(tOpTemp, tOpSch, fleetAll[i]['dcostFuelAll'][tOpTemp], fleetAll[i]['costShipAll'][tOpTemp], fleetAll[i]['costShipBasicHFO'][tOpTemp])
             fleetAll[i]['gTilde'][tOpTemp] = fleetAll[i]['g'][tOpTemp] / fleetAll[i]['cta'][tOpTemp]
+            fleetAll['output']['gTilde'][elapsedYear] += fleetAll[i]['gTilde'][tOpTemp]
             fleetAll[i]['dcostShippingTilde'][tOpTemp] = fleetAll[i]['dcostShipping'][tOpTemp] / fleetAll[i]['cta'][tOpTemp]
             numFleet += 1
 
@@ -433,18 +436,33 @@ def outputGUIFunc(fleetAll,startYear,elapsedYear,tOpSch):
     mainloop()
 
 def outputFunc(fleetAll,startYear,elapsedYear,lastYear,tOpSch):
-    fig = plt.figure()
-    ax1 = fig.add_subplot(131)
-    ax1.plot(fleetAll['year'][:elapsedYear+1],fleetAll['S'][:elapsedYear+1])
+    fig, ax = plt.subplots(1, 3, figsize=(13.0, 4.0))
+    plt.subplots_adjust(wspace=0.4, hspace=0.6)
 
-    ax2 = fig.add_subplot(132)
+    ax[0].plot(fleetAll['year'][:elapsedYear+1],fleetAll['S'][:elapsedYear+1])
+    ax[0].set_title("Score")
+    ax[0].set_xlabel('Year')
+    ax[0].yaxis.set_major_formatter(ScalarFormatter(useMathText=True))
+    ax[0].ticklabel_format(style="sci",  axis="y",scilimits=(0,0))
+    #ax[0].set_ylabel('Year')
 
-    ax3 = fig.add_subplot(133)
-    ax3.plot(fleetAll['year'][:elapsedYear+1],fleetAll['output']['g'][:elapsedYear+1])
+    ax[1].plot(fleetAll['year'][:elapsedYear+1],fleetAll['output']['gTilde'][:elapsedYear+1])
+    ax[1].set_title("g / cta")
+    ax[1].set_xlabel('Year')
+    ax[1].set_ylabel('ton / (TEU $\cdot$ NM)')
+    ax[1].yaxis.set_major_formatter(ScalarFormatter(useMathText=True))
+    ax[1].ticklabel_format(style="sci",  axis="y",scilimits=(0,0))
+
+    ax[2].plot(fleetAll['year'][:elapsedYear+1],fleetAll['output']['g'][:elapsedYear+1])
+    ax[2].set_title("g")
+    ax[2].set_xlabel('Year')
+    ax[2].set_ylabel('ton')
+    ax[2].yaxis.set_major_formatter(ScalarFormatter(useMathText=True))
+    ax[2].ticklabel_format(style="sci",  axis="y",scilimits=(0,0))
                 #if i == 1:
                 #    ax2.bar(fleetAll['year'][:elapsedYear+1], simu)
                 #else:
                 #    ax2.bar(fleetAll['year'][:elapsedYear+1], simu, bottom=simuSum)
     
-    
+    #fig.tight_layout()
     plt.show()
