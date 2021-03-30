@@ -19,17 +19,20 @@ def roleplayRun():
 
     path = str(Path(__file__).parent)
 
-    print(path)
-    path = path.replace('roleplay','parameters')
-    parameterFile1 = path+"\\variableAll3.csv"
-    parameterFile2 = path+"\\eqLHV.csv"
-    parameterFile3 = path+"\\CO2Eff.csv"
-    parameterFile4 = path+"\\unitCostFuel.csv"
-    parameterFile5 = path+"\\costShipBasic.csv"
-    parameterFile6 = path+"\\initialFleetA.csv"
-    parameterFile7 = path+"\\initialFleetB.csv"
-    parameterFile8 = path+"\\initialFleetC.csv"
-    parameterFile9 = path+"\\decisionList1.csv"
+    if os.name == 'nt':
+        path = path.replace('roleplay','parameters') + '\\'
+    elif os.name == 'posix':
+        path = path.replace('roleplay','parameters') + '/'
+
+    parameterFile1 = path+"variableAll3.csv"
+    parameterFile2 = path+"eqLHV.csv"
+    parameterFile3 = path+"CO2Eff.csv"
+    parameterFile4 = path+"unitCostFuel.csv"
+    parameterFile5 = path+"costShipBasic.csv"
+    parameterFile6 = path+"initialFleetA.csv"
+    parameterFile7 = path+"initialFleetB.csv"
+    parameterFile8 = path+"initialFleetC.csv"
+    parameterFile9 = path+"decisionList1.csv"
 
     variableAll, valueDict = rs.readinput(parameterFile1)
 
