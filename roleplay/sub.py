@@ -11,8 +11,8 @@ from matplotlib.ticker import ScalarFormatter
 from tkinter import *
 from tkinter import ttk
 import sys
+import os
 import random
-from IPython.display import Image,display_jpeg
 
 def readinput(filename):
     csv_input = pd.read_csv(filepath_or_buffer=filename, encoding="utf_8", sep=",")
@@ -255,7 +255,7 @@ def yearlyOperationFunc(fleetAll,startYear,elapsedYear,NShipFleet,Alpha,tOpSch,v
             ctaPerRocc += ctaPerRoccFunc(fleetAll[i]['CAPcnt'],fleetAll[i]['d'][tOpTemp])
             j += 1
 
-    numFleet = 0
+    numFleetAlive = 0
     for i in range(1,NumFleet):
         if fleetAll[i]['delivery'] <= currentYear and fleetAll[i]['tOp'] < tOpSch:
             tOpTemp = fleetAll[i]['tOp']
@@ -264,28 +264,31 @@ def yearlyOperationFunc(fleetAll,startYear,elapsedYear,NShipFleet,Alpha,tOpSch,v
             fleetAll[i]['cta'][tOpTemp] = ctaFunc(fleetAll[i]['CAPcnt'],fleetAll[i]['rocc'][tOpTemp],fleetAll[i]['d'][tOpTemp])
             fleetAll[i]['fShipORG'][tOpTemp], fleetAll[i]['fShip'][tOpTemp] = fShipFunc(valueDict["kShip1"],valueDict["kShip2"],fleetAll[i]['wDWT'][tOpTemp],fleetAll[i]['wFLD'][tOpTemp],fleetAll[i]['rocc'][tOpTemp],valueDict["CNM2km"],fleetAll[i]['v'][tOpTemp],fleetAll[i]['d'][tOpTemp],valueDict["rWPS"],fleetAll[i]['WPS'],fleetAll[i]['CeqLHV'])
             fleetAll[i]['fAuxORG'][tOpTemp], fleetAll[i]['fAux'][tOpTemp] = fAuxFunc(valueDict["Dyear"],valueDict["Hday"],valueDict["Rrun"],valueDict["kAux1"],valueDict["kAux2"],fleetAll[i]['wDWT'][tOpTemp],valueDict["rSPS"],fleetAll[i]['SPS'])
-            fleetAll[i]['gORG'][tOpTemp], fleetAll[i]['g'][tOpTemp] = gFunc(fleetAll[i]['Cco2'],fleetAll[i]['fShip'][tOpTemp],valueDict["Cco2DF"],fleetAll[i]['fAux'][tOpTemp],valueDict["rCCS"],fleetAll[i]['CCS'])
-            fleetAll['output']['g'][elapsedYear] += fleetAll[i]['g'][tOpTemp]
+            fleetAll[i]['gORG'][tOpTemp], fleetAll[i]['g'][tOpTemp] = gFunc(fleetAll[i]['Cco2'],fleetAll[i]['fShip'][tOpTemp],valueDict["Cco2DF"],fleetAll[i]['fAux'][tOpTemp],valueDict["rCCS"],fleetAll[i]['CCS'])     
             fleetAll[i]['costFuelShipORG'][tOpTemp], fleetAll[i]['costFuelShip'][tOpTemp], fleetAll[i]['dcostFuelShip'][tOpTemp] = costFuelShipFunc(unitCostFuelHFO, unitCostFuel, fleetAll[i]['fShipORG'][tOpTemp], fleetAll[i]['fShip'][tOpTemp])
             fleetAll[i]['costFuelAuxORG'][tOpTemp], fleetAll[i]['costFuelAux'][tOpTemp], fleetAll[i]['dcostFuelAux'][tOpTemp] = costFuelAuxFunc(valueDict["unitCostDF"], fleetAll[i]['fAuxORG'][tOpTemp], fleetAll[i]['fAux'][tOpTemp])
             fleetAll[i]['costFuelAll'][tOpTemp], fleetAll[i]['dcostFuelAll'][tOpTemp] = costFuelAllFunc(fleetAll[i]['costFuelShip'][tOpTemp], fleetAll[i]['costFuelAux'][tOpTemp], fleetAll[i]['dcostFuelShip'][tOpTemp], fleetAll[i]['dcostFuelAux'][tOpTemp])
             fleetAll[i]['costShipBasicHFO'][tOpTemp], fleetAll[i]['costShipBasic'][tOpTemp], fleetAll[i]['costShipAll'][tOpTemp] = costShipFunc(valueDict["kShipBasic1"], fleetAll[i]["CAPcnt"], valueDict["kShipBasic2"], fleetAll[i]['rShipBasic'], valueDict["dcostWPS"], valueDict["dcostSPS"], valueDict["dcostCCS"])
             fleetAll[i]['dcostShipping'][tOpTemp] = additionalShippingFeeFunc(tOpTemp, tOpSch, fleetAll[i]['dcostFuelAll'][tOpTemp], fleetAll[i]['costShipAll'][tOpTemp], fleetAll[i]['costShipBasicHFO'][tOpTemp])
             fleetAll[i]['gTilde'][tOpTemp] = fleetAll[i]['g'][tOpTemp] / fleetAll[i]['cta'][tOpTemp]
-            fleetAll['output']['gTilde'][elapsedYear] += fleetAll[i]['gTilde'][tOpTemp]
             fleetAll[i]['dcostShippingTilde'][tOpTemp] = fleetAll[i]['dcostShipping'][tOpTemp] / fleetAll[i]['cta'][tOpTemp]
-            numFleet += 1
+            fleetAll['output']['gTilde'][elapsedYear] += fleetAll[i]['gTilde'][tOpTemp]
+            fleetAll['output']['g'][elapsedYear] += fleetAll[i]['g'][tOpTemp]
+            fleetAll['output']['dcostShippingTilde'][elapsedYear] += fleetAll[i]['dcostShippingTilde'][tOpTemp]
+            numFleetAlive += 1
 
     Si = 0
     for i in range(1,NumFleet):
         if fleetAll[i]['delivery'] <= currentYear:
-            if fleetAll[i]['tOp'] < tOpSch:
+            tOpTemp = fleetAll[i]['tOp']
+            if tOpTemp < tOpSch:
                 Si += fleetAll[i]['dcostShippingTilde'][tOpTemp] - Alpha * fleetAll[i]['gTilde'][tOpTemp]
             fleetAll[i]['tOp'] += 1
-    if numFleet > 0:
-        fleetAll['S'][elapsedYear] = Si / numFleet
+    if numFleetAlive > 0:
+        fleetAll['S'][elapsedYear] = Si / numFleetAlive
     else:
         fleetAll['S'][elapsedYear] = 0
+
     fleetAll['year'][elapsedYear] = currentYear
     return fleetAll
 
@@ -459,29 +462,36 @@ def outputGUIFunc(fleetAll,startYear,elapsedYear,tOpSch):
     mainloop()
 
 def outputFunc(fleetAll,startYear,elapsedYear,lastYear,tOpSch):
-    fig, ax = plt.subplots(1, 3, figsize=(13.0, 4.0))
+    fig, ax = plt.subplots(2, 2, figsize=(10.0, 10.0))
     plt.subplots_adjust(wspace=0.4, hspace=0.6)
 
-    ax[0].plot(fleetAll['year'][:elapsedYear+1],fleetAll['S'][:elapsedYear+1])
-    ax[0].set_title("Score")
-    ax[0].set_xlabel('Year')
-    ax[0].yaxis.set_major_formatter(ScalarFormatter(useMathText=True))
-    ax[0].ticklabel_format(style="sci",  axis="y",scilimits=(0,0))
+    ax[0,0].plot(fleetAll['year'][:elapsedYear+1],fleetAll['S'][:elapsedYear+1])
+    ax[0,0].set_title(r"$ ( \Delta C_{shipping} - \alpha g) \ / \ cta$")
+    ax[0,0].set_xlabel('Year')
+    ax[0,0].yaxis.set_major_formatter(ScalarFormatter(useMathText=True))
+    ax[0,0].ticklabel_format(style="sci",  axis="y",scilimits=(0,0))
     #ax[0].set_ylabel('Year')
 
-    ax[1].plot(fleetAll['year'][:elapsedYear+1],fleetAll['output']['gTilde'][:elapsedYear+1])
-    ax[1].set_title("g / cta")
-    ax[1].set_xlabel('Year')
-    ax[1].set_ylabel('ton / (TEU $\cdot$ NM)')
-    ax[1].yaxis.set_major_formatter(ScalarFormatter(useMathText=True))
-    ax[1].ticklabel_format(style="sci",  axis="y",scilimits=(0,0))
+    ax[1,0].plot(fleetAll['year'][:elapsedYear+1],fleetAll['output']['gTilde'][:elapsedYear+1])
+    ax[1,0].set_title("g / cta")
+    ax[1,0].set_xlabel('Year')
+    ax[1,0].set_ylabel('ton / (TEU $\cdot$ NM)')
+    ax[1,0].yaxis.set_major_formatter(ScalarFormatter(useMathText=True))
+    ax[1,0].ticklabel_format(style="sci",  axis="y",scilimits=(0,0))
 
-    ax[2].plot(fleetAll['year'][:elapsedYear+1],fleetAll['output']['g'][:elapsedYear+1])
-    ax[2].set_title("g")
-    ax[2].set_xlabel('Year')
-    ax[2].set_ylabel('ton')
-    ax[2].yaxis.set_major_formatter(ScalarFormatter(useMathText=True))
-    ax[2].ticklabel_format(style="sci",  axis="y",scilimits=(0,0))
+    ax[0,1].plot(fleetAll['year'][:elapsedYear+1],fleetAll['output']['g'][:elapsedYear+1])
+    ax[0,1].set_title("g")
+    ax[0,1].set_xlabel('Year')
+    ax[0,1].set_ylabel('ton')
+    ax[0,1].yaxis.set_major_formatter(ScalarFormatter(useMathText=True))
+    ax[0,1].ticklabel_format(style="sci",  axis="y",scilimits=(0,0))
+
+    ax[1,1].plot(fleetAll['year'][:elapsedYear+1],fleetAll['output']['dcostShippingTilde'][:elapsedYear+1])
+    ax[1,1].set_title("$\Delta C_{shipping} \ / \ cta$")
+    ax[1,1].set_xlabel('Year')
+    ax[1,1].set_ylabel('\$ / (TEU $\cdot$ NM)')
+    ax[1,1].yaxis.set_major_formatter(ScalarFormatter(useMathText=True))
+    ax[1,1].ticklabel_format(style="sci",  axis="y",scilimits=(0,0))
                 #if i == 1:
                 #    ax2.bar(fleetAll['year'][:elapsedYear+1], simu)
                 #else:
@@ -490,5 +500,6 @@ def outputFunc(fleetAll,startYear,elapsedYear,lastYear,tOpSch):
     #fig.tight_layout()
     
     plt.savefig('output.jpg')
-    display_jpeg(Image('output.jpg'))
-    #plt.show()
+    
+    if os.name == 'nt':
+        plt.show()
