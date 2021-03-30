@@ -10,9 +10,9 @@ import matplotlib.pyplot as plt
 
 def roleplayRun():
     tOpSch = 20
-    startYear = 2021
-    lastYear = 2100
-    NShipFleet = 20
+    startYear = 2020
+    lastYear = 2050
+    NShipFleet = 6
     Alpha = 1
     tbid = 2
 
@@ -26,6 +26,7 @@ def roleplayRun():
     parameterFile6 = path+"\\initialFleetA.csv"
     parameterFile7 = path+"\\initialFleetB.csv"
     parameterFile8 = path+"\\initialFleetC.csv"
+    parameterFile9 = path+"\\decisionList1.csv"
 
     variableAll, valueDict = rs.readinput(parameterFile1)
 
@@ -36,15 +37,17 @@ def roleplayRun():
     fleets['output']['g'] = np.zeros(lastYear-startYear+1)
     fleets['output']['gTilde'] = np.zeros(lastYear-startYear+1)
     initialFleets = rs.initialFleetFunc(parameterFile6)
+    decisionList1 = rs.decisionList(parameterFile9)
+
     for i in range(len(initialFleets)):
         orderYear = initialFleets[i]['year'] - tbid
         iniT = startYear - initialFleets[i]['year']
         iniCAPcnt = initialFleets[i]['TEU']
-        fleets = rs.orderShipFunc(fleets,'HFO','0','0','0',iniCAPcnt,tOpSch,tbid,iniT,orderYear,parameterFile2,parameterFile3,parameterFile5)
+        fleets = rs.orderShipFunc(fleets,'HFO',0,0,0,iniCAPcnt,tOpSch,tbid,iniT,orderYear,parameterFile2,parameterFile3,parameterFile5)
 
     # start ship operation
     for elapsedYear in range(lastYear-startYear+1):
-        cerrentYear = startYear+elapsedYear
+        currentYear = startYear+elapsedYear
         # scrap old fleet
         #numFleet = len(fleets)-2
         #for currentFleet in range(1,numFleet):
@@ -57,7 +60,9 @@ def roleplayRun():
         #rs.outputGUIFunc(fleets,startYear,elapsedYear,tOpSch)
 
         # order & operate fleet by Scenario
-        fleets = rs.orderShipFunc(fleets,'HFO','1','1','1',10000,tOpSch,tbid,0,cerrentYear,parameterFile2,parameterFile3,parameterFile5)
-        fleets = rs.yearlyOperationFunc(fleets,startYear,elapsedYear,NShipFleet,Alpha,tOpSch,valueDict,parameterFile4)
+        if decisionList1[currentYear]['Order']:
+            fleets = rs.orderShipFunc(fleets,decisionList1[currentYear]['fuelType'],decisionList1[currentYear]['WPS'],decisionList1[currentYear]['SPS'],decisionList1[currentYear]['CCS'],decisionList1[currentYear]['CAP'],tOpSch,tbid,0,currentYear,parameterFile2,parameterFile3,parameterFile5)
+
+        fleets = rs.yearlyOperationFunc(fleets,startYear,elapsedYear,NShipFleet,Alpha,tOpSch,decisionList1[currentYear]['Speed'],valueDict,parameterFile4)
         
     rs.outputFunc(fleets,startYear,elapsedYear,lastYear,tOpSch)

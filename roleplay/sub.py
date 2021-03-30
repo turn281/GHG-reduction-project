@@ -62,6 +62,28 @@ def initialFleetFunc(filename):
         k += 1
     return iniFleetDict
 
+def decisionList(filename):
+    csv_input = pd.read_csv(filepath_or_buffer=filename, encoding="utf_8", sep=",").fillna(0)
+    Year = csv_input['Year']
+    Order = csv_input['Order']
+    fuelType = csv_input['Fuel type']
+    WPS = csv_input['WPS']
+    SPS = csv_input['SPS']
+    CCS = csv_input['CCS']
+    CAP = csv_input['CAP']
+    Speed = csv_input['Speed']
+    valueDict = {}
+    for i, j, k, l, m, n, o, p in zip(Year, Order, fuelType, WPS, SPS, CCS, CAP, Speed):
+        valueDict.setdefault(int(i),{})
+        valueDict[int(i)]['Order'] = int(j)
+        valueDict[int(i)]['fuelType'] = k
+        valueDict[int(i)]['WPS'] = int(l)
+        valueDict[int(i)]['SPS'] = int(m)
+        valueDict[int(i)]['CCS'] = int(n)
+        valueDict[int(i)]['CAP'] = float(o)
+        valueDict[int(i)]['Speed'] = float(p)
+    return valueDict
+
 def unitCostFuelFunc(filename,fuelName,year):
     csv_input = pd.read_csv(filepath_or_buffer=filename, encoding="utf_8", sep=",")
     #print("unitCostFuel")
@@ -106,7 +128,7 @@ def dFunc(Dyear,Hday,v,Rrun):
 
 def fShipFunc(kShip1,kShip2,wDWT,wFLD,rocc,CNM2km,v,d,rWPS,windPr,CeqLHV):
     fShipORG = (kShip1/1000)*(wFLD-(1-kShip2*rocc)*wDWT)*(wFLD**(-1/3))*((CNM2km*v)**2)*CNM2km*d
-    if windPr == '1':
+    if windPr:
         fShipORG = fShipORG*(1-rWPS)
     else:
         fShipORG = fShipORG
@@ -115,7 +137,7 @@ def fShipFunc(kShip1,kShip2,wDWT,wFLD,rocc,CNM2km,v,d,rWPS,windPr,CeqLHV):
 
 def fAuxFunc(Dyear,Hday,Rrun,kAux1,kAux2,wDWT,rSPS,solar):
     fAuxORG = Dyear*Hday*Rrun*(kAux1+kAux2*wDWT)/1000
-    if solar == '1':
+    if solar:
         fAux = fAuxORG*(1-rSPS)
     else:
         fAux = fAuxORG
@@ -123,7 +145,7 @@ def fAuxFunc(Dyear,Hday,Rrun,kAux1,kAux2,wDWT,rSPS,solar):
 
 def gFunc(Cco2,fShip,Cco2DF,fAux,rCCS,CCS):
     gORG = Cco2*fShip+Cco2DF*fAux
-    if CCS == '1':
+    if CCS:
         g = gORG*(1-rCCS)
     else:
         g = gORG
@@ -167,8 +189,8 @@ def additionalShippingFeeFunc(tOp, tOpSch, dcostFuelAll, costShipAll, costShipBa
         dcostShipping = dcostFuelAll
     return dcostShipping
 
-def demandScenarioFunc(year,kDem1,kDem2,kDem3,kDem4,kDem5):
-    Di = (kDem1*year**2 + kDem2*year + kDem3)*1000000000/kDem4*kDem5
+def demandScenarioFunc(year,kDem1,kDem2,kDem3,kDem4):
+    Di = (kDem1*year**2 + kDem2*year + kDem3)*1000000000/kDem4
     return Di
 
 def orderShipFunc(fleetAll,fuelName,WPS,SPS,CCS,CAPcnt,tOpSch,tbid,iniT,currentYear,parameterFile2,parameterFile3,parameterFile5):
@@ -214,7 +236,7 @@ def orderShipFunc(fleetAll,fuelName,WPS,SPS,CCS,CAPcnt,tOpSch,tbid,iniT,currentY
     return fleetAll
 
 #def yearlyOperationFunc(fleetAll,startYear,elapsedYear,NShipFleet,Alpha,tOpSch,v,valueDict,parameterFile4):　# tkinterによるInput用
-def yearlyOperationFunc(fleetAll,startYear,elapsedYear,NShipFleet,Alpha,tOpSch,valueDict,parameterFile4):
+def yearlyOperationFunc(fleetAll,startYear,elapsedYear,NShipFleet,Alpha,tOpSch,v,valueDict,parameterFile4):
     NumFleet = len(fleetAll)-2
 
     j = 0
@@ -225,7 +247,7 @@ def yearlyOperationFunc(fleetAll,startYear,elapsedYear,NShipFleet,Alpha,tOpSch,v
             tOpTemp = fleetAll[i]['tOp']
             unitCostFuel, unitCostFuelHFO = unitCostFuelFunc(parameterFile4,fleetAll[i]['fuelName'],currentYear)
             #fleetAll[i]['v'][tOpTemp] = v[j].get() # tkinterによるInput用
-            fleetAll[i]['v'][tOpTemp] = random.uniform(10,20)
+            fleetAll[i]['v'][tOpTemp] = v
             fleetAll[i]['wDWT'][tOpTemp] = wDWTFunc(valueDict["kDWT1"],fleetAll[i]['CAPcnt'],valueDict["kDWT2"])
             fleetAll[i]['wFLD'][tOpTemp] = wFLDFunc(valueDict["kFLD1"],fleetAll[i]['wDWT'][tOpTemp],valueDict["kFLD2"])
             fleetAll[i]['d'][tOpTemp] = dFunc(valueDict["Dyear"],valueDict["Hday"],fleetAll[i]['v'][tOpTemp],valueDict["Rrun"])
@@ -236,7 +258,7 @@ def yearlyOperationFunc(fleetAll,startYear,elapsedYear,NShipFleet,Alpha,tOpSch,v
     for i in range(1,NumFleet):
         if fleetAll[i]['delivery'] <= currentYear and fleetAll[i]['tOp'] < tOpSch:
             tOpTemp = fleetAll[i]['tOp']
-            Di = demandScenarioFunc(currentYear,valueDict["kDem1"],valueDict["kDem2"],valueDict["kDem3"],valueDict["kDem4"],valueDict["kDem5"])
+            Di = demandScenarioFunc(currentYear,valueDict["kDem1"],valueDict["kDem2"],valueDict["kDem3"],valueDict["kDem4"])
             fleetAll[i]['rocc'][tOpTemp] = Di / ctaPerRocc
             fleetAll[i]['cta'][tOpTemp] = ctaFunc(fleetAll[i]['CAPcnt'],fleetAll[i]['rocc'][tOpTemp],fleetAll[i]['d'][tOpTemp])
             fleetAll[i]['fShipORG'][tOpTemp], fleetAll[i]['fShip'][tOpTemp] = fShipFunc(valueDict["kShip1"],valueDict["kShip2"],fleetAll[i]['wDWT'][tOpTemp],fleetAll[i]['wFLD'][tOpTemp],fleetAll[i]['rocc'][tOpTemp],valueDict["CNM2km"],fleetAll[i]['v'][tOpTemp],fleetAll[i]['d'][tOpTemp],valueDict["rWPS"],fleetAll[i]['WPS'],fleetAll[i]['CeqLHV'])

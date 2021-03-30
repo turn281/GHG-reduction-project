@@ -27,8 +27,7 @@ dcostCCS,Additional cost by CCS,$,Constant parameter,0.35
 kDem1,,,Constant parameter,0.612224477
 kDem2,,,Constant parameter,-2410.243165
 kDem3,,,Constant parameter,2372173.603
-kDem4,,,Constant parameter,16
-kDem5,,,Constant parameter,0.299
+kDem4,,,Constant parameter,131.7754494
 wDWT,Deadweight tonnage,ton,State variable,
 wFLD,Full load displacement,ton,State variable,
 d,Distance,NM,State variable,
