@@ -7,6 +7,7 @@ import csv
 import matplotlib as mpl
 #mpl.use('TkAgg')
 import matplotlib.pyplot as plt
+import os
 
 def roleplayRun():
     tOpSch = 20
@@ -17,6 +18,8 @@ def roleplayRun():
     tbid = 2
 
     path = str(Path(__file__).parent)
+
+    print(path)
     path = path.replace('roleplay','parameters')
     parameterFile1 = path+"\\variableAll3.csv"
     parameterFile2 = path+"\\eqLHV.csv"
