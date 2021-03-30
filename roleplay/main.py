@@ -5,7 +5,7 @@ import pandas as pd
 from scipy import interpolate
 import csv
 import matplotlib as mpl
-mpl.use('TkAgg')
+#mpl.use('TkAgg')
 import matplotlib.pyplot as plt
 
 def roleplayRun():
