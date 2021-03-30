@@ -12,6 +12,7 @@ from tkinter import *
 from tkinter import ttk
 import sys
 import random
+from IPython.display import Image,display_jpeg
 
 def readinput(filename):
     csv_input = pd.read_csv(filepath_or_buffer=filename, encoding="utf_8", sep=",")
@@ -487,4 +488,7 @@ def outputFunc(fleetAll,startYear,elapsedYear,lastYear,tOpSch):
                 #    ax2.bar(fleetAll['year'][:elapsedYear+1], simu, bottom=simuSum)
     
     #fig.tight_layout()
-    plt.show();
+    
+    plt.savefig('output.jpg')
+    display_jpeg(Image('output.jpg'))
+    #plt.show()
