@@ -487,4 +487,4 @@ def outputFunc(fleetAll,startYear,elapsedYear,lastYear,tOpSch):
                 #    ax2.bar(fleetAll['year'][:elapsedYear+1], simu, bottom=simuSum)
     
     #fig.tight_layout()
-    plt.show()
+    #plt.show()
