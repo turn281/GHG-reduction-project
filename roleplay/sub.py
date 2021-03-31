@@ -469,6 +469,7 @@ def outputFunc(fleetAll,startYear,elapsedYear,lastYear,tOpSch,decisionListName):
     fig, ax = plt.subplots(2, 2, figsize=(10.0, 10.0))
     plt.subplots_adjust(wspace=0.4, hspace=0.6)
 
+    SPlot = fleetAll['S'][:elapsedYear+1]
     ax[0,0].plot(fleetAll['year'][:elapsedYear+1],fleetAll['S'][:elapsedYear+1])
     ax[0,0].set_title(r"$ ( \Delta C_{shipping} - \alpha g) \ / \ cta$")
     ax[0,0].set_xlabel('Year')
@@ -476,6 +477,7 @@ def outputFunc(fleetAll,startYear,elapsedYear,lastYear,tOpSch,decisionListName):
     ax[0,0].ticklabel_format(style="sci",  axis="y",scilimits=(0,0))
     #ax[0].set_ylabel('Year')
 
+    gTildePlot = fleetAll['output']['gTilde'][:elapsedYear+1]*1000000
     ax[1,0].plot(fleetAll['year'][:elapsedYear+1],fleetAll['output']['gTilde'][:elapsedYear+1]*1000000)
     ax[1,0].set_title("g / cta")
     ax[1,0].set_xlabel('Year')
@@ -483,6 +485,7 @@ def outputFunc(fleetAll,startYear,elapsedYear,lastYear,tOpSch,decisionListName):
     #ax[1,0].yaxis.set_major_formatter(ScalarFormatter(useMathText=True))
     ax[1,0].ticklabel_format(style="sci",  axis="y",scilimits=(0,0))
 
+    gPlot = fleetAll['output']['g'][:elapsedYear+1]/1000000
     ax[0,1].plot(fleetAll['year'][:elapsedYear+1],fleetAll['output']['g'][:elapsedYear+1]/1000000)
     ax[0,1].set_title("g")
     ax[0,1].set_xlabel('Year')
@@ -490,6 +493,7 @@ def outputFunc(fleetAll,startYear,elapsedYear,lastYear,tOpSch,decisionListName):
     ax[0,1].yaxis.set_major_formatter(ScalarFormatter(useMathText=True))
     ax[0,1].ticklabel_format(style="sci",  axis="y",scilimits=(0,0))
 
+    dcostShippingTildePlot = fleetAll['output']['dcostShippingTilde'][:elapsedYear+1]
     ax[1,1].plot(fleetAll['year'][:elapsedYear+1],fleetAll['output']['dcostShippingTilde'][:elapsedYear+1])
     ax[1,1].set_title("$\Delta C_{shipping} \ / \ cta$")
     ax[1,1].set_xlabel('Year')
@@ -503,8 +507,11 @@ def outputFunc(fleetAll,startYear,elapsedYear,lastYear,tOpSch,decisionListName):
     
     #fig.tight_layout()
     
-
-    plt.savefig(decisionListName+".jpg")
-    
     if os.name == 'nt':
         plt.show()
+    elif os.name == 'posix':
+        plt.savefig(decisionListName+".jpg")
+        np.savetxt(decisionListName+'_S.csv',SPlot)
+        np.savetxt(decisionListName+'_gTilde.csv',gTildePlot)
+        np.savetxt(decisionListName+'_g.csv',gPlot)
+        np.savetxt(decisionListName+'_dcostShippingTilde.csv',dcostShippingTildePlot)
