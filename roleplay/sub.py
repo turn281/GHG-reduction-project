@@ -263,7 +263,7 @@ def yearlyOperationFunc(fleetAll,startYear,elapsedYear,NShipFleet,Alpha,tOpSch,v
             if Di / ctaPerRocc <= 1.0 and Di / ctaPerRocc > 0.0:
                 fleetAll[i]['rocc'][tOpTemp] = Di / ctaPerRocc
             else:
-                print('ERROR: rocc should be 0.0 < rocc <= 1.0 but now',rocc,'.')
+                print('ERROR: rocc should be 0.0 < rocc <= 1.0 but now',Di/ctaPerRocc,'.')
                 sys.exit()
             fleetAll[i]['cta'][tOpTemp] = ctaFunc(fleetAll[i]['CAPcnt'],fleetAll[i]['rocc'][tOpTemp],fleetAll[i]['d'][tOpTemp])
             fleetAll[i]['fShipORG'][tOpTemp], fleetAll[i]['fShip'][tOpTemp] = fShipFunc(valueDict["kShip1"],valueDict["kShip2"],fleetAll[i]['wDWT'][tOpTemp],fleetAll[i]['wFLD'][tOpTemp],fleetAll[i]['rocc'][tOpTemp],valueDict["CNM2km"],fleetAll[i]['v'][tOpTemp],fleetAll[i]['d'][tOpTemp],valueDict["rWPS"],fleetAll[i]['WPS'],fleetAll[i]['CeqLHV'])
