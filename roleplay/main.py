@@ -9,7 +9,7 @@ import matplotlib as mpl
 import matplotlib.pyplot as plt
 import os
 
-def roleplayRun():
+def roleplayRun(decisionListName):
     tOpSch = 20
     startYear = 2020
     lastYear = 2050
@@ -32,7 +32,7 @@ def roleplayRun():
     parameterFile6 = path+"initialFleetA.csv"
     parameterFile7 = path+"initialFleetB.csv"
     parameterFile8 = path+"initialFleetC.csv"
-    parameterFile9 = path+"decisionList1.csv"
+    parameterFile9 = path+decisionListName+".csv"
 
     variableAll, valueDict = rs.readinput(parameterFile1)
 
@@ -72,4 +72,4 @@ def roleplayRun():
 
         fleets = rs.yearlyOperationFunc(fleets,startYear,elapsedYear,NShipFleet,Alpha,tOpSch,decisionList1[currentYear]['Speed'],valueDict,parameterFile4)
         
-    rs.outputFunc(fleets,startYear,elapsedYear,lastYear,tOpSch)
+    rs.outputFunc(fleets,startYear,elapsedYear,lastYear,tOpSch,decisionListName)
