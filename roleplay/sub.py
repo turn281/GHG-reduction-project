@@ -252,7 +252,7 @@ def yearlyOperationFunc(fleetAll,startYear,elapsedYear,NShipFleet,Alpha,tOpSch,v
             fleetAll[i]['wDWT'][tOpTemp] = wDWTFunc(valueDict["kDWT1"],fleetAll[i]['CAPcnt'],valueDict["kDWT2"])
             fleetAll[i]['wFLD'][tOpTemp] = wFLDFunc(valueDict["kFLD1"],fleetAll[i]['wDWT'][tOpTemp],valueDict["kFLD2"])
             fleetAll[i]['d'][tOpTemp] = dFunc(valueDict["Dyear"],valueDict["Hday"],fleetAll[i]['v'][tOpTemp],valueDict["Rrun"])
-            ctaPerRocc += ctaPerRoccFunc(fleetAll[i]['CAPcnt'],fleetAll[i]['d'][tOpTemp])
+            ctaPerRocc += NShipFleet * ctaPerRoccFunc(fleetAll[i]['CAPcnt'],fleetAll[i]['d'][tOpTemp])
             j += 1
 
     numFleetAlive = 0
