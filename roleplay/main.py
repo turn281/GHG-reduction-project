@@ -9,7 +9,7 @@ import matplotlib as mpl
 import matplotlib.pyplot as plt
 import os
 
-def roleplayRun(decisionListName):
+def roleplayRun(decisionListName1,decisionListName2,decisionListName3):
     tOpSch = 20
     startYear = 2020
     lastYear = 2050
@@ -29,31 +29,29 @@ def roleplayRun(decisionListName):
     parameterFile3 = path+"CO2Eff.csv"
     parameterFile4 = path+"unitCostFuel.csv"
     parameterFile5 = path+"costShipBasic.csv"
-    parameterFile6 = path+"initialFleetA.csv"
-    parameterFile7 = path+"initialFleetB.csv"
-    parameterFile8 = path+"initialFleetC.csv"
-    parameterFile9 = path+decisionListName+".csv"
+    parameterFile6 = path+"initialFleet1.csv"
+    parameterFile7 = path+"initialFleet2.csv"
+    parameterFile8 = path+"initialFleet3.csv"
+    parameterFile9 = path+decisionListName1+".csv"
+    parameterFile10 = path+decisionListName2+".csv"
+    parameterFile11 = path+decisionListName3+".csv"
 
     variableAll, valueDict = rs.readinput(parameterFile1)
 
     # prepare fleets
-    fleets = {'S': np.zeros(lastYear-startYear+1)}
-    fleets['year'] = np.zeros(lastYear-startYear+1)
-    fleets.setdefault('output',{})
-    fleets['output']['g'] = np.zeros(lastYear-startYear+1)
-    fleets['output']['gTilde'] = np.zeros(lastYear-startYear+1)
-    fleets['output']['dcostShippingTilde'] = np.zeros(lastYear-startYear+1)
-    fleets['output']['cta'] = np.zeros(lastYear-startYear+1)
-    initialFleets = rs.initialFleetFunc(parameterFile6)
-    decisionList1 = rs.decisionList(parameterFile9)
-
-    for i in range(len(initialFleets)):
-        orderYear = initialFleets[i]['year'] - tbid
-        iniT = startYear - initialFleets[i]['year']
-        iniCAPcnt = initialFleets[i]['TEU']
-        fleets = rs.orderShipFunc(fleets,'HFO',0,0,0,iniCAPcnt,tOpSch,tbid,iniT,orderYear,parameterFile2,parameterFile3,parameterFile5)
+    fleets = {'year': np.zeros(lastYear-startYear+1)}
+    fleets = rs.fleetPreparationFunc(fleets,parameterFile6,1,startYear,lastYear,tOpSch,tbid,parameterFile2,parameterFile3,parameterFile5)
+    fleets = rs.fleetPreparationFunc(fleets,parameterFile7,2,startYear,lastYear,tOpSch,tbid,parameterFile2,parameterFile3,parameterFile5)
+    fleets = rs.fleetPreparationFunc(fleets,parameterFile8,3,startYear,lastYear,tOpSch,tbid,parameterFile2,parameterFile3,parameterFile5)
+    
+    # prepare dicisionList dictionary
+    decisionList = {}
+    decisionList.setdefault(1,rs.decisionListFunc(parameterFile9))
+    decisionList.setdefault(2,rs.decisionListFunc(parameterFile10))
+    decisionList.setdefault(3,rs.decisionListFunc(parameterFile11))
 
     # start ship operation
+    playOrder = np.array([1,2,3])
     for elapsedYear in range(lastYear-startYear+1):
         currentYear = startYear+elapsedYear
         # scrap old fleet
@@ -68,9 +66,17 @@ def roleplayRun(decisionListName):
         #rs.outputGUIFunc(fleets,startYear,elapsedYear,tOpSch)
 
         # order & operate fleet by Scenario
-        if decisionList1[currentYear]['Order']:
-            fleets = rs.orderShipFunc(fleets,decisionList1[currentYear]['fuelType'],decisionList1[currentYear]['WPS'],decisionList1[currentYear]['SPS'],decisionList1[currentYear]['CCS'],decisionList1[currentYear]['CAP'],tOpSch,tbid,0,currentYear,parameterFile2,parameterFile3,parameterFile5)
-
-        fleets = rs.yearlyOperationFunc(fleets,startYear,elapsedYear,NShipFleet,Alpha,tOpSch,decisionList1[currentYear]['Speed'],valueDict,parameterFile4)
+        scoreTemp = []
+        overDi = 0
+        for numCompany in playOrder:
+            if decisionList[numCompany][currentYear]['Order']:
+                fleets = rs.orderShipFunc(fleets,numCompany,decisionList[numCompany][currentYear]['fuelType'],decisionList[numCompany][currentYear]['WPS'],decisionList[numCompany][currentYear]['SPS'],decisionList[numCompany][currentYear]['CCS'],decisionList[numCompany][currentYear]['CAP'],tOpSch,tbid,0,currentYear,parameterFile2,parameterFile3,parameterFile5)
+            fleets = rs.yearlyOperationFunc(fleets,numCompany,overDi,startYear,elapsedYear,NShipFleet,Alpha,tOpSch,decisionList[numCompany][currentYear]['Speed'],valueDict,parameterFile4)
+            overDi = fleets[numCompany]['total']['overDi'][elapsedYear]
+            scoreTemp.append(fleets[numCompany]['total']['S'][elapsedYear])
         
-    rs.outputFunc(fleets,startYear,elapsedYear,lastYear,tOpSch,decisionListName)
+        playOrder = np.argsort(np.array(scoreTemp))[::-1] + 1
+        
+    rs.outputFunc(fleets,1,startYear,elapsedYear,lastYear,tOpSch,decisionListName1)
+    rs.outputFunc(fleets,2,startYear,elapsedYear,lastYear,tOpSch,decisionListName2)
+    rs.outputFunc(fleets,3,startYear,elapsedYear,lastYear,tOpSch,decisionListName3)
