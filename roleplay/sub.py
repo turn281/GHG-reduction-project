@@ -149,10 +149,9 @@ def dFunc(Dyear,Hday,v,Rrun):
 def fShipFunc(kShip1,kShip2,wDWT,wFLD,rocc,CNM2km,v,d,rWPS,windPr,CeqLHV):
     fShipORG = (kShip1/1000)*(wFLD-(1-kShip2*rocc)*wDWT)*(wFLD**(-1/3))*((CNM2km*v)**2)*CNM2km*d
     if windPr:
-        fShipORG = fShipORG*(1-rWPS)
+        fShip = CeqLHV*fShipORG*(1-rWPS)
     else:
-        fShipORG = fShipORG
-    fShip = CeqLHV*fShipORG
+        fShip = CeqLHV*fShipORG
     return fShipORG, fShip
 
 def fAuxFunc(Dyear,Hday,Rrun,kAux1,kAux2,wDWT,rSPS,solar):
@@ -196,10 +195,17 @@ def costFuelAllFunc(costFuelShip, costFuelAux, dcostFuelShip, dcostFuelAux):
     dcostFuelAll = dcostFuelShip+dcostFuelAux
     return costFuelAll, dcostFuelAll
 
-def costShipFunc(kShipBasic1, CAPcnt, kShipBasic2, rShipBasic, dcostWPS, dcostSPS, dcostCCS):
+def costShipFunc(kShipBasic1, CAPcnt, kShipBasic2, rShipBasic, dcostWPS, dcostSPS, dcostCCS, flagWPS, flagSPS, flagCCS):
     costShipBasicHFO = kShipBasic1 * CAPcnt + kShipBasic2
     costShipBasic = rShipBasic * costShipBasicHFO
-    costShipAll = (1+dcostWPS+dcostSPS+dcostCCS) * costShipBasic
+    cAdditionalEquipment = 1
+    if flagWPS:
+        cAdditionalEquipment += dcostWPS
+    elif flagSPS:
+        cAdditionalEquipment += dcostSPS
+    elif flagCCS:
+        cAdditionalEquipment += dcostCCS
+    costShipAll = cAdditionalEquipment * costShipBasic
     return costShipBasicHFO, costShipBasic, costShipAll
 
 def additionalShippingFeeFunc(tOp, tOpSch, dcostFuelAll, costShipAll, costShipBasicHFO):
@@ -293,7 +299,7 @@ def yearlyOperationFunc(fleetAll,numCompany,overDi,startYear,elapsedYear,NShipFl
             fleetAll[numCompany][i]['costFuelShipORG'][tOpTemp], fleetAll[numCompany][i]['costFuelShip'][tOpTemp], fleetAll[numCompany][i]['dcostFuelShip'][tOpTemp] = costFuelShipFunc(unitCostFuelHFO, unitCostFuel, fleetAll[numCompany][i]['fShipORG'][tOpTemp], fleetAll[numCompany][i]['fShip'][tOpTemp])
             fleetAll[numCompany][i]['costFuelAuxORG'][tOpTemp], fleetAll[numCompany][i]['costFuelAux'][tOpTemp], fleetAll[numCompany][i]['dcostFuelAux'][tOpTemp] = costFuelAuxFunc(valueDict["unitCostDF"], fleetAll[numCompany][i]['fAuxORG'][tOpTemp], fleetAll[numCompany][i]['fAux'][tOpTemp])
             fleetAll[numCompany][i]['costFuelAll'][tOpTemp], fleetAll[numCompany][i]['dcostFuelAll'][tOpTemp] = costFuelAllFunc(fleetAll[numCompany][i]['costFuelShip'][tOpTemp], fleetAll[numCompany][i]['costFuelAux'][tOpTemp], fleetAll[numCompany][i]['dcostFuelShip'][tOpTemp], fleetAll[numCompany][i]['dcostFuelAux'][tOpTemp])
-            fleetAll[numCompany][i]['costShipBasicHFO'][tOpTemp], fleetAll[numCompany][i]['costShipBasic'][tOpTemp], fleetAll[numCompany][i]['costShipAll'][tOpTemp] = costShipFunc(valueDict["kShipBasic1"], fleetAll[numCompany][i]["CAPcnt"], valueDict["kShipBasic2"], fleetAll[numCompany][i]['rShipBasic'], valueDict["dcostWPS"], valueDict["dcostSPS"], valueDict["dcostCCS"])
+            fleetAll[numCompany][i]['costShipBasicHFO'][tOpTemp], fleetAll[numCompany][i]['costShipBasic'][tOpTemp], fleetAll[numCompany][i]['costShipAll'][tOpTemp] = costShipFunc(valueDict["kShipBasic1"], fleetAll[numCompany][i]["CAPcnt"], valueDict["kShipBasic2"], fleetAll[numCompany][i]['rShipBasic'], valueDict["dcostWPS"], valueDict["dcostSPS"], valueDict["dcostCCS"], fleetAll[numCompany][i]['WPS'], fleetAll[numCompany][i]['SPS'], fleetAll[numCompany][i]['CCS'])
             fleetAll[numCompany][i]['dcostShipping'][tOpTemp] = additionalShippingFeeFunc(tOpTemp, tOpSch, fleetAll[numCompany][i]['dcostFuelAll'][tOpTemp], fleetAll[numCompany][i]['costShipAll'][tOpTemp], fleetAll[numCompany][i]['costShipBasicHFO'][tOpTemp])
             fleetAll[numCompany][i]['gTilde'][tOpTemp] = fleetAll[numCompany][i]['g'][tOpTemp] / fleetAll[numCompany][i]['cta'][tOpTemp]
             fleetAll[numCompany][i]['dcostShippingTilde'][tOpTemp] = fleetAll[numCompany][i]['dcostShipping'][tOpTemp] / fleetAll[numCompany][i]['cta'][tOpTemp]
@@ -533,8 +539,8 @@ def outputFunc(fleetAll,numCompany,startYear,elapsedYear,lastYear,tOpSch,decisio
     if os.name == 'nt':
         plt.show()
     elif os.name == 'posix':
-        plt.savefig(decisionListName+".jpg")
-        np.savetxt(decisionListName+'_S.csv',SPlot)
-        np.savetxt(decisionListName+'_gTilde.csv',gTildePlot)
-        np.savetxt(decisionListName+'_g.csv',gPlot)
-        np.savetxt(decisionListName+'_dcostShippingTilde.csv',dcostShippingTildePlot)
+        plt.savefig(decisionListName+"_Company"+str(numCompany)+".jpg")
+        np.savetxt(decisionListName+"_Company"+str(numCompany)+'_S.csv',SPlot)
+        np.savetxt(decisionListName+"_Company"+str(numCompany)+'_gTilde.csv',gTildePlot)
+        np.savetxt(decisionListName+"_Company"+str(numCompany)+'_g.csv',gPlot)
+        np.savetxt(decisionListName+"_Company"+str(numCompany)+'_dcostShippingTilde.csv',dcostShippingTildePlot)
