@@ -539,8 +539,8 @@ def outputFunc(fleetAll,numCompany,startYear,elapsedYear,lastYear,tOpSch,decisio
     if os.name == 'nt':
         plt.show()
     elif os.name == 'posix':
-        plt.savefig(decisionListName+"_Company"+str(numCompany)+".jpg")
-        np.savetxt(decisionListName+"_Company"+str(numCompany)+'_S.csv',SPlot)
-        np.savetxt(decisionListName+"_Company"+str(numCompany)+'_gTilde.csv',gTildePlot)
-        np.savetxt(decisionListName+"_Company"+str(numCompany)+'_g.csv',gPlot)
-        np.savetxt(decisionListName+"_Company"+str(numCompany)+'_dcostShippingTilde.csv',dcostShippingTildePlot)
+        plt.savefig("Company"+str(numCompany)+decisionListName+".jpg")
+        np.savetxt("Company"+str(numCompany)+decisionListName+'_S.csv',SPlot)
+        np.savetxt("Company"+str(numCompany)+decisionListName+'_gTilde.csv',gTildePlot)
+        np.savetxt("Company"+str(numCompany)+decisionListName+'_g.csv',gPlot)
+        np.savetxt("Company"+str(numCompany)+decisionListName+'_dcostShippingTilde.csv',dcostShippingTildePlot)
