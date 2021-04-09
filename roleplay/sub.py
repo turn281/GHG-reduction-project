@@ -112,7 +112,7 @@ def unitCostFuelFunc(filename,fuelName,year):
     measureYear = np.array(csv_input['Year'],dtype='float64')
     measureHFO = np.array(csv_input['HFO'],dtype='float64')
     measure = np.array(csv_input[fuelName],dtype='float64')
-    fittedHFO = interpolate.interp1d(measureYear, measure)
+    fittedHFO = interpolate.interp1d(measureYear, measureHFO)
     fitted = interpolate.interp1d(measureYear, measure)
     if year >= 2020:
         interp = fitted(year)
