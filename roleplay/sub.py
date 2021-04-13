@@ -21,10 +21,13 @@ def readinput(filename):
     #print("\n")
     symbol = csv_input['Symbol']
     value = csv_input['Value']
+    unit = csv_input['Unit']
     valueDict = {}
-    for i, j in zip(symbol, value):
+    unitDict = {}
+    for i, j, k in zip(symbol, value, unit):
         valueDict[i] = float(j)
-    return csv_input, valueDict
+        unitDict[i] = str(k)
+    return csv_input, valueDict, unitDict
 
 def CeqLHVFunc(filename,fuelName):
     csv_input = pd.read_csv(filepath_or_buffer=filename, encoding="utf_8", sep=",")
@@ -270,8 +273,6 @@ def yearlyOperationFunc(fleetAll,numCompany,overDi,startYear,elapsedYear,NShipFl
     for i in range(1,NumFleet):
         if fleetAll[numCompany][i]['delivery'] <= currentYear and fleetAll[numCompany][i]['tOp'] < tOpSch:
             tOpTemp = fleetAll[numCompany][i]['tOp']
-            unitCostFuel, unitCostFuelHFO = unitCostFuelFunc(parameterFile4,fleetAll[numCompany][i]['fuelName'],currentYear)
-            #fleetAll[numCompany][i]['v'][tOpTemp] = v[j].get() # tkinterによるInput用
             fleetAll[numCompany][i]['v'][tOpTemp] = v
             fleetAll[numCompany][i]['wDWT'][tOpTemp] = wDWTFunc(valueDict["kDWT1"],fleetAll[numCompany][i]['CAPcnt'],valueDict["kDWT2"])
             fleetAll[numCompany][i]['wFLD'][tOpTemp] = wFLDFunc(valueDict["kFLD1"],fleetAll[numCompany][i]['wDWT'][tOpTemp],valueDict["kFLD2"])
@@ -283,6 +284,7 @@ def yearlyOperationFunc(fleetAll,numCompany,overDi,startYear,elapsedYear,NShipFl
     for i in range(1,NumFleet):
         if fleetAll[numCompany][i]['delivery'] <= currentYear and fleetAll[numCompany][i]['tOp'] < tOpSch:
             tOpTemp = fleetAll[numCompany][i]['tOp']
+            unitCostFuel, unitCostFuelHFO = unitCostFuelFunc(parameterFile4,fleetAll[numCompany][i]['fuelName'],currentYear)
             Di = overDi + demandScenarioFunc(currentYear,valueDict["kDem1"],valueDict["kDem2"],valueDict["kDem3"],valueDict["kDem4"])
             if Di / maxCta <= 1.0 and Di / maxCta > 0.0:
                 fleetAll[numCompany][i]['rocc'][tOpTemp] = Di / maxCta
@@ -316,7 +318,7 @@ def yearlyOperationFunc(fleetAll,numCompany,overDi,startYear,elapsedYear,NShipFl
             tOpTemp = fleetAll[numCompany][i]['tOp']
             if tOpTemp < tOpSch:
                 Si += fleetAll[numCompany][i]['dcostShippingTilde'][tOpTemp] - Alpha * fleetAll[numCompany][i]['gTilde'][tOpTemp]
-            fleetAll[numCompany][i]['tOp'] += 1
+                fleetAll[numCompany][i]['tOp'] += 1
     if numFleetAlive > 0:
         fleetAll[numCompany]['total']['S'][elapsedYear] = Si / numFleetAlive
     else:
@@ -494,7 +496,7 @@ def outputGUIFunc(fleetAll,startYear,elapsedYear,tOpSch):
     # root
     mainloop()
 
-def outputFunc(fleetAll,numCompany,startYear,elapsedYear,lastYear,tOpSch,decisionListName):
+def outputEachCompanyFunc(fleetAll,numCompany,startYear,elapsedYear,lastYear,tOpSch,decisionListName):
     fig, ax = plt.subplots(2, 2, figsize=(10.0, 10.0))
     plt.subplots_adjust(wspace=0.4, hspace=0.6)
 
@@ -544,3 +546,56 @@ def outputFunc(fleetAll,numCompany,startYear,elapsedYear,lastYear,tOpSch,decisio
         np.savetxt("Company"+str(numCompany)+decisionListName+'_gTilde.csv',gTildePlot)
         np.savetxt("Company"+str(numCompany)+decisionListName+'_g.csv',gPlot)
         np.savetxt("Company"+str(numCompany)+decisionListName+'_dcostShippingTilde.csv',dcostShippingTildePlot)
+
+def outputAllCompanyFunc(fleetAll,startYear,elapsedYear,lastYear,tOpSch,unitDict,decisionListNameList):
+    fig, axes = plt.subplots(2, 3, figsize=(12.0, 8.0))
+    plt.subplots_adjust(wspace=0.4, hspace=0.6)
+
+    for j, listName in enumerate(decisionListNameList,1):
+        for ax, keyi in zip(fig.axes, fleetAll[j]['total'].keys()):
+            ax.plot(fleetAll['year'][:elapsedYear+1],fleetAll[j]['total'][keyi][:elapsedYear+1],label="Company"+str(j))
+            ax.set_title(keyi)
+            ax.set_xlabel('Year')
+            ax.legend()
+            ax.ticklabel_format(style="sci",  axis="y",scilimits=(0,0))
+            ax.set_ylabel(unitDict[keyi])
+    
+    if os.name == 'nt':
+        plt.show()
+    elif os.name == 'posix':
+        plt.savefig("TotalValues.jpg")
+        for j, listName in enumerate(decisionListNameList,1):
+            for keyi in fleetAll[j]['total'].keys():
+                np.savetxt("Company"+str(j)+listName+'_'+keyi+'.csv',fleetAll[j]['total'][keyi][:elapsedYear+1])
+
+    plt.rcParams['figure.max_open_warning'] = 40
+    figDict = {}
+    for j, listName in enumerate(decisionListNameList,1):
+        for keyFleet in fleetAll[j].keys():
+            if type(keyFleet) is int:
+                for keyValue in fleetAll[j][keyFleet].keys():
+                    if type(fleetAll[j][keyFleet][keyValue]) is np.ndarray:
+                        if keyFleet == 1 and j == 1:
+                            fig, ax = plt.subplots(1, 1, figsize=(12.0, 8.0))
+                            figDict.setdefault(keyValue,ax)
+
+                        plotArr = np.zeros(lastYear-startYear+1)
+                        if fleetAll[j][keyFleet]['delivery'] >= startYear:
+                            plotArr[fleetAll[j][keyFleet]['delivery']-startYear:fleetAll[j][keyFleet]['delivery']-startYear+fleetAll[j][keyFleet]['tOp']] = fleetAll[j][keyFleet][keyValue][:fleetAll[j][keyFleet]['tOp']]
+                        else:
+                            plotArr[:tOpSch-startYear+fleetAll[j][keyFleet]['delivery']] = fleetAll[j][keyFleet][keyValue][startYear-fleetAll[j][keyFleet]['delivery']:fleetAll[j][keyFleet]['tOp']]
+                        
+                        figDict[keyValue].plot(fleetAll['year'][:elapsedYear+1],plotArr,label="Fleet"+str(keyFleet))
+                        figDict[keyValue].set_title(keyValue)
+                        figDict[keyValue].set_xlabel('Year')
+                        figDict[keyValue].legend()
+                        figDict[keyValue].ticklabel_format(style="sci",  axis="y",scilimits=(0,0))
+                        figDict[keyValue].set_ylabel(unitDict[keyValue])
+
+                        if j == len(decisionListNameList) and keyFleet == len(list(fleetAll[j].keys()))-1 and os.name == 'nt':
+                            plt.show()
+                        elif j == len(decisionListNameList) and keyFleet == len(list(fleetAll[j].keys()))-1 and os.name == 'posix':
+                            plt.savefig(str(keyValue)+".jpg")
+                        
+                        if os.name == 'posix':
+                            np.savetxt("Company"+str(j)+listName+'_'+keyValue+'Fleet'+keyFleet+'.csv',plotArr)

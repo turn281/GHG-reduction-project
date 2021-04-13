@@ -24,7 +24,7 @@ def roleplayRun(decisionListName1,decisionListName2,decisionListName3):
     elif os.name == 'posix':
         path = path.replace('roleplay','parameters') + '/'
 
-    parameterFile1 = path+"variableAll3.csv"
+    parameterFile1 = path+"variableAll.csv"
     parameterFile2 = path+"eqLHV.csv"
     parameterFile3 = path+"CO2Eff.csv"
     parameterFile4 = path+"unitCostFuel.csv"
@@ -36,7 +36,7 @@ def roleplayRun(decisionListName1,decisionListName2,decisionListName3):
     parameterFile10 = path+decisionListName2+".csv"
     parameterFile11 = path+decisionListName3+".csv"
 
-    variableAll, valueDict = rs.readinput(parameterFile1)
+    variableAll, valueDict, unitDict = rs.readinput(parameterFile1)
 
     # prepare fleets
     fleets = {'year': np.zeros(lastYear-startYear+1)}
@@ -77,6 +77,9 @@ def roleplayRun(decisionListName1,decisionListName2,decisionListName3):
         
         playOrder = np.argsort(np.array(scoreTemp))[::-1] + 1
         
-    rs.outputFunc(fleets,1,startYear,elapsedYear,lastYear,tOpSch,decisionListName1)
-    rs.outputFunc(fleets,2,startYear,elapsedYear,lastYear,tOpSch,decisionListName2)
-    rs.outputFunc(fleets,3,startYear,elapsedYear,lastYear,tOpSch,decisionListName3)
+    #rs.outputEachCompanyFunc(fleets,1,startYear,elapsedYear,lastYear,tOpSch,decisionListName1)
+    #rs.outputEachCompanyFunc(fleets,2,startYear,elapsedYear,lastYear,tOpSch,decisionListName2)
+    #rs.outputEachCompanyFunc(fleets,3,startYear,elapsedYear,lastYear,tOpSch,decisionListName3)
+    decisionListNameList = [decisionListName1, decisionListName2, decisionListName3]
+    rs.outputAllCompanyFunc(fleets,startYear,elapsedYear,lastYear,tOpSch,unitDict,decisionListNameList)
+
