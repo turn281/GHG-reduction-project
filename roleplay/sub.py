@@ -566,7 +566,7 @@ def outputAllCompanyFunc(fleetAll,startYear,elapsedYear,lastYear,tOpSch,unitDict
         plt.savefig("TotalValues.jpg")
         for j, listName in enumerate(decisionListNameList,1):
             for keyi in fleetAll[j]['total'].keys():
-                np.savetxt("Company"+str(j)+listName+'_'+keyi+'.csv',fleetAll[j]['total'][keyi][:elapsedYear+1])
+                np.savetxt("Company"+str(j)+'_'+listName+'_'+keyi+'.csv',fleetAll[j]['total'][keyi][:elapsedYear+1])
 
     plt.rcParams['figure.max_open_warning'] = 40
     figDict = {}
@@ -598,4 +598,4 @@ def outputAllCompanyFunc(fleetAll,startYear,elapsedYear,lastYear,tOpSch,unitDict
                             plt.savefig(str(keyValue)+".jpg")
                         
                         if os.name == 'posix':
-                            np.savetxt("Company"+str(j)+listName+'_'+str(keyValue)+'Fleet'+str(keyFleet)+'.csv',plotArr)
+                            np.savetxt("Company"+str(j)+'_'+listName+'_'+str(keyValue)+'_'+'Fleet'+str(keyFleet)+'.csv',plotArr)
