@@ -598,4 +598,4 @@ def outputAllCompanyFunc(fleetAll,startYear,elapsedYear,lastYear,tOpSch,unitDict
                             plt.savefig(str(keyValue)+".jpg")
                         
                         if os.name == 'posix':
-                            np.savetxt("Company"+str(j)+listName+'_'+keyValue+'Fleet'+keyFleet+'.csv',plotArr)
+                            np.savetxt("Company"+str(j)+listName+'_'+str(keyValue)+'Fleet'+str(keyFleet)+'.csv',plotArr)
