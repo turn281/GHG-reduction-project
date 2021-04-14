@@ -548,12 +548,14 @@ def outputEachCompanyFunc(fleetAll,numCompany,startYear,elapsedYear,lastYear,tOp
         np.savetxt("Company"+str(numCompany)+decisionListName+'_dcostShippingTilde.csv',dcostShippingTildePlot)
 
 def outputAllCompanyFunc(fleetAll,startYear,elapsedYear,lastYear,tOpSch,unitDict,decisionListNameList):
+    year = fleetAll['year'][:elapsedYear+1]
+    
     fig, axes = plt.subplots(2, 3, figsize=(12.0, 8.0))
     plt.subplots_adjust(wspace=0.4, hspace=0.6)
 
     for j, listName in enumerate(decisionListNameList,1):
         for ax, keyi in zip(fig.axes, fleetAll[j]['total'].keys()):
-            ax.plot(fleetAll['year'][:elapsedYear+1],fleetAll[j]['total'][keyi][:elapsedYear+1],label="Company"+str(j))
+            ax.plot(year,fleetAll[j]['total'][keyi][:elapsedYear+1],label="Company"+str(j))
             ax.set_title(keyi)
             ax.set_xlabel('Year')
             ax.legend()
@@ -565,19 +567,28 @@ def outputAllCompanyFunc(fleetAll,startYear,elapsedYear,lastYear,tOpSch,unitDict
     elif os.name == 'posix':
         plt.savefig("TotalValues.jpg")
         for j, listName in enumerate(decisionListNameList,1):
-            for keyi in fleetAll[j]['total'].keys():
-                np.savetxt("Company"+str(j)+'_'+listName+'_'+keyi+'.csv',fleetAll[j]['total'][keyi][:elapsedYear+1])
+            valueName = []
+            outputList = []
+            for i, keyi in enumerate(fleetAll[j]['total'].keys(),1):
+                valueName.append(keyi)
+                outputList.append(fleetAll[j]['total'][keyi][:elapsedYear+1])
+                    
+            outputData = np.stack(outputList,1)
+            outputDf = pd.DataFrame(data=outputData, index=year, columns=valueName, dtype='float')
+            outputDf.to_csv("Company"+str(j)+'_'+listName+'.csv')
 
-    plt.rcParams['figure.max_open_warning'] = 40
     figDict = {}
     for j, listName in enumerate(decisionListNameList,1):
         for keyFleet in fleetAll[j].keys():
+            valueName = []
+            outputList = []
             if type(keyFleet) is int:
                 for keyValue in fleetAll[j][keyFleet].keys():
                     if type(fleetAll[j][keyFleet][keyValue]) is np.ndarray:
-                        if keyFleet == 1 and j == 1:
-                            fig, ax = plt.subplots(1, 1, figsize=(12.0, 8.0))
-                            figDict.setdefault(keyValue,ax)
+                        valueName.append(keyValue)
+                        #if keyFleet == 1 and j == 1:
+                        #    fig, ax = plt.subplots(1, 1, figsize=(12.0, 8.0))
+                        #    figDict.setdefault(keyValue,ax)
 
                         plotArr = np.zeros(lastYear-startYear+1)
                         if fleetAll[j][keyFleet]['delivery'] >= startYear:
@@ -585,17 +596,21 @@ def outputAllCompanyFunc(fleetAll,startYear,elapsedYear,lastYear,tOpSch,unitDict
                         else:
                             plotArr[:tOpSch-startYear+fleetAll[j][keyFleet]['delivery']] = fleetAll[j][keyFleet][keyValue][startYear-fleetAll[j][keyFleet]['delivery']:fleetAll[j][keyFleet]['tOp']]
                         
-                        figDict[keyValue].plot(fleetAll['year'][:elapsedYear+1],plotArr,label="Fleet"+str(keyFleet))
-                        figDict[keyValue].set_title(keyValue)
-                        figDict[keyValue].set_xlabel('Year')
-                        figDict[keyValue].legend()
-                        figDict[keyValue].ticklabel_format(style="sci",  axis="y",scilimits=(0,0))
-                        figDict[keyValue].set_ylabel(unitDict[keyValue])
+                        outputList.append(plotArr)
 
-                        if j == len(decisionListNameList) and keyFleet == len(list(fleetAll[j].keys()))-1 and os.name == 'nt':
-                            plt.show()
-                        elif j == len(decisionListNameList) and keyFleet == len(list(fleetAll[j].keys()))-1 and os.name == 'posix':
-                            plt.savefig(str(keyValue)+".jpg")
-                        
-                        if os.name == 'posix':
-                            np.savetxt("Company"+str(j)+'_'+listName+'_'+str(keyValue)+'_'+'Fleet'+str(keyFleet)+'.csv',plotArr)
+                        #figDict[keyValue].plot(year,plotArr,label="Fleet"+str(keyFleet))
+                        #figDict[keyValue].set_title(keyValue)
+                        #figDict[keyValue].set_xlabel('Year')
+                        #figDict[keyValue].legend()
+                        #figDict[keyValue].ticklabel_format(style="sci",  axis="y",scilimits=(0,0))
+                        #figDict[keyValue].set_ylabel(unitDict[keyValue])
+
+                        #if j == len(decisionListNameList) and keyFleet == len(list(fleetAll[j].keys()))-1 and os.name == 'nt':
+                        #    plt.show()
+                        #elif j == len(decisionListNameList) and keyFleet == len(list(fleetAll[j].keys()))-1 and os.name == 'posix':
+                        #    plt.savefig(str(keyValue)+".jpg")
+
+                if os.name == 'posix':
+                    outputData = np.stack(outputList,1)
+                    outputDf = pd.DataFrame(data=outputData, index=year, columns=valueName, dtype='float')
+                    outputDf.to_csv("Company"+str(j)+'_'+listName+'_'+'Fleet'+str(keyFleet)+'.csv')
