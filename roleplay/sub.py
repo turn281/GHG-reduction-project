@@ -97,6 +97,7 @@ def fleetPreparationFunc(fleetAll,initialFleetFile,numCompany,startYear,lastYear
     fleetAll[numCompany]['total']['dcostShippingTilde'] = np.zeros(lastYear-startYear+1)
     fleetAll[numCompany]['total']['cta'] = np.zeros(lastYear-startYear+1)
     fleetAll[numCompany]['total']['overDi'] = np.zeros(lastYear-startYear+1)
+    fleetAll[numCompany]['total']['costShipAll'] = np.zeros(lastYear-startYear+1)
 
     initialFleets = initialFleetFunc(initialFleetFile)
 
@@ -308,6 +309,7 @@ def yearlyOperationFunc(fleetAll,numCompany,overDi,startYear,elapsedYear,NShipFl
             fleetAll[numCompany]['total']['g'][elapsedYear] += NShipFleet * fleetAll[numCompany][i]['g'][tOpTemp]
             fleetAll[numCompany]['total']['cta'][elapsedYear] += NShipFleet * fleetAll[numCompany][i]['cta'][tOpTemp]
             fleetAll[numCompany]['total']['dcostShippingTilde'][elapsedYear] += NShipFleet * fleetAll[numCompany][i]['dcostShippingTilde'][tOpTemp]
+            fleetAll[numCompany]['total']['costShipAll'][elapsedYear] += fleetAll[numCompany][i]['costShipAll'][tOpTemp]
             numFleetAlive += 1
 
     fleetAll[numCompany]['total']['gTilde'][elapsedYear] = fleetAll[numCompany]['total']['g'][elapsedYear] / fleetAll[numCompany]['total']['cta'][elapsedYear]
@@ -550,7 +552,7 @@ def outputEachCompanyFunc(fleetAll,numCompany,startYear,elapsedYear,lastYear,tOp
 def outputAllCompanyFunc(fleetAll,startYear,elapsedYear,lastYear,tOpSch,unitDict,decisionListNameList):
     year = fleetAll['year'][:elapsedYear+1]
     
-    fig, axes = plt.subplots(2, 3, figsize=(12.0, 8.0))
+    fig, axes = plt.subplots(3, 3, figsize=(12.0, 12.0))
     plt.subplots_adjust(wspace=0.4, hspace=0.6)
 
     for j, listName in enumerate(decisionListNameList,1):
