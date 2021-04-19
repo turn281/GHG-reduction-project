@@ -68,11 +68,11 @@ def roleplayRun(decisionListName1,decisionListName2,decisionListName3):
         # order & operate fleet by Scenario
         scoreTemp = []
         overDi = 0
+        Dtotal = rs.demandScenarioFunc(currentYear,valueDict["kDem1"],valueDict["kDem2"],valueDict["kDem3"],valueDict["kDem4"])
         for numCompany in playOrder:
             if decisionList[numCompany][currentYear]['Order']:
                 fleets = rs.orderShipFunc(fleets,numCompany,decisionList[numCompany][currentYear]['fuelType'],decisionList[numCompany][currentYear]['WPS'],decisionList[numCompany][currentYear]['SPS'],decisionList[numCompany][currentYear]['CCS'],decisionList[numCompany][currentYear]['CAP'],tOpSch,tbid,0,currentYear,parameterFile2,parameterFile3,parameterFile5)
-            fleets = rs.yearlyOperationFunc(fleets,numCompany,overDi,startYear,elapsedYear,NShipFleet,Alpha,tOpSch,decisionList[numCompany][currentYear]['Speed'],valueDict,parameterFile4)
-            overDi = fleets[numCompany]['total']['overDi'][elapsedYear]
+            fleets = rs.yearlyOperationFunc(fleets,numCompany,Dtotal,startYear,elapsedYear,NShipFleet,Alpha,tOpSch,decisionList[numCompany][currentYear]['Speed'],valueDict,parameterFile4)
             scoreTemp.append(fleets[numCompany]['total']['S'][elapsedYear])
         
         playOrder = np.argsort(np.array(scoreTemp))[::-1] + 1
