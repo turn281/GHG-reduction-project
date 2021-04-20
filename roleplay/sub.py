@@ -303,7 +303,7 @@ def yearlyOperationFunc(fleetAll,numCompany,Dtotal,startYear,elapsedYear,NShipFl
         if fleetAll[numCompany][i]['delivery'] <= currentYear and fleetAll[numCompany][i]['tOp'] < tOpSch:
             tOpTemp = fleetAll[numCompany][i]['tOp']
             if tOpTemp == 0:
-                print(elapsedYear,costShipFunc(valueDict["kShipBasic1"], fleetAll[numCompany][i]["CAPcnt"], valueDict["kShipBasic2"], fleetAll[numCompany][i]['rShipBasic'], valueDict["dcostWPS"], valueDict["dcostSPS"], valueDict["dcostCCS"], fleetAll[numCompany][i]['WPS'], fleetAll[numCompany][i]['SPS'], fleetAll[numCompany][i]['CCS']))
+                #print(elapsedYear,costShipFunc(valueDict["kShipBasic1"], fleetAll[numCompany][i]["CAPcnt"], valueDict["kShipBasic2"], fleetAll[numCompany][i]['rShipBasic'], valueDict["dcostWPS"], valueDict["dcostSPS"], valueDict["dcostCCS"], fleetAll[numCompany][i]['WPS'], fleetAll[numCompany][i]['SPS'], fleetAll[numCompany][i]['CCS']))
                 fleetAll[numCompany][i]['costShipBasicHFO'], fleetAll[numCompany][i]['costShipBasic'], fleetAll[numCompany][i]['costShipAll'] = costShipFunc(valueDict["kShipBasic1"], fleetAll[numCompany][i]["CAPcnt"], valueDict["kShipBasic2"], fleetAll[numCompany][i]['rShipBasic'], valueDict["dcostWPS"], valueDict["dcostSPS"], valueDict["dcostCCS"], fleetAll[numCompany][i]['WPS'], fleetAll[numCompany][i]['SPS'], fleetAll[numCompany][i]['CCS'])
                 fleetAll[numCompany]['total']['costShipAll'][elapsedYear] += fleetAll[numCompany][i]['costShipAll']
             unitCostFuel, unitCostFuelHFO = unitCostFuelFunc(parameterFile4,fleetAll[numCompany][i]['fuelName'],currentYear)
@@ -317,8 +317,8 @@ def yearlyOperationFunc(fleetAll,numCompany,Dtotal,startYear,elapsedYear,NShipFl
             #print(tOpTemp, tOpSch, fleetAll[numCompany][i]['dcostFuelAll'], fleetAll[numCompany][i]['costShipAll'], fleetAll[numCompany][i]['costShipBasicHFO'])
             fleetAll[numCompany][i]['costFuelAll'][tOpTemp], fleetAll[numCompany][i]['dcostFuelAll'][tOpTemp] = costFuelAllFunc(fleetAll[numCompany][i]['costFuelShip'][tOpTemp], fleetAll[numCompany][i]['costFuelAux'][tOpTemp], fleetAll[numCompany][i]['dcostFuelShip'][tOpTemp], fleetAll[numCompany][i]['dcostFuelAux'][tOpTemp])
             fleetAll[numCompany][i]['dcostShipping'][tOpTemp] = additionalShippingFeeFunc(tOpTemp, tOpSch, fleetAll[numCompany][i]['dcostFuelAll'][tOpTemp], fleetAll[numCompany][i]['costShipAll'], fleetAll[numCompany][i]['costShipBasicHFO'])
-            if fleetAll[numCompany][i]['cta'][tOpTemp] == 0:
-                print(elapsedYear,numCompany,i,tOpTemp,fleetAll[numCompany][i]['cta'][tOpTemp])
+            #if fleetAll[numCompany][i]['cta'][tOpTemp] == 0:
+            #    print(elapsedYear,numCompany,i,tOpTemp,fleetAll[numCompany][i]['cta'][tOpTemp])
             fleetAll[numCompany][i]['gTilde'][tOpTemp] = fleetAll[numCompany][i]['g'][tOpTemp] / fleetAll[numCompany][i]['cta'][tOpTemp]
             fleetAll[numCompany][i]['dcostShippingTilde'][tOpTemp] = fleetAll[numCompany][i]['dcostShipping'][tOpTemp] / fleetAll[numCompany][i]['cta'][tOpTemp]
             fleetAll[numCompany]['total']['g'][elapsedYear] += NShipFleet * fleetAll[numCompany][i]['g'][tOpTemp]
