@@ -98,6 +98,8 @@ def fleetPreparationFunc(fleetAll,initialFleetFile,numCompany,startYear,lastYear
     fleetAll[numCompany]['total']['cta'] = np.zeros(lastYear-startYear+1)
     fleetAll[numCompany]['total']['overDi'] = np.zeros(lastYear-startYear+1)
     fleetAll[numCompany]['total']['costShipAll'] = np.zeros(lastYear-startYear+1)
+    fleetAll[numCompany]['total']['costFuelAll'] = np.zeros(lastYear-startYear+1)
+    fleetAll[numCompany]['total']['costAll'] = np.zeros(lastYear-startYear+1)
     fleetAll[numCompany]['total']['maxCta'] = np.zeros(lastYear-startYear+1)
     fleetAll[numCompany]['total']['rocc'] = np.zeros(lastYear-startYear+1)
 
@@ -303,29 +305,26 @@ def yearlyOperationFunc(fleetAll,numCompany,Dtotal,startYear,elapsedYear,NShipFl
         if fleetAll[numCompany][i]['delivery'] <= currentYear and fleetAll[numCompany][i]['tOp'] < tOpSch:
             tOpTemp = fleetAll[numCompany][i]['tOp']
             if tOpTemp == 0:
-                #print(elapsedYear,costShipFunc(valueDict["kShipBasic1"], fleetAll[numCompany][i]["CAPcnt"], valueDict["kShipBasic2"], fleetAll[numCompany][i]['rShipBasic'], valueDict["dcostWPS"], valueDict["dcostSPS"], valueDict["dcostCCS"], fleetAll[numCompany][i]['WPS'], fleetAll[numCompany][i]['SPS'], fleetAll[numCompany][i]['CCS']))
                 fleetAll[numCompany][i]['costShipBasicHFO'], fleetAll[numCompany][i]['costShipBasic'], fleetAll[numCompany][i]['costShipAll'] = costShipFunc(valueDict["kShipBasic1"], fleetAll[numCompany][i]["CAPcnt"], valueDict["kShipBasic2"], fleetAll[numCompany][i]['rShipBasic'], valueDict["dcostWPS"], valueDict["dcostSPS"], valueDict["dcostCCS"], fleetAll[numCompany][i]['WPS'], fleetAll[numCompany][i]['SPS'], fleetAll[numCompany][i]['CCS'])
                 fleetAll[numCompany]['total']['costShipAll'][elapsedYear] += fleetAll[numCompany][i]['costShipAll']
             unitCostFuel, unitCostFuelHFO = unitCostFuelFunc(parameterFile4,fleetAll[numCompany][i]['fuelName'],currentYear)
-            #fleetAll[numCompany][i]['rocc'][tOpTemp] = fleetAll[numCompany]['total']['rocc'][elapsedYear]
             fleetAll[numCompany][i]['cta'][tOpTemp] = ctaFunc(fleetAll[numCompany][i]['CAPcnt'],fleetAll[numCompany]['total']['rocc'][elapsedYear],fleetAll[numCompany][i]['d'][tOpTemp])
             fleetAll[numCompany][i]['fShipORG'][tOpTemp], fleetAll[numCompany][i]['fShip'][tOpTemp] = fShipFunc(valueDict["kShip1"],valueDict["kShip2"],fleetAll[numCompany][i]['wDWT'][tOpTemp],fleetAll[numCompany][i]['wFLD'][tOpTemp],fleetAll[numCompany]['total']['rocc'][elapsedYear],valueDict["CNM2km"],fleetAll[numCompany][i]['v'][tOpTemp],fleetAll[numCompany][i]['d'][tOpTemp],valueDict["rWPS"],fleetAll[numCompany][i]['WPS'],fleetAll[numCompany][i]['CeqLHV'])
             fleetAll[numCompany][i]['fAuxORG'][tOpTemp], fleetAll[numCompany][i]['fAux'][tOpTemp] = fAuxFunc(valueDict["Dyear"],valueDict["Hday"],valueDict["Rrun"],valueDict["kAux1"],valueDict["kAux2"],fleetAll[numCompany][i]['wDWT'][tOpTemp],valueDict["rSPS"],fleetAll[numCompany][i]['SPS'])
             fleetAll[numCompany][i]['gORG'][tOpTemp], fleetAll[numCompany][i]['g'][tOpTemp] = gFunc(fleetAll[numCompany][i]['Cco2'],fleetAll[numCompany][i]['fShip'][tOpTemp],valueDict["Cco2DF"],fleetAll[numCompany][i]['fAux'][tOpTemp],valueDict["rCCS"],fleetAll[numCompany][i]['CCS'])     
             fleetAll[numCompany][i]['costFuelShipORG'][tOpTemp], fleetAll[numCompany][i]['costFuelShip'][tOpTemp], fleetAll[numCompany][i]['dcostFuelShip'][tOpTemp] = costFuelShipFunc(unitCostFuelHFO, unitCostFuel, fleetAll[numCompany][i]['fShipORG'][tOpTemp], fleetAll[numCompany][i]['fShip'][tOpTemp])
             fleetAll[numCompany][i]['costFuelAuxORG'][tOpTemp], fleetAll[numCompany][i]['costFuelAux'][tOpTemp], fleetAll[numCompany][i]['dcostFuelAux'][tOpTemp] = costFuelAuxFunc(valueDict["unitCostDF"], fleetAll[numCompany][i]['fAuxORG'][tOpTemp], fleetAll[numCompany][i]['fAux'][tOpTemp])
-            #print(tOpTemp, tOpSch, fleetAll[numCompany][i]['dcostFuelAll'], fleetAll[numCompany][i]['costShipAll'], fleetAll[numCompany][i]['costShipBasicHFO'])
             fleetAll[numCompany][i]['costFuelAll'][tOpTemp], fleetAll[numCompany][i]['dcostFuelAll'][tOpTemp] = costFuelAllFunc(fleetAll[numCompany][i]['costFuelShip'][tOpTemp], fleetAll[numCompany][i]['costFuelAux'][tOpTemp], fleetAll[numCompany][i]['dcostFuelShip'][tOpTemp], fleetAll[numCompany][i]['dcostFuelAux'][tOpTemp])
             fleetAll[numCompany][i]['dcostShipping'][tOpTemp] = additionalShippingFeeFunc(tOpTemp, tOpSch, fleetAll[numCompany][i]['dcostFuelAll'][tOpTemp], fleetAll[numCompany][i]['costShipAll'], fleetAll[numCompany][i]['costShipBasicHFO'])
-            #if fleetAll[numCompany][i]['cta'][tOpTemp] == 0:
-            #    print(elapsedYear,numCompany,i,tOpTemp,fleetAll[numCompany][i]['cta'][tOpTemp])
             fleetAll[numCompany][i]['gTilde'][tOpTemp] = fleetAll[numCompany][i]['g'][tOpTemp] / fleetAll[numCompany][i]['cta'][tOpTemp]
             fleetAll[numCompany][i]['dcostShippingTilde'][tOpTemp] = fleetAll[numCompany][i]['dcostShipping'][tOpTemp] / fleetAll[numCompany][i]['cta'][tOpTemp]
             fleetAll[numCompany]['total']['g'][elapsedYear] += NShipFleet * fleetAll[numCompany][i]['g'][tOpTemp]
             fleetAll[numCompany]['total']['cta'][elapsedYear] += NShipFleet * fleetAll[numCompany][i]['cta'][tOpTemp]
             fleetAll[numCompany]['total']['dcostShippingTilde'][elapsedYear] += NShipFleet * fleetAll[numCompany][i]['dcostShippingTilde'][tOpTemp]
+            fleetAll[numCompany]['total']['costFuelAll'][elapsedYear] += NShipFleet * fleetAll[numCompany][i]['costFuelAll'][tOpTemp]
             numFleetAlive += 1
 
+    fleetAll[numCompany]['total']['costAll'][elapsedYear] = fleetAll[numCompany]['total']['costFuelAll'][elapsedYear] + fleetAll[numCompany]['total']['costShipAll'][elapsedYear]
     fleetAll[numCompany]['total']['gTilde'][elapsedYear] = fleetAll[numCompany]['total']['g'][elapsedYear] / fleetAll[numCompany]['total']['cta'][elapsedYear]
 
     Si = 0
@@ -566,7 +565,7 @@ def outputEachCompanyFunc(fleetAll,numCompany,startYear,elapsedYear,lastYear,tOp
 def outputAllCompanyFunc(fleetAll,startYear,elapsedYear,lastYear,tOpSch,unitDict,decisionListNameList):
     year = fleetAll['year'][:elapsedYear+1]
     
-    fig, axes = plt.subplots(3, 3, figsize=(12.0, 12.0))
+    fig, axes = plt.subplots(3, 4, figsize=(16.0, 11.0))
     plt.subplots_adjust(wspace=0.4, hspace=0.6)
 
     for j, listName in enumerate(decisionListNameList,1):

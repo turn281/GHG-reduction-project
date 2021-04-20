@@ -58,3 +58,4 @@ dcostShippingTilde,Additional shipping fee per unit cargo transport amount,\$/(T
 S,Score,TBD,Output,
 overDi,Carry over,TEU $\cdot$ NM,Output,
 maxCta,,TEU $\cdot$ NM,Output,
+costAll,,$,Output,
