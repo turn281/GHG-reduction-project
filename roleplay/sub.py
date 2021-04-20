@@ -306,7 +306,7 @@ def yearlyOperationFunc(fleetAll,numCompany,Dtotal,startYear,elapsedYear,NShipFl
             tOpTemp = fleetAll[numCompany][i]['tOp']
             if tOpTemp == 0:
                 fleetAll[numCompany][i]['costShipBasicHFO'], fleetAll[numCompany][i]['costShipBasic'], fleetAll[numCompany][i]['costShipAll'] = costShipFunc(valueDict["kShipBasic1"], fleetAll[numCompany][i]["CAPcnt"], valueDict["kShipBasic2"], fleetAll[numCompany][i]['rShipBasic'], valueDict["dcostWPS"], valueDict["dcostSPS"], valueDict["dcostCCS"], fleetAll[numCompany][i]['WPS'], fleetAll[numCompany][i]['SPS'], fleetAll[numCompany][i]['CCS'])
-                fleetAll[numCompany]['total']['costShipAll'][elapsedYear] += fleetAll[numCompany][i]['costShipAll']
+                fleetAll[numCompany]['total']['costShipAll'][elapsedYear] += NShipFleet * fleetAll[numCompany][i]['costShipAll']
             unitCostFuel, unitCostFuelHFO = unitCostFuelFunc(parameterFile4,fleetAll[numCompany][i]['fuelName'],currentYear)
             fleetAll[numCompany][i]['cta'][tOpTemp] = ctaFunc(fleetAll[numCompany][i]['CAPcnt'],fleetAll[numCompany]['total']['rocc'][elapsedYear],fleetAll[numCompany][i]['d'][tOpTemp])
             fleetAll[numCompany][i]['fShipORG'][tOpTemp], fleetAll[numCompany][i]['fShip'][tOpTemp] = fShipFunc(valueDict["kShip1"],valueDict["kShip2"],fleetAll[numCompany][i]['wDWT'][tOpTemp],fleetAll[numCompany][i]['wFLD'][tOpTemp],fleetAll[numCompany]['total']['rocc'][elapsedYear],valueDict["CNM2km"],fleetAll[numCompany][i]['v'][tOpTemp],fleetAll[numCompany][i]['d'][tOpTemp],valueDict["rWPS"],fleetAll[numCompany][i]['WPS'],fleetAll[numCompany][i]['CeqLHV'])
