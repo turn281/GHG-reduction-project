@@ -13,15 +13,16 @@ rWPS,Fuel reduction rate of wind propulsion system,-,Constant parameter,0.05
 CeqLHV,Equivalent lower heating value coefficient,-,Constant parameter,
 kAux1,1st fuel coefficient of auxiliary machinery,-,Constant parameter,7.01
 kAux2,2nd fuel coefficients of auxiliary machinery,-,Constant parameter,0.0000868
-rSPS,Fuel reduction rate of solar power system,-,Constant parameter,0.05
+rSPS,Fuel reduction rate of solar power system,-,Constant parameter,0.15
 Cco2,CO2 coefficient,-,Constant parameter,
 Cco2DF,CO2 coefficient of diesel fuel,-,Constant parameter,2.816
+Cco2EEDI,,-,Constant parameter,3.1144
 rCCS,Fuel reduction rate of CCS,-,Constant parameter,0.85
 unitCostFuel,Unit cost of fuel,$/ton,Constant parameter,
 unitCostDF,Unit cost of diesel fuel,$/ton,Constant parameter,400
 kShipBasic1,1st coefficient for basic ship building,-,Constant parameter,5101
 kShipBasic2,2nd coefficient for basic ship building,-,Constant parameter,35900000
-dcostWPS,Additional cost by wind propulsion system,$,Constant parameter,0.03
+dcostWPS,Additional cost by wind propulsion system,$,Constant parameter,0.1
 dcostSPS,Additional cost by solar power system,$,Constant parameter,0.1
 dcostCCS,Additional cost by CCS,$,Constant parameter,0.35
 kDem1,,-,Constant parameter,0.612224477
@@ -34,9 +35,22 @@ rDMax,,-,Constant parameter,0.9
 CAPcntMin,,TEU,Constant parameter,8000
 CAPcntMax,,TEU,Constant parameter,24000
 vMin,,kt,Constant parameter,12
+vDsgn,,kt,Constant parameter,23
 dJPNA,,NM,Constant parameter,5000
 costCntNom,,$,Constant parameter,1500
 NShipFleet,,-,Constant parameter,6
+tRegDec,,year,Constant parameter,5
+kEEDI1,,-,Constant parameter,174.22
+kEEDI2,,-,Constant parameter,-0.201
+kMCR1,,-,Constant parameter,0.58
+kMCR2,,-,Constant parameter,414.68
+kMCR3,,-,Constant parameter,51465.71
+wMCR,,ton,Constant parameter,88385.29
+kPAE1,,-,Constant parameter,0.025
+kPAE2,,-,Constant parameter,250
+rMCR,,-,,0.75
+SfcM,,g/kWh,,190
+SfcA,,g/kWh,,215
 wDWT,Deadweight tonnage,ton,State variable,
 wFLD,Full load displacement,ton,State variable,
 d,Distance,NM,State variable,
@@ -57,6 +71,13 @@ v,,kt,State variable,
 tOp,Operation duration,year,State variable,
 dcostCnt,,$,State variable,
 costRfrb,,$,State variable,
+EEDIref,,g/(TEU $\cdot$ NM),State variable,
+EEDIreq,,g/(TEU $\cdot$ NM),State variable,
+rEEDI,,-,State variable,
+MCRM,,kW,State variable,
+PA,,kW,State variable,
+rSubs,,-,State variable,
+rTax,,-,State variable,
 dcostEco,,$,Output,
 fShip,Fuel consumption of ship,ton,Output,
 fAux,Fuel consumption of auxiliary machinery,ton,Output,
@@ -72,4 +93,15 @@ dcostShippingTilde,Additional shipping fee per unit cargo transport amount,\$/(T
 S,Sales,$,Output,
 overDi,Carry over,TEU $\cdot$ NM,Output,
 maxCta,,TEU $\cdot$ NM,Output,
+costShipAdd,,$,Output,
+EEDIatt,,g/(TEU $\cdot$ NM),Output,
+EEXIatt,,g/(TEU $\cdot$ NM),Output,
+mSubs,,$,Output,
+mTax,,$,Output,
+sale,,$,Output,
+nTransCnt,,-,Output,
+saleTilde,,$,Output,
+costShip,,$,Output,
+costFuel,,$,Output,
+costAdd,,$,Output,
 costAll,,$,Output,
