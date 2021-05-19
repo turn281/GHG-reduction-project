@@ -1,8 +1,6 @@
-from typing import ValuesView
 import numpy as np
 import pandas as pd
 from scipy import interpolate
-import csv
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import (FigureCanvasTkAgg, NavigationToolbar2Tk)
 from matplotlib.backend_bases import key_press_handler
@@ -14,8 +12,10 @@ from tkinter import *
 from tkinter import ttk
 import sys
 import os
+import shutil
 import random
 from matplotlib.ticker import MaxNLocator
+from pathlib import Path
 
 def readinput(filename):
     csv_input = pd.read_csv(filepath_or_buffer=filename, encoding="utf_8", sep=",")
@@ -121,6 +121,9 @@ def fleetPreparationFunc(fleetAll,initialFleetFile,numCompany,startYear,lastYear
     for i in range(len(initialFleets)):
         orderYear = initialFleets[i]['year'] - tbid
         iniT = startYear - initialFleets[i]['year']
+        if iniT < 0:
+            orderYear = initialFleets[i]['year']
+            iniT = 0
         iniCAPcnt = initialFleets[i]['TEU']
         fleetAll = orderShipFunc(fleetAll,numCompany,'HFO',0,0,0,iniCAPcnt,tOpSch,tbid,iniT,orderYear,elapsedYear,valueDict,NShipFleet,parameterFile2,parameterFile12,parameterFile3,parameterFile5)
     return fleetAll
@@ -233,7 +236,7 @@ def demandScenarioFunc(year,kDem1,kDem2,kDem3,kDem4):
 def playOrderFunc(cost,playOrder):
     unique, counts = np.unique(cost, return_counts=True)
     if np.amax(counts) == 1:
-        playOrder = playOrder[np.argsort(cost)] [0 ,1, 1]
+        playOrder = playOrder[np.argsort(cost)]
     elif np.amax(counts) == 2:
         minCost = np.amin(cost)
         maxCost = np.amax(cost)
@@ -430,7 +433,7 @@ def regDecFunc(regDec,nReg,currentYear):
 
     return regDec
     
-def scrapRefurbishFunc(fleetAll,numCompany,elapsedYear,currentYear,valueDict,tOpSch,regDec,nDec):
+def scrapRefurbishFunc(fleetAll,numCompany,elapsedYear,currentYear,valueDict,tOpSch,rEEDIreq):
     
     def _fleetListGui(fleetAll,numCompany):
         def _buttonCommand(root):
@@ -456,7 +459,7 @@ def scrapRefurbishFunc(fleetAll,numCompany,elapsedYear,currentYear,valueDict,tOp
                 compFleet = fleetAll[numCompany][keyFleet]
                 tOpTemp = compFleet['tOp']
                 if compFleet['delivery'] <= currentYear and compFleet['tOp'] < tOpSch:
-                    rEEDIreqCurrent = rEEDIreqCurrentFunc(compFleet['wDWT'],regDec['rEEDIreq'][elapsedYear])
+                    rEEDIreqCurrent = rEEDIreqCurrentFunc(compFleet['wDWT'],rEEDIreq)
                     compFleet['EEDIref'][tOpTemp], compFleet['EEDIreq'][tOpTemp] = EEDIreqFunc(valueDict['kEEDI1'],compFleet['wDWT'],valueDict['kEEDI2'],rEEDIreqCurrent)
                     compFleet['MCRM'][tOpTemp], compFleet['PA'][tOpTemp], compFleet['EEDIatt'][tOpTemp], compFleet['vDsgnRed'][tOpTemp] = EEDIattFunc(compFleet['wDWT'],valueDict['wMCR'],valueDict['kMCR1'],valueDict['kMCR2'],valueDict['kMCR3'],valueDict['kPAE1'],valueDict['kPAE2'],valueDict['rCCS'],valueDict['vDsgn'],valueDict['rWPS'],compFleet['Cco2ship'],valueDict['SfcM'],valueDict['SfcA'],valueDict['rSPS'],compFleet['Cco2aux'],compFleet['EEDIreq'][tOpTemp],compFleet['WPS'],compFleet['SPS'],compFleet['CCS'])
                     fleetNum.append(keyFleet)
@@ -546,7 +549,7 @@ def scrapRefurbishFunc(fleetAll,numCompany,elapsedYear,currentYear,valueDict,tOp
 
         return
     
-    def _scrapOrRefurbishGui(compFleet,numFleet,tOpSch,valueDict,nDec):
+    def _scrapOrRefurbishGui(compFleet,numFleet,tOpSch,valueDict):
         def _buttonCommandScrap(compFleet,root):
             compFleet['tOp'] = tOpSch
             root.quit()
@@ -618,7 +621,7 @@ def scrapRefurbishFunc(fleetAll,numCompany,elapsedYear,currentYear,valueDict,tOp
         label15 = ttk.Label(frame, text='{:.3g}'.format(compFleet['EEDIreq'][tOpTemp]), padding=(5, 2))
         label16 = ttk.Label(frame, text='{:.3g}'.format(compFleet['EEDIatt'][tOpTemp]), padding=(5, 2))
 
-        rEEDIreqCurrent = rEEDIreqCurrentFunc(compFleet['wDWT'],regDec['rEEDIreq'][nDec])
+        rEEDIreqCurrent = rEEDIreqCurrentFunc(compFleet['wDWT'],rEEDIreq)
 
         # Button
         button1 = ttk.Button(frame, text='Scrap', command=lambda: _buttonCommandScrap(compFleet,root))
@@ -723,19 +726,26 @@ def scrapRefurbishFunc(fleetAll,numCompany,elapsedYear,currentYear,valueDict,tOp
 
         return fleetAll
 
-    # show fleet list
-    _fleetListGui(fleetAll,numCompany)
-    
-    # decide to scrap or refurbish currently alive fleet
+    # calculate EEDI
     NumFleet = len(fleetAll[numCompany])
     for i in range(1,NumFleet):
         compFleet = fleetAll[numCompany][i]
         tOpTemp = compFleet['tOp']
         if compFleet['delivery'] <= currentYear and compFleet['tOp'] < tOpSch:
-            rEEDIreqCurrent = rEEDIreqCurrentFunc(compFleet['wDWT'],regDec['rEEDIreq'][elapsedYear])
+            rEEDIreqCurrent = rEEDIreqCurrentFunc(compFleet['wDWT'],rEEDIreq)
             compFleet['EEDIref'][tOpTemp], compFleet['EEDIreq'][tOpTemp] = EEDIreqFunc(valueDict['kEEDI1'],compFleet['wDWT'],valueDict['kEEDI2'],rEEDIreqCurrent)
             compFleet['MCRM'][tOpTemp], compFleet['PA'][tOpTemp], compFleet['EEDIatt'][tOpTemp], compFleet['vDsgnRed'][tOpTemp] = EEDIattFunc(compFleet['wDWT'],valueDict['wMCR'],valueDict['kMCR1'],valueDict['kMCR2'],valueDict['kMCR3'],valueDict['kPAE1'],valueDict['kPAE2'],valueDict['rCCS'],valueDict['vDsgn'],valueDict['rWPS'],compFleet['Cco2ship'],valueDict['SfcM'],valueDict['SfcA'],valueDict['rSPS'],compFleet['Cco2aux'],compFleet['EEDIreq'][tOpTemp],compFleet['WPS'],compFleet['SPS'],compFleet['CCS'])
-            compFleet = _scrapOrRefurbishGui(compFleet,i,tOpSch,valueDict,nDec)
+            fleetAll[numCompany][i] = compFleet
+
+    # show fleet list
+    _fleetListGui(fleetAll,numCompany)
+    
+    # decide to scrap or refurbish currently alive fleet
+    for i in range(1,NumFleet):
+        compFleet = fleetAll[numCompany][i]
+        tOpTemp = compFleet['tOp']
+        if compFleet['delivery'] <= currentYear and compFleet['tOp'] < tOpSch:
+            compFleet = _scrapOrRefurbishGui(compFleet,i,tOpSch,valueDict)
             cAdditionalEquipment = 1
             if compFleet['WPS']:
                 cAdditionalEquipment += valueDict['dcostWPS']
@@ -791,7 +801,7 @@ def orderShipFunc(fleetAll,numCompany,fuelName,WPS,SPS,CCS,CAPcnt,tOpSch,tbid,in
         compTotal['costShip'][elapsedYear] += NShipFleet * compFleet['costShip']
         compTotal['costShipBasicHFO'][elapsedYear] += NShipFleet * compFleet['costShipBasicHFO']
     compFleet['v'] = np.zeros(tOpSch)
-    compFleet['rocc'] = np.zeros(tOpSch)
+    #compFleet['v'][:] = 1
     compFleet['d'] = np.zeros(tOpSch)
     compFleet['fShipORG'] = np.zeros(tOpSch)
     compFleet['fAuxORG'] = np.zeros(tOpSch)
@@ -805,12 +815,10 @@ def orderShipFunc(fleetAll,numCompany,fuelName,WPS,SPS,CCS,CAPcnt,tOpSch,tbid,in
     compFleet['cta'] = np.zeros(tOpSch)
     compFleet['dcostShipping'] = np.zeros(tOpSch)
     compFleet['gTilde'] = np.zeros(tOpSch)
-    compFleet['dcostShippingTilde'] = np.zeros(tOpSch)
     compFleet['costRfrb'] = np.zeros(tOpSch)
     compFleet['EEDIref'] = np.zeros(tOpSch)
     compFleet['EEDIreq'] = np.zeros(tOpSch)
     compFleet['EEDIatt'] = np.zeros(tOpSch)
-    compFleet['EEXIatt'] = np.zeros(tOpSch)
     compFleet['vDsgnRed'] = np.zeros(tOpSch)
     compFleet['MCRM'] = np.zeros(tOpSch)
     compFleet['PA'] = np.zeros(tOpSch)
@@ -818,9 +826,9 @@ def orderShipFunc(fleetAll,numCompany,fuelName,WPS,SPS,CCS,CAPcnt,tOpSch,tbid,in
     fleetAll[numCompany]['total'] = compTotal
     return fleetAll
 
-def orderPhaseFunc(fleetAll,numCompany,valueDict,elapsedYear,tOpSch,tbid,currentYear,regDec,NShipFleet,parameterFile2,parameterFile12,parameterFile3,parameterFile5):
+def orderPhaseFunc(fleetAll,numCompany,valueDict,elapsedYear,tOpSch,tbid,currentYear,rEEDIreq,NShipFleet,parameterFile2,parameterFile12,parameterFile3,parameterFile5):
 
-    def _orderShipGui(fleetAll,numCompany,valueDict,elapsedYear,tOpSch,tbid,currentYear,regDec,NShipFleet,parameterFile2,parameterFile12,parameterFile3,parameterFile5):
+    def _orderShipGui(fleetAll,numCompany,valueDict,elapsedYear,tOpSch,tbid,currentYear,rEEDIreq,NShipFleet,parameterFile2,parameterFile12,parameterFile3,parameterFile5):
         def _buttonCommandAnother(fleetAll,numCompany,tOpSch,tbid,currentYear,elapsedYear,NShipFleet,parameterFile2,parameterFile12,parameterFile3,parameterFile5):
             if v1.get() == 'HFO/Diesel':
                 fuelName = 'HFO'
@@ -850,14 +858,14 @@ def orderPhaseFunc(fleetAll,numCompany,valueDict,elapsedYear,tOpSch,tbid,current
             root.quit()
             root.destroy()
 
-        def _buttonCommandCheck(valueDict,elapsedYear,parameterFile3,regDec):
+        def _buttonCommandCheck(valueDict,parameterFile3,rEEDIreq):
             fuelType = v1.get()
             CAP = float(v2.get())
             WPS = int(v3.get())
             SPS = int(v4.get())
             CCS = int(v5.get())
             wDWT = wDWTFunc(valueDict['kDWT1'],CAP,valueDict['kDWT2'])
-            rEEDIreqCurrent = rEEDIreqCurrentFunc(wDWT,regDec['rEEDIreq'][elapsedYear])
+            rEEDIreqCurrent = rEEDIreqCurrentFunc(wDWT,rEEDIreq)
             if fuelType == 'HFO/Diesel':
                 Cco2ship = Cco2Func(parameterFile3,'HFO')
                 Cco2aux = Cco2Func(parameterFile3,'Diesel')
@@ -867,8 +875,8 @@ def orderPhaseFunc(fleetAll,numCompany,valueDict,elapsedYear,tOpSch,tbid,current
             _, EEDIreq = EEDIreqFunc(valueDict['kEEDI1'],wDWT,valueDict['kEEDI2'],rEEDIreqCurrent)
             _, _, EEDIatt, vDsgnRed = EEDIattFunc(wDWT,valueDict['wMCR'],valueDict['kMCR1'],valueDict['kMCR2'],valueDict['kMCR3'],valueDict['kPAE1'],valueDict['kPAE2'],valueDict['rCCS'],valueDict['vDsgn'],valueDict['rWPS'],Cco2ship,valueDict['SfcM'],valueDict['SfcA'],valueDict['rSPS'],Cco2aux,EEDIreq,WPS,SPS,CCS)
             label6['text'] = str(vDsgnRed)
-            label7['text'] = str(EEDIreq)
-            label8['text'] = str(EEDIatt)
+            label7['text'] = str('{:.3g}'.format(EEDIreq))
+            label8['text'] = str('{:.3g}'.format(EEDIatt))
             if valueDict['vMin'] < vDsgnRed:
                 button1['state'] = 'normal'
                 button2['state'] = 'normal'
@@ -932,7 +940,7 @@ def orderPhaseFunc(fleetAll,numCompany,valueDict,elapsedYear,tOpSch,tbid,current
         # Button
         button1 = ttk.Button(frame, text='Another fleet', state='disabled', command=lambda: _buttonCommandAnother(fleetAll,numCompany,tOpSch,tbid,currentYear,elapsedYear,NShipFleet,parameterFile2,parameterFile12,parameterFile3,parameterFile5))
         button2 = ttk.Button(frame, text='Complete', state='disabled', command=lambda: _buttonCommandComplete(root,fleetAll,numCompany,tOpSch,tbid,currentYear,elapsedYear,NShipFleet,parameterFile2,parameterFile12,parameterFile3,parameterFile5))
-        button3 = ttk.Button(frame, text='EEDI check', command=lambda: _buttonCommandCheck(valueDict,elapsedYear,parameterFile3,regDec))
+        button3 = ttk.Button(frame, text='EEDI check', command=lambda: _buttonCommandCheck(valueDict,parameterFile3,rEEDIreq))
         button4 = ttk.Button(frame, text='No order', command=lambda: _buttonCommandNoOrder(root))
 
         # Layout
@@ -962,7 +970,7 @@ def orderPhaseFunc(fleetAll,numCompany,valueDict,elapsedYear,tOpSch,tbid,current
 
         return fleetAll
 
-    fleetAll = _orderShipGui(fleetAll,numCompany,valueDict,elapsedYear,tOpSch,tbid,currentYear,regDec,NShipFleet,parameterFile2,parameterFile12,parameterFile3,parameterFile5)
+    fleetAll = _orderShipGui(fleetAll,numCompany,valueDict,elapsedYear,tOpSch,tbid,currentYear,rEEDIreq,NShipFleet,parameterFile2,parameterFile12,parameterFile3,parameterFile5)
 
     return fleetAll
 
@@ -1086,6 +1094,7 @@ def yearlyOperationPhaseFunc(fleetAll,numCompany,pureDi,overDi,startYear,elapsed
         labelRes8 = ttk.Label(frame, text='None', padding=(5, 2))
         labelRes9 = ttk.Label(frame, text='CO2 [ton]:', padding=(5, 2))
         labelRes10 = ttk.Label(frame, text='None', padding=(5, 2))
+        label0 = ttk.Label(frame, text='No.', padding=(5, 2))
         label1 = ttk.Label(frame, text='Fuel type', padding=(5, 2))
         label2 = ttk.Label(frame, text='CAP [TEU]', padding=(5, 2))
         label3 = ttk.Label(frame, text='WPS', padding=(5, 2))
@@ -1093,6 +1102,7 @@ def yearlyOperationPhaseFunc(fleetAll,numCompany,pureDi,overDi,startYear,elapsed
         label5 = ttk.Label(frame, text='CCS', padding=(5, 2))
         label6 = ttk.Label(frame, text='vSer (12<=) [kt]', padding=(5, 2))
         label7 = ttk.Label(frame, text='vMax [kt]', padding=(5, 2))
+        label00 = []
         label8 = []
         label9 = []
         label10 = []
@@ -1106,6 +1116,7 @@ def yearlyOperationPhaseFunc(fleetAll,numCompany,pureDi,overDi,startYear,elapsed
         for i in range(1,NumFleet):
             compFleet = fleetAll[numCompany][i]
             if compFleet['delivery'] <= currentYear and compFleet['tOp'] < tOpSch:
+                label00.append(ttk.Label(frame, text=str(i), padding=(5, 2)))
                 tOpTemp = compFleet['tOp']
                 if compFleet['fuelName'] == 'HFO':
                     label8.append(ttk.Label(frame, text='HFO/Diesel', padding=(5, 2)))
@@ -1138,33 +1149,35 @@ def yearlyOperationPhaseFunc(fleetAll,numCompany,pureDi,overDi,startYear,elapsed
         button2 = ttk.Button(frame, text='Next', state='disabled', command=lambda: _buttonCommandNext(root,fleetAll,numCompany,pureDi,overDi,startYear,elapsedYear,NShipFleet,tOpSch,v13,valueDict,parameterFile4))
 
         # Layout
-        labelRes1.grid(row=0, column=0)
-        labelRes2.grid(row=0, column=1)
+        labelRes1.grid(row=0, column=1)
+        labelRes2.grid(row=0, column=2)
         labelRes3.grid(row=0, column=4)
         labelRes4.grid(row=0, column=5)
-        labelRes5.grid(row=1, column=0)
-        labelRes6.grid(row=1, column=1)
+        labelRes5.grid(row=1, column=1)
+        labelRes6.grid(row=1, column=2)
         labelRes7.grid(row=1, column=4)
         labelRes8.grid(row=1, column=5)
-        labelRes9.grid(row=2, column=0)
-        labelRes10.grid(row=2, column=1)
-        label1.grid(row=3, column=0)
-        label2.grid(row=3, column=1)
-        label3.grid(row=3, column=2)
-        label4.grid(row=3, column=3)
-        label5.grid(row=3, column=4)
-        label6.grid(row=3, column=5)
-        label7.grid(row=3, column=6)
+        labelRes9.grid(row=2, column=1)
+        labelRes10.grid(row=2, column=2)
+        label0.grid(row=3, column=0)
+        label1.grid(row=3, column=1)
+        label2.grid(row=3, column=2)
+        label3.grid(row=3, column=3)
+        label4.grid(row=3, column=4)
+        label5.grid(row=3, column=5)
+        label6.grid(row=3, column=6)
+        label7.grid(row=3, column=7)
         for i, j in enumerate(label8):
-            label8[i].grid(row=i+4, column=0)
-            label9[i].grid(row=i+4, column=1)
-            label10[i].grid(row=i+4, column=2)
-            label11[i].grid(row=i+4, column=3)
-            label12[i].grid(row=i+4, column=4)
-            label13[i].grid(row=i+4, column=5)
-            label14[i].grid(row=i+4, column=6)
-        button1.grid(row=i+5, column=5)
-        button2.grid(row=i+5, column=6)
+            label00[i].grid(row=i+4, column=0)
+            label8[i].grid(row=i+4, column=1)
+            label9[i].grid(row=i+4, column=2)
+            label10[i].grid(row=i+4, column=3)
+            label11[i].grid(row=i+4, column=4)
+            label12[i].grid(row=i+4, column=5)
+            label13[i].grid(row=i+4, column=6)
+            label14[i].grid(row=i+4, column=7)
+        button1.grid(row=i+5, column=6)
+        button2.grid(row=i+5, column=7)
 
         root.deiconify()
         root.mainloop()
@@ -1417,7 +1430,7 @@ def outputAllCompany2Func(fleetAll,startYear,elapsedYear,keyi,unitDict):
             #ax.xaxis.label.set_size(10)
             #ax.get_xaxis().get_major_formatter().set_useOffset(False)
             #ax.get_xaxis().set_major_locator(MaxNLocator(integer=True))
-            ax.set_xticks(year)
+            ax.set_xticks(np.array([2020,2025,2030,2035,2040,2045,2050]))
             #ax.yaxis.label.set_size(10)
     else:
         for numCompany in range(1,4):
@@ -1434,16 +1447,42 @@ def outputAllCompany2Func(fleetAll,startYear,elapsedYear,keyi,unitDict):
             #ax.yaxis.label.set_size(10)
     return fig
 
-def outputCsvFunc(fleetAll,elapsedYear):
+def outputCsvFunc(fleetAll,startYear,elapsedYear,lastYear,tOpSch):
+    resPath = Path(__file__).parent
+    resPath /= '../results'
+    shutil.rmtree(resPath)
+    os.mkdir(resPath)
     year = fleetAll['year'][:elapsedYear+1]
+    tOps = np.arange(tOpSch)
     for numCompany in range(1,4):
         valueName = []
         outputList = []
-        for i, keyi in enumerate(fleetAll[numCompany]['total'].keys(),1):
+        for keyi in fleetAll[numCompany]['total'].keys():
             valueName.append(keyi)
             outputList.append(fleetAll[numCompany]['total'][keyi][:elapsedYear+1])
                     
-        outputData = np.stack(outputList,1)
-        outputDf = pd.DataFrame(data=outputData, index=year, columns=valueName, dtype='float')
-        outputDf.to_csv("Company"+str(numCompany)+'.csv')
-    
+        outputData1 = np.stack(outputList,1)
+        outputDf1 = pd.DataFrame(data=outputData1, index=year, columns=valueName, dtype='float')
+        outputDf1.to_csv(str(resPath)+"\Company"+str(numCompany)+'.csv')
+
+        for keyFleet in fleetAll[numCompany].keys():
+            valueName = []
+            outputList = []
+            if type(keyFleet) is int:
+                compFleet = fleetAll[numCompany][keyFleet]
+                for keyValue in compFleet.keys():
+                    if type(compFleet[keyValue]) is np.ndarray:
+                        valueName.append(keyValue)
+                        '''
+                        plotArr = np.zeros(lastYear-startYear+1)
+                        if compFleet['delivery'] >= startYear:
+                            plotArr[compFleet['delivery']-startYear:compFleet['delivery']-startYear+compFleet['tOp']] = compFleet[keyValue][:compFleet['tOp']]
+                        else:
+                            plotArr[:tOpSch-startYear+compFleet['delivery']] = compFleet[keyValue][(startYear-compFleet['delivery']):compFleet['tOp']]
+                        '''
+                        outputList.append(compFleet[keyValue])
+                
+                outputData2 = np.stack(outputList,1)
+                outputDf2 = pd.DataFrame(data=outputData2, index=tOps, columns=valueName, dtype='float')
+                outputDf2.to_csv(str(resPath)+"\Company"+str(numCompany)+'_'+'Fleet'+str(keyFleet)+'.csv')
+

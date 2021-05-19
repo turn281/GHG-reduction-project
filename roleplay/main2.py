@@ -15,7 +15,7 @@ def roleplayRun():
     tOpSch = 20
     startYear = 2021
     regYear = [2025,2030,2035,2040,2045]
-    lastYear = 2022
+    lastYear = 2030
     NShipFleet = 6
     tbid = 2
 
@@ -69,16 +69,15 @@ def roleplayRun():
             nRegDec += 1
             regDec = rs.regDecFunc(regDec,nRegDec,currentYear)
 
-        if nRegAct < len(regYear)-1:
-            if currentYear == regYear[nRegAct+1]:
-                nRegAct += 1
+        if currentYear == regYear[nRegDec]+2:
+            nRegAct += 1
 
         # scrap & refurbish phase (also decide additional shipping fee per container)
         dcostTemp = np.zeros(3)
         dcostCntSum = 0
         playOrder = np.array([1,2,3])
         for numCompany in playOrder:
-            fleets, dcostCntTemp = rs.scrapRefurbishFunc(fleets,numCompany,elapsedYear,currentYear,valueDict,tOpSch,regDec,nRegAct)
+            fleets, dcostCntTemp = rs.scrapRefurbishFunc(fleets,numCompany,elapsedYear,currentYear,valueDict,tOpSch,regDec['rEEDIreq'][nRegAct])
             dcostTemp[numCompany-1] = dcostCntTemp
             dcostCntSum += dcostCntTemp - valueDict["dcostCntMin"]
 
@@ -91,13 +90,13 @@ def roleplayRun():
         overDi = 0
         for numCompany in playOrder:
             Di = Dasg[numCompany-1]
-            fleets = rs.orderPhaseFunc(fleets,numCompany,valueDict,elapsedYear,tOpSch,tbid,currentYear,regDec,NShipFleet,parameterFile2,parameterFile12,parameterFile3,parameterFile5)
+            fleets = rs.orderPhaseFunc(fleets,numCompany,valueDict,elapsedYear,tOpSch,tbid,currentYear,regDec['rEEDIreq'][nRegAct],NShipFleet,parameterFile2,parameterFile12,parameterFile3,parameterFile5)
             fleets, overDi = rs.yearlyOperationPhaseFunc(fleets,numCompany,Di,overDi,startYear,elapsedYear,NShipFleet,tOpSch,valueDict,parameterFile4)
-        #'''
-
+        
         rs.outputGuiFunc(fleets,startYear,elapsedYear,lastYear,tOpSch,unitDict)
+        #'''
     
-    rs.outputCsvFunc(fleets,elapsedYear)
+    rs.outputCsvFunc(fleets,startYear,elapsedYear,lastYear,tOpSch)
 
     #rs.outputEachCompanyFunc(fleets,1,startYear,elapsedYear,lastYear,tOpSch,decisionListName1)
     #rs.outputEachCompanyFunc(fleets,2,startYear,elapsedYear,lastYear,tOpSch,decisionListName2)
