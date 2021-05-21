@@ -313,11 +313,22 @@ def regDecFunc(regDec,nReg,currentYear):
     def _regDecGui1(regDec,nReg,currentYear):
 
         def _buttonCommand(regDec,nReg,root):
-            regDec['rEEDIreq'][nReg,0] = float(v1.get()) / 100
-            regDec['rEEDIreq'][nReg,1] = float(v2.get()) / 100
-            regDec['rEEDIreq'][nReg,2] = float(v3.get()) / 100
-            root.quit()
-            root.destroy()
+            if float(v1.get()) <= 100 and float(v2.get()) <= 100 and float(v3.get()) <= 100 and float(v1.get()) >= 0 and float(v2.get()) >= 0 and float(v3.get()) >= 0:
+                regDec['rEEDIreq'][nReg,0] = float(v1.get()) / 100
+                regDec['rEEDIreq'][nReg,1] = float(v2.get()) / 100
+                regDec['rEEDIreq'][nReg,2] = float(v3.get()) / 100
+                root.quit()
+                root.destroy()
+            else:
+                button['state'] = 'disabled'
+                
+            
+        def _buttonCommandCheck():
+            if float(v1.get()) <= 100 and float(v2.get()) <= 100 and float(v3.get()) <= 100 and float(v1.get()) >= 0 and float(v2.get()) >= 0 and float(v3.get()) >= 0:
+                button['state'] = 'normal'
+            else:
+                button['state'] = 'disabled'
+
 
         root = Tk()
         root.title('Regulator : Reduction Rate for EEXI / EEDI in '+str(currentYear))
@@ -337,7 +348,8 @@ def regDecFunc(regDec,nReg,currentYear):
         v1.set('50')
         cb1 = ttk.Entry(frame, textvariable=v1)
         label1 = ttk.Label(frame, text='wDWT <= 200,000', padding=(5, 2))
-        label11 = ttk.Label(frame, text='>= 0 [%]', padding=(5, 2))
+        label11 = ttk.Label(frame, text='% <= 100%', padding=(5, 2))
+        label111 = ttk.Label(frame, text='0% <=', padding=(5, 2))
 
 
         # Checkbutton
@@ -345,29 +357,36 @@ def regDecFunc(regDec,nReg,currentYear):
         v2.set('45') # 初期化
         cb2 = ttk.Entry(frame, textvariable=v2)
         label2 = ttk.Label(frame, text='120,000 <= wDWT < 200,000', padding=(5, 2))
-        label22 = ttk.Label(frame, text='>= 0 [%]', padding=(5, 2))
+        label22 = ttk.Label(frame, text='% <= 100%', padding=(5, 2))
+        label222 = ttk.Label(frame, text='0% <=', padding=(5, 2))
 
         # Checkbutton
         v3 = StringVar()
         v3.set('30') # 初期化
         cb3 = ttk.Entry(frame, textvariable=v3)
         label3 = ttk.Label(frame, text='wDWT < 120,000', padding=(5, 2))
-        label33 = ttk.Label(frame, text='>= 0 [%]', padding=(5, 2))
+        label33 = ttk.Label(frame, text='% <= 100%', padding=(5, 2))
+        label333 = ttk.Label(frame, text='0% <=', padding=(5, 2))
 
         # Button
-        button = ttk.Button(frame, text='Next', command=lambda: _buttonCommand(regDec,nReg,root))
+        button = ttk.Button(frame, text='Next', state='disabled', command=lambda: _buttonCommand(regDec,nReg,root))
+        button1 = ttk.Button(frame, text='Check', command=lambda: _buttonCommandCheck())
 
         # Layout
-        label11.grid(row=0, column=2)
-        cb1.grid(row=0, column=1)
+        label11.grid(row=0, column=3)
+        cb1.grid(row=0, column=2)
+        label111.grid(row=0, column=1)
         label1.grid(row=0, column=0)
-        label22.grid(row=1, column=2)
-        cb2.grid(row=1, column=1)
+        label22.grid(row=1, column=3)
+        cb2.grid(row=1, column=2)
+        label222.grid(row=1, column=1)
         label2.grid(row=1, column=0)
-        label33.grid(row=2, column=2)
-        cb3.grid(row=2, column=1)
+        label33.grid(row=2, column=3)
+        cb3.grid(row=2, column=2)
+        label333.grid(row=2, column=1)
         label3.grid(row=2, column=0)
-        button.grid(row=3, column=0, columnspan=2)
+        button.grid(row=3, column=3)
+        button1.grid(row=3, column=2)
 
         root.deiconify()
         root.mainloop()
@@ -377,16 +396,22 @@ def regDecFunc(regDec,nReg,currentYear):
     def _regDecGui2(regDec,nReg,currentYear):
 
         def _buttonCommand(regDec,nReg,root):
-            def inner():
+            if float(v1.get()) <= 100 and float(v2.get()) <= 100 and float(v1.get()) >= 0 and float(v2.get()) >= 0:
                 regDec['Subsidy'][nReg] = float(v1.get()) / 100
                 regDec['Ctax'][nReg] = float(v2.get()) / 100
                 root.quit()
                 root.destroy()
-                return regDec
-            return inner
+            else:
+                button['state'] = 'disabled'
+
+        def _buttonCommandCheck():
+            if float(v1.get()) <= 100 and float(v2.get()) <= 100 and float(v1.get()) >= 0 and float(v2.get()) >= 0:
+                button['state'] = 'normal'
+            else:
+                button['state'] = 'disabled'
 
         root = Tk()
-        root.title('Regulator : Subsidy & Ctax in'+str(currentYear))
+        root.title('Regulator : Subsidy & Carbon tax in'+str(currentYear))
         width = 500
         height = 300
         placeX = root.winfo_screenwidth()/2 - width/2
@@ -400,30 +425,36 @@ def regDecFunc(regDec,nReg,currentYear):
 
         # Checkbutton
         v1 = StringVar()
-        v1.set('50')
+        v1.set('0')
         cb1 = ttk.Entry(frame, textvariable=v1)
-        label1 = ttk.Label(frame, text='Rsubs', padding=(5, 2))
-        label11 = ttk.Label(frame, text='>= 0 [%]', padding=(5, 2))
+        label1 = ttk.Label(frame, text='Subsidy rate', padding=(5, 2))
+        label11 = ttk.Label(frame, text='% <= 100%', padding=(5, 2))
+        label111 = ttk.Label(frame, text='0% <=', padding=(5, 2))
 
 
         # Checkbutton
         v2 = StringVar()
-        v2.set('45') # 初期化
+        v2.set('0') # 初期化
         cb2 = ttk.Entry(frame, textvariable=v2)
-        label2 = ttk.Label(frame, text='Rtax', padding=(5, 2))
-        label22 = ttk.Label(frame, text='>= 0 [%]', padding=(5, 2))
+        label2 = ttk.Label(frame, text='Carbon tax rate', padding=(5, 2))
+        label22 = ttk.Label(frame, text='% <= 100%', padding=(5, 2))
+        label222 = ttk.Label(frame, text='0% <=', padding=(5, 2))
 
         # Button
-        button = ttk.Button(frame, text='Next', command=_buttonCommand(regDec,nReg,root))
+        button = ttk.Button(frame, text='Next', state='disabled', command=lambda: _buttonCommand(regDec,nReg,root))
+        button1 = ttk.Button(frame, text='Check', command=lambda: _buttonCommandCheck())
 
         # Layout
-        label11.grid(row=0, column=2)
-        cb1.grid(row=0, column=1)
+        label11.grid(row=0, column=3)
+        cb1.grid(row=0, column=2)
+        label111.grid(row=0, column=1)
         label1.grid(row=0, column=0)
-        label22.grid(row=1, column=2)
-        cb2.grid(row=1, column=1)
+        label22.grid(row=1, column=3)
+        cb2.grid(row=1, column=2)
+        label222.grid(row=1, column=1)
         label2.grid(row=1, column=0)
-        button.grid(row=2, column=0, columnspan=2)
+        button.grid(row=3, column=3)
+        button1.grid(row=3, column=2)
 
         root.deiconify()
         root.mainloop()
@@ -511,11 +542,11 @@ def scrapRefurbishFunc(fleetAll,numCompany,elapsedYear,currentYear,valueDict,tOp
         tree["show"] = "headings"
         tree.heading(1, text="No.")
         tree.heading(2, text="Fuel type")
-        tree.heading(3, text="CAP [TEU]")
+        tree.heading(3, text="Capacity [TEU]")
         tree.heading(4, text="WPS")
         tree.heading(5, text="SPS")
         tree.heading(6, text="CCS")
-        tree.heading(7, text="vMax [kt]")
+        tree.heading(7, text="Maximum speed [kt]")
         tree.heading(8, text="EEXIreq [g/(ton*NM)]")
         tree.heading(9, text="EEXIatt [g/(ton*NM)]")
         tree.column(1, width=40)
@@ -558,8 +589,12 @@ def scrapRefurbishFunc(fleetAll,numCompany,elapsedYear,currentYear,valueDict,tOp
             root.destroy()
         
         def _buttonCommandNext(root):
-            root.quit()
-            root.destroy()
+            if valueDict['vMin'] < compFleet['vDsgnRed'][tOpTemp]:
+                root.quit()
+                root.destroy()
+            else:
+                button2['state'] = 'disabled'
+                
 
         def _buttonCommandCheck(compFleet,valueDict,rEEDIreq,v,labelS,label14,label15,label16,Sys,button):
             tOpTemp = compFleet['tOp']
@@ -594,11 +629,11 @@ def scrapRefurbishFunc(fleetAll,numCompany,elapsedYear,currentYear,valueDict,tOp
         label0 = ttk.Label(frame, text='No.', padding=(5, 2))
         label00 = ttk.Label(frame, text=str(numFleet), padding=(5, 2))
         label1 = ttk.Label(frame, text='Fuel type', padding=(5, 2))
-        label2 = ttk.Label(frame, text='CAP [TEU]', padding=(5, 2))
+        label2 = ttk.Label(frame, text='Capacity [TEU]', padding=(5, 2))
         label3 = ttk.Label(frame, text='WPS', padding=(5, 2))
         label4 = ttk.Label(frame, text='SPS', padding=(5, 2))
         label5 = ttk.Label(frame, text='CCS', padding=(5, 2))
-        label6 = ttk.Label(frame, text='vMax [kt]', padding=(5, 2))
+        label6 = ttk.Label(frame, text='Maximum speed [kt]', padding=(5, 2))
         label7 = ttk.Label(frame, text='EEXIreq [g/(ton*NM)]', padding=(5, 2))
         label8 = ttk.Label(frame, text='EEXIatt [g/(ton*NM)]', padding=(5, 2))
         if compFleet['fuelName'] == 'HFO':
@@ -824,6 +859,7 @@ def orderShipFunc(fleetAll,numCompany,fuelName,WPS,SPS,CCS,CAPcnt,tOpSch,tbid,in
     compFleet['vDsgnRed'] = np.zeros(tOpSch)
     compFleet['MCRM'] = np.zeros(tOpSch)
     compFleet['PA'] = np.zeros(tOpSch)
+    compFleet['year'] = np.zeros(tOpSch)
     fleetAll[numCompany][NumFleet] = compFleet
     fleetAll[numCompany]['total'] = compTotal
     return fleetAll
@@ -831,36 +867,7 @@ def orderShipFunc(fleetAll,numCompany,fuelName,WPS,SPS,CCS,CAPcnt,tOpSch,tbid,in
 def orderPhaseFunc(fleetAll,numCompany,valueDict,elapsedYear,tOpSch,tbid,currentYear,rEEDIreq,NShipFleet,parameterFile2,parameterFile12,parameterFile3,parameterFile5):
 
     def _orderShipGui(fleetAll,numCompany,valueDict,elapsedYear,tOpSch,tbid,currentYear,rEEDIreq,NShipFleet,parameterFile2,parameterFile12,parameterFile3,parameterFile5):
-        def _buttonCommandAnother(fleetAll,numCompany,tOpSch,tbid,currentYear,elapsedYear,NShipFleet,parameterFile2,parameterFile12,parameterFile3,parameterFile5):
-            if v1.get() == 'HFO/Diesel':
-                fuelName = 'HFO'
-            else:
-                fuelName = v1.get()
-            fleetAll = orderShipFunc(fleetAll,numCompany,fuelName,int(v3.get()),int(v4.get()),int(v5.get()),float(v2.get()),tOpSch,tbid,0,currentYear,elapsedYear,valueDict,NShipFleet,parameterFile2,parameterFile12,parameterFile3,parameterFile5)
-            cb1.delete(0,"end")
-            cb1.insert(0, '8000')
-            v3.set('0')
-            v4.set('0')
-            v5.set('0')
-            cb2.var = v3
-            cb3.var = v4
-            cb4.var = v5
-            label6['text'] = 'None'
-            label7['text'] = 'None'
-            label8['text'] = 'None'
-            button1['state'] = 'disabled'
-            button2['state'] = 'disabled'
-
-        def _buttonCommandComplete(root,fleetAll,numCompany,tOpSch,tbid,currentYear,elapsedYear,NShipFleet,parameterFile2,parameterFile12,parameterFile3,parameterFile5):
-            if v1.get() == 'HFO/Diesel':
-                fuelName = 'HFO'
-            else:
-                fuelName = v1.get()
-            fleetAll = orderShipFunc(fleetAll,numCompany,fuelName,int(v3.get()),int(v4.get()),int(v5.get()),float(v2.get()),tOpSch,tbid,0,currentYear,elapsedYear,valueDict,NShipFleet,parameterFile2,parameterFile12,parameterFile3,parameterFile5)
-            root.quit()
-            root.destroy()
-
-        def _buttonCommandCheck(valueDict,parameterFile3,rEEDIreq):
+        def _EEDIcalc(rEEDIreq,parameterFile3,valueDict):
             fuelType = v1.get()
             CAP = float(v2.get())
             WPS = int(v3.get())
@@ -876,10 +883,57 @@ def orderPhaseFunc(fleetAll,numCompany,valueDict,elapsedYear,tOpSch,tbid,current
                 Cco2aux = Cco2Func(parameterFile3,fuelType)
             _, EEDIreq = EEDIreqFunc(valueDict['kEEDI1'],wDWT,valueDict['kEEDI2'],rEEDIreqCurrent)
             _, _, EEDIatt, vDsgnRed = EEDIattFunc(wDWT,valueDict['wMCR'],valueDict['kMCR1'],valueDict['kMCR2'],valueDict['kMCR3'],valueDict['kPAE1'],valueDict['kPAE2'],valueDict['rCCS'],valueDict['vDsgn'],valueDict['rWPS'],Cco2ship,valueDict['SfcM'],valueDict['SfcA'],valueDict['rSPS'],Cco2aux,EEDIreq,WPS,SPS,CCS)
+            return CAP, vDsgnRed, EEDIreq, EEDIatt
+
+
+        def _buttonCommandAnother(fleetAll,numCompany,tOpSch,tbid,currentYear,elapsedYear,NShipFleet,parameterFile2,parameterFile12,parameterFile3,parameterFile5):
+            CAP, vDsgnRed, EEDIreq, EEDIatt = _EEDIcalc(rEEDIreq,parameterFile3,valueDict)
+            if valueDict['vMin'] < vDsgnRed and CAP >= 8000 and CAP <= 24000:
+                if v1.get() == 'HFO/Diesel':
+                    fuelName = 'HFO'
+                else:
+                    fuelName = v1.get()
+                fleetAll = orderShipFunc(fleetAll,numCompany,fuelName,int(v3.get()),int(v4.get()),int(v5.get()),float(v2.get()),tOpSch,tbid,0,currentYear,elapsedYear,valueDict,NShipFleet,parameterFile2,parameterFile12,parameterFile3,parameterFile5)
+                cb1.delete(0,"end")
+                cb1.insert(0, '20000')
+                v3.set('0')
+                v4.set('0')
+                v5.set('0')
+                cb2.var = v3
+                cb3.var = v4
+                cb4.var = v5
+                label6['text'] = 'None'
+                label7['text'] = 'None'
+                label8['text'] = 'None'
+                button1['state'] = 'disabled'
+                button2['state'] = 'disabled'
+            else:
+                button1['state'] = 'disabled'
+                button2['state'] = 'disabled'
+
+        def _buttonCommandComplete(root,fleetAll,numCompany,tOpSch,tbid,currentYear,elapsedYear,NShipFleet,parameterFile2,parameterFile12,parameterFile3,parameterFile5):
+            CAP, vDsgnRed, EEDIreq, EEDIatt = _EEDIcalc(rEEDIreq,parameterFile3,valueDict)
+            if valueDict['vMin'] < vDsgnRed and CAP >= 8000 and CAP <= 24000:
+                if v1.get() == 'HFO/Diesel':
+                    fuelName = 'HFO'
+                else:
+                    fuelName = v1.get()
+                fleetAll = orderShipFunc(fleetAll,numCompany,fuelName,int(v3.get()),int(v4.get()),int(v5.get()),float(v2.get()),tOpSch,tbid,0,currentYear,elapsedYear,valueDict,NShipFleet,parameterFile2,parameterFile12,parameterFile3,parameterFile5)
+                root.quit()
+                root.destroy()
+            else:
+                button1['state'] = 'disabled'
+                button2['state'] = 'disabled'
+
+        def _buttonCommandCheck(valueDict,parameterFile3,rEEDIreq):
+            CAP, vDsgnRed, EEDIreq, EEDIatt = _EEDIcalc(rEEDIreq,parameterFile3,valueDict)
             label6['text'] = str(vDsgnRed)
             label7['text'] = str('{:.3g}'.format(EEDIreq))
             label8['text'] = str('{:.3g}'.format(EEDIatt))
             if valueDict['vMin'] < vDsgnRed:
+                button1['state'] = 'normal'
+                button2['state'] = 'normal'
+            if CAP >= 8000 and CAP <= 24000:
                 button1['state'] = 'normal'
                 button2['state'] = 'normal'
         
@@ -902,8 +956,8 @@ def orderPhaseFunc(fleetAll,numCompany,valueDict,elapsedYear,tOpSch,tbid,current
 
         # Label
         label1 = ttk.Label(frame, text='Fuel type', padding=(5, 2))
-        label2 = ttk.Label(frame, text='CAP (8000<=) [TEU]', padding=(5, 2))
-        label3 = ttk.Label(frame, text='vMax [kt]', padding=(5, 2))
+        label2 = ttk.Label(frame, text='Capacity (8000<=Capacity<=24000) [TEU]', padding=(5, 2))
+        label3 = ttk.Label(frame, text='Maximum speed [kt]', padding=(5, 2))
         label4 = ttk.Label(frame, text='EEDIreq [g/(ton*NM)]', padding=(5, 2))
         label5 = ttk.Label(frame, text='EEDIatt [g/(ton*NM)]', padding=(5, 2))
         label6 = ttk.Label(frame, text='None', padding=(5, 2))
@@ -921,7 +975,7 @@ def orderPhaseFunc(fleetAll,numCompany,valueDict,elapsedYear,tOpSch,tbid,current
 
         # Entry
         v2 = StringVar()
-        v2.set('8000')
+        v2.set('20000')
         cb1 = ttk.Entry(frame, textvariable=v2)
 
         # Checkbutton
@@ -1031,6 +1085,7 @@ def yearlyOperationFunc(fleetAll,numCompany,pureDi,overDi,startYear,elapsedYear,
             compTotal['cta'][elapsedYear] += NShipFleet * compFleet['cta'][tOpTemp]
             compTotal['costFuel'][elapsedYear] += NShipFleet * compFleet['costFuel'][tOpTemp]
             if nextIf:
+                compFleet['year'][tOpTemp] = currentYear
                 compFleet['tOp'] += 1
             fleetAll[numCompany][i] = compFleet
 
@@ -1050,9 +1105,22 @@ def yearlyOperationPhaseFunc(fleetAll,numCompany,pureDi,overDi,startYear,elapsed
     def _surviceSpeedGui(fleetAll,numCompany,pureDi,overDi,startYear,elapsedYear,NShipFleet,tOpSch,valueDict,parameterFile4):
         
         def _buttonCommandNext(root,fleetAll,numCompany,pureDi,overDi,startYear,elapsedYear,NShipFleet,tOpSch,v13,valueDict,parameterFile4):
-            fleetAll, overDi = yearlyOperationFunc(fleetAll,numCompany,pureDi,overDi,startYear,elapsedYear,NShipFleet,tOpSch,v13,valueDict,parameterFile4,True)
-            root.quit()
-            root.destroy()
+            NumFleet = len(fleetAll[numCompany])
+            j = 0
+            goAhead = True
+            for i in range(1,NumFleet):
+                compFleet = fleetAll[numCompany][i]
+                if compFleet['delivery'] <= currentYear and compFleet['tOp'] < tOpSch:
+                    tOpTemp = compFleet['tOp']
+                    if float(v13[j].get()) < 12 or float(v13[j].get()) > compFleet['vDsgnRed'][tOpTemp]:
+                        goAhead = False
+                    j += 1
+            if goAhead:
+                fleetAll, overDi = yearlyOperationFunc(fleetAll,numCompany,pureDi,overDi,startYear,elapsedYear,NShipFleet,tOpSch,v13,valueDict,parameterFile4,True)
+                root.quit()
+                root.destroy()
+            else:
+                button2['state'] = 'disabled'
 
         def _buttonCommandCalc(fleetAll,numCompany,pureDi,overDi,startYear,elapsedYear,NShipFleet,tOpSch,valueDict,parameterFile4):
             fleetAll, _ = yearlyOperationFunc(fleetAll,numCompany,pureDi,overDi,startYear,elapsedYear,NShipFleet,tOpSch,v13,valueDict,parameterFile4,False)
@@ -1074,7 +1142,7 @@ def yearlyOperationPhaseFunc(fleetAll,numCompany,pureDi,overDi,startYear,elapsed
 
         root = Tk()
         root.title('Company '+str(numCompany)+' : Service Speed in '+str(startYear+elapsedYear))
-        width = 800
+        width = 1000
         height = 500
         placeX = root.winfo_screenwidth()/2 - width/2
         placeY = root.winfo_screenheight()/2 - height/2
@@ -1098,12 +1166,12 @@ def yearlyOperationPhaseFunc(fleetAll,numCompany,pureDi,overDi,startYear,elapsed
         labelRes10 = ttk.Label(frame, text='None', padding=(5, 2))
         label0 = ttk.Label(frame, text='No.', padding=(5, 2))
         label1 = ttk.Label(frame, text='Fuel type', padding=(5, 2))
-        label2 = ttk.Label(frame, text='CAP [TEU]', padding=(5, 2))
+        label2 = ttk.Label(frame, text='Capacity [TEU]', padding=(5, 2))
         label3 = ttk.Label(frame, text='WPS', padding=(5, 2))
         label4 = ttk.Label(frame, text='SPS', padding=(5, 2))
         label5 = ttk.Label(frame, text='CCS', padding=(5, 2))
-        label6 = ttk.Label(frame, text='vSer (12<=) [kt]', padding=(5, 2))
-        label7 = ttk.Label(frame, text='vMax [kt]', padding=(5, 2))
+        label6 = ttk.Label(frame, text='Service speed (12<=) [kt]', padding=(5, 2))
+        label7 = ttk.Label(frame, text='Maximum speed [kt]', padding=(5, 2))
         label00 = []
         label8 = []
         label9 = []
@@ -1422,7 +1490,7 @@ def outputAllCompany2Func(fleetAll,startYear,elapsedYear,keyi,unitDict):
     if elapsedYear > 0:
         year = fleetAll['year'][:elapsedYear+1]
         for numCompany in range(1,4):
-            ax.plot(year,fleetAll[numCompany]['total'][keyi][:elapsedYear+1],label="Company"+str(numCompany))
+            ax.plot(year,fleetAll[numCompany]['total'][keyi][:elapsedYear+1],marker=".",label="Company"+str(numCompany))
             ax.set_title(keyi)
             ax.set_xlabel('Year')
             ax.legend()
@@ -1475,16 +1543,9 @@ def outputCsvFunc(fleetAll,startYear,elapsedYear,lastYear,tOpSch):
                 for keyValue in compFleet.keys():
                     if type(compFleet[keyValue]) is np.ndarray:
                         valueName.append(keyValue)
-                        '''
-                        plotArr = np.zeros(lastYear-startYear+1)
-                        if compFleet['delivery'] >= startYear:
-                            plotArr[compFleet['delivery']-startYear:compFleet['delivery']-startYear+compFleet['tOp']] = compFleet[keyValue][:compFleet['tOp']]
-                        else:
-                            plotArr[:tOpSch-startYear+compFleet['delivery']] = compFleet[keyValue][(startYear-compFleet['delivery']):compFleet['tOp']]
-                        '''
                         outputList.append(compFleet[keyValue])
                 
                 outputData2 = np.stack(outputList,1)
-                outputDf2 = pd.DataFrame(data=outputData2, index=tOps, columns=valueName, dtype='float')
+                outputDf2 = pd.DataFrame(data=outputData2, index=compFleet['year'], columns=valueName, dtype='float')
                 outputDf2.to_csv(str(resPath)+"\Company"+str(numCompany)+'_'+'Fleet'+str(keyFleet)+'.csv')
 

@@ -15,7 +15,6 @@ def roleplayRun():
     tOpSch = 20
     startYear = 2021
     regYear = [2025,2030,2035,2040,2045]
-    lastYear = 2050
     NShipFleet = 6
     tbid = 2
 
@@ -42,6 +41,7 @@ def roleplayRun():
     valueDict, unitDict = rs.readinput(parameterFile1)
 
     # prepare fleets
+    lastYear = int(valueDict['lastYear'])
     fleets = {'year': np.zeros(lastYear-startYear+1)}
     fleets = rs.fleetPreparationFunc(fleets,parameterFile6,1,startYear,lastYear,0,tOpSch,tbid,valueDict,NShipFleet,parameterFile2,parameterFile12,parameterFile3,parameterFile5)
     fleets = rs.fleetPreparationFunc(fleets,parameterFile7,2,startYear,lastYear,0,tOpSch,tbid,valueDict,NShipFleet,parameterFile2,parameterFile12,parameterFile3,parameterFile5)

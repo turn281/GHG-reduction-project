@@ -1,4 +1,5 @@
 Symbol,Name,Unit,Param. type,Value
+lastYear,,,Constant parameter,2021
 kDWT1,1st DWT coefficients,-,Constant parameter,10.69
 kDWT2,2nd DWT coefficients,-,Constant parameter,7024
 kFLD1,1st FLD coefficient,-,Constant parameter,1.28
