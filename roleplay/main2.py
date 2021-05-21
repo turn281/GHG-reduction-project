@@ -65,13 +65,16 @@ def roleplayRun():
 
         #'''
         # requlator's decision phase
-        if currentYear == regYear[nRegDec]:
+        if currentYear == regYear[nRegAct]:
             nRegDec += 1
             regDec = rs.regDecFunc(regDec,nRegDec,currentYear)
 
-        if currentYear == regYear[nRegDec]+2:
+        if currentYear == regYear[nRegAct]+2:
             nRegAct += 1
 
+        print(currentYear,regYear[nRegAct],regDec['rEEDIreq'][nRegAct])
+
+        '''
         # scrap & refurbish phase (also decide additional shipping fee per container)
         dcostTemp = np.zeros(3)
         dcostCntSum = 0
@@ -96,7 +99,7 @@ def roleplayRun():
         rs.outputGuiFunc(fleets,startYear,elapsedYear,lastYear,tOpSch,unitDict)
         #'''
     
-    rs.outputCsvFunc(fleets,startYear,elapsedYear,lastYear,tOpSch)
+    #rs.outputCsvFunc(fleets,startYear,elapsedYear,lastYear,tOpSch)
 
     #rs.outputEachCompanyFunc(fleets,1,startYear,elapsedYear,lastYear,tOpSch,decisionListName1)
     #rs.outputEachCompanyFunc(fleets,2,startYear,elapsedYear,lastYear,tOpSch,decisionListName2)

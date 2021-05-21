@@ -301,9 +301,9 @@ def regPreFunc(nDec):
     regDec['rEEDIreq'] = np.zeros((nDec,3))
     regDec['Subsidy'] = np.zeros(nDec)
     regDec['Ctax'] = np.zeros(nDec)
-    regDec['rEEDIreq'][0,0] = 50
-    regDec['rEEDIreq'][0,1] = 45
-    regDec['rEEDIreq'][0,2] = 35
+    regDec['rEEDIreq'][0,0] = 0.5
+    regDec['rEEDIreq'][0,1] = 0.45
+    regDec['rEEDIreq'][0,2] = 0.35
     #regDec['Subsidy'][0] = 
     #regDec['Ctax'][0] = 
     return regDec
@@ -345,7 +345,10 @@ def regDecFunc(regDec,nReg,currentYear):
 
         # Checkbutton
         v1 = StringVar()
-        v1.set('50')
+        if nReg == 0:
+            v1.set('0') # 初期化
+        else:
+            v1.set(str(100*regDec['rEEDIreq'][nReg-1,0])) # 初期化
         cb1 = ttk.Entry(frame, textvariable=v1)
         label1 = ttk.Label(frame, text='wDWT <= 200,000', padding=(5, 2))
         label11 = ttk.Label(frame, text='% <= 100%', padding=(5, 2))
@@ -354,7 +357,10 @@ def regDecFunc(regDec,nReg,currentYear):
 
         # Checkbutton
         v2 = StringVar()
-        v2.set('45') # 初期化
+        if nReg == 0:
+            v2.set('0') # 初期化
+        else:
+            v2.set(str(100*regDec['rEEDIreq'][nReg-1,1])) # 初期化
         cb2 = ttk.Entry(frame, textvariable=v2)
         label2 = ttk.Label(frame, text='120,000 <= wDWT < 200,000', padding=(5, 2))
         label22 = ttk.Label(frame, text='% <= 100%', padding=(5, 2))
@@ -362,7 +368,10 @@ def regDecFunc(regDec,nReg,currentYear):
 
         # Checkbutton
         v3 = StringVar()
-        v3.set('30') # 初期化
+        if nReg == 0:
+            v3.set('0') # 初期化
+        else:
+            v3.set(str(100*regDec['rEEDIreq'][nReg-1,2])) # 初期化
         cb3 = ttk.Entry(frame, textvariable=v3)
         label3 = ttk.Label(frame, text='wDWT < 120,000', padding=(5, 2))
         label33 = ttk.Label(frame, text='% <= 100%', padding=(5, 2))
@@ -425,7 +434,10 @@ def regDecFunc(regDec,nReg,currentYear):
 
         # Checkbutton
         v1 = StringVar()
-        v1.set('0')
+        if nReg == 0:
+            v1.set('0') # 初期化
+        else:
+            v1.set(str(100*regDec['Subsidy'][nReg-1])) # 初期化
         cb1 = ttk.Entry(frame, textvariable=v1)
         label1 = ttk.Label(frame, text='Subsidy rate', padding=(5, 2))
         label11 = ttk.Label(frame, text='% <= 100%', padding=(5, 2))
@@ -434,7 +446,10 @@ def regDecFunc(regDec,nReg,currentYear):
 
         # Checkbutton
         v2 = StringVar()
-        v2.set('0') # 初期化
+        if nReg == 0:
+            v2.set('0') # 初期化
+        else:
+            v2.set(str(100*regDec['Ctax'][nReg-1])) # 初期化
         cb2 = ttk.Entry(frame, textvariable=v2)
         label2 = ttk.Label(frame, text='Carbon tax rate', padding=(5, 2))
         label22 = ttk.Label(frame, text='% <= 100%', padding=(5, 2))
