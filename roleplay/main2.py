@@ -79,11 +79,11 @@ def roleplayRun():
         for numCompany in playOrder:
             fleets, dcostCntTemp = rs.scrapRefurbishFunc(fleets,numCompany,elapsedYear,currentYear,valueDict,tOpSch,regDec['rEEDIreq'][nRegAct])
             dcostTemp[numCompany-1] = dcostCntTemp
-            dcostCntSum += dcostCntTemp - valueDict["dcostCntMin"]
+            dcostCntSum += - dcostCntTemp - valueDict["dcostCntMin"]
 
         # demand calculation
         Dtotal = rs.demandScenarioFunc(currentYear,valueDict["kDem1"],valueDict["kDem2"],valueDict["kDem3"],valueDict["kDem4"])
-        Dasg = Dtotal * (dcostTemp - valueDict["dcostCntMin"]) / dcostCntSum
+        Dasg = Dtotal * (- dcostTemp - valueDict["dcostCntMin"]) / dcostCntSum
         playOrder = rs.playOrderFunc(dcostTemp,playOrder)
         
         # order & yearly operation phase
