@@ -14,10 +14,8 @@ import sys
 def roleplayRun():
     tOpSch = 20
     startYear = 2021
-    regYear = [2025,2030,2035,2040,2045]
     NShipFleet = 6
     tbid = 2
-
     path = str(Path(__file__).parent)
 
     if os.name == 'nt':
@@ -39,6 +37,8 @@ def roleplayRun():
     parameterFile12 = path+"eqLHVaux.csv"
 
     valueDict, unitDict = rs.readinput(parameterFile1)
+    #regYear = np.linspace(valueDict['regStart'],valueDict['lastYear'],int((valueDict['lastYear']-valueDict['regStart'])//valueDict['regSpan']+1))
+    regYear = np.linspace(2021,valueDict['lastYear'],int((valueDict['lastYear']-valueDict['regStart'])//valueDict['regSpan']+1))
 
     # prepare fleets
     lastYear = int(valueDict['lastYear'])
@@ -68,7 +68,6 @@ def roleplayRun():
         if currentYear == regYear[nRegAct]:
             nRegDec += 1
             regDec = rs.regDecFunc(regDec,nRegDec,currentYear)
-
         if currentYear == regYear[nRegAct]+2:
             nRegAct += 1
 

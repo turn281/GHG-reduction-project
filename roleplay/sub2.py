@@ -96,34 +96,31 @@ def decisionListFunc(filename):
 def fleetPreparationFunc(fleetAll,initialFleetFile,numCompany,startYear,lastYear,elapsedYear,tOpSch,tbid,valueDict,NShipFleet,parameterFile2,parameterFile12,parameterFile3,parameterFile5):
     fleetAll.setdefault(numCompany,{})
     fleetAll[numCompany].setdefault('total',{})
-    compTotal = fleetAll[numCompany]['total']
-    compTotal['sale'] = np.zeros(lastYear-startYear+1)
-    compTotal['g'] = np.zeros(lastYear-startYear+1)
-    compTotal['gTilde'] = np.zeros(lastYear-startYear+1)
-    compTotal['costTilde'] = np.zeros(lastYear-startYear+1)
-    compTotal['saleTilde'] = np.zeros(lastYear-startYear+1)
-    compTotal['cta'] = np.zeros(lastYear-startYear+1)
-    compTotal['overDi'] = np.zeros(lastYear-startYear+1)
-    compTotal['costShipBasicHFO'] = np.zeros(lastYear-startYear+1)
-    compTotal['costShip'] = np.zeros(lastYear-startYear+1)
-    compTotal['costFuel'] = np.zeros(lastYear-startYear+1)
-    compTotal['costAdd'] = np.zeros(lastYear-startYear+1)
-    compTotal['costAll'] = np.zeros(lastYear-startYear+1)
-    compTotal['maxCta'] = np.zeros(lastYear-startYear+1)
-    compTotal['rocc'] = np.zeros(lastYear-startYear+1)
-    compTotal['costRfrb'] = np.zeros(lastYear-startYear+1)
-    compTotal['dcostCnt'] = np.zeros(lastYear-startYear+1)
-    compTotal['dcostEco'] = np.zeros(lastYear-startYear+1)
-    compTotal['nTransCnt'] = np.zeros(lastYear-startYear+1)
+    fleetAll[numCompany]['total']['sale'] = np.zeros(lastYear-startYear+1)
+    fleetAll[numCompany]['total']['g'] = np.zeros(lastYear-startYear+1)
+    fleetAll[numCompany]['total']['gTilde'] = np.zeros(lastYear-startYear+1)
+    fleetAll[numCompany]['total']['costTilde'] = np.zeros(lastYear-startYear+1)
+    fleetAll[numCompany]['total']['saleTilde'] = np.zeros(lastYear-startYear+1)
+    fleetAll[numCompany]['total']['cta'] = np.zeros(lastYear-startYear+1)
+    fleetAll[numCompany]['total']['overDi'] = np.zeros(lastYear-startYear+1)
+    fleetAll[numCompany]['total']['costShipBasicHFO'] = np.zeros(lastYear-startYear+1)
+    fleetAll[numCompany]['total']['costShip'] = np.zeros(lastYear-startYear+1)
+    fleetAll[numCompany]['total']['costFuel'] = np.zeros(lastYear-startYear+1)
+    fleetAll[numCompany]['total']['costAdd'] = np.zeros(lastYear-startYear+1)
+    fleetAll[numCompany]['total']['costAll'] = np.zeros(lastYear-startYear+1)
+    fleetAll[numCompany]['total']['maxCta'] = np.zeros(lastYear-startYear+1)
+    fleetAll[numCompany]['total']['rocc'] = np.zeros(lastYear-startYear+1)
+    fleetAll[numCompany]['total']['costRfrb'] = np.zeros(lastYear-startYear+1)
+    fleetAll[numCompany]['total']['dcostCnt'] = np.zeros(lastYear-startYear+1)
+    fleetAll[numCompany]['total']['dcostEco'] = np.zeros(lastYear-startYear+1)
+    fleetAll[numCompany]['total']['nTransCnt'] = np.zeros(lastYear-startYear+1)
+    fleetAll[numCompany]['total']['atOnce'] = np.zeros(lastYear-startYear+1)
 
     initialFleets = initialFleetFunc(initialFleetFile)
 
     for i in range(len(initialFleets)):
         orderYear = initialFleets[i]['year'] - tbid
         iniT = startYear - initialFleets[i]['year']
-        if iniT < 0:
-            orderYear = initialFleets[i]['year']
-            iniT = 0
         iniCAPcnt = initialFleets[i]['TEU']
         fleetAll = orderShipFunc(fleetAll,numCompany,'HFO',0,0,0,iniCAPcnt,tOpSch,tbid,iniT,orderYear,elapsedYear,valueDict,NShipFleet,parameterFile2,parameterFile12,parameterFile3,parameterFile5)
     return fleetAll
@@ -286,6 +283,7 @@ def EEDIattFunc(wDWT,wMCR,kMCR1,kMCR2,kMCR3,kPAE1,kPAE2,rCCS,vDsgn,rWPS,Cco2ship
             rCCStemp = rCCS
         else:
             rCCStemp = 0
+        print(vDsgn)
         return ((1-rCCStemp)/(0.7*wDWT*vDsgnRed))*((1-rWPStemp)*Cco2ship*0.75*MCRM*SfcM*(vDsgnRed/vDsgn)**3 + (1-rSPStemp)*Cco2aux*PA*SfcA)
 
     vDsgnRed = vDsgn
@@ -304,8 +302,6 @@ def regPreFunc(nDec):
     regDec['rEEDIreq'][0,0] = 0.5
     regDec['rEEDIreq'][0,1] = 0.45
     regDec['rEEDIreq'][0,2] = 0.35
-    #regDec['Subsidy'][0] = 
-    #regDec['Ctax'][0] = 
     return regDec
 
 def regDecFunc(regDec,nReg,currentYear):
@@ -321,14 +317,12 @@ def regDecFunc(regDec,nReg,currentYear):
                 root.destroy()
             else:
                 button['state'] = 'disabled'
-                
             
         def _buttonCommandCheck():
             if float(v1.get()) <= 100 and float(v2.get()) <= 100 and float(v3.get()) <= 100 and float(v1.get()) >= 0 and float(v2.get()) >= 0 and float(v3.get()) >= 0:
                 button['state'] = 'normal'
             else:
                 button['state'] = 'disabled'
-
 
         root = Tk()
         root.title('Regulator : Reduction Rate for EEXI / EEDI in '+str(currentYear))
@@ -350,7 +344,7 @@ def regDecFunc(regDec,nReg,currentYear):
         else:
             v1.set(str(100*regDec['rEEDIreq'][nReg-1,0])) # 初期化
         cb1 = ttk.Entry(frame, textvariable=v1)
-        label1 = ttk.Label(frame, text='wDWT <= 200,000', padding=(5, 2))
+        label1 = ttk.Label(frame, text='wDWT >= 200,000', padding=(5, 2))
         label11 = ttk.Label(frame, text='% <= 100%', padding=(5, 2))
         label111 = ttk.Label(frame, text='0% <=', padding=(5, 2))
 
@@ -482,302 +476,45 @@ def regDecFunc(regDec,nReg,currentYear):
     return regDec
     
 def scrapRefurbishFunc(fleetAll,numCompany,elapsedYear,currentYear,valueDict,tOpSch,rEEDIreq):
-    
-    def _fleetListGui(fleetAll,numCompany):
-        def _buttonCommand(root):
-            root.quit()
-            root.destroy()
-        
-        def _selectTree(event):
-            for item in tree.selection():
-                itemText = tree.item(item,"values")
-                #print(itemText) #itemText[0]等で項目指定できる
-
-        fleetNum = []
-        fuelType = []
-        CAP = []
-        WPS = []
-        SPS = []
-        CCS = []
-        vDsgnRed = []
-        EEXIreq = []
-        EEXIatt = []
-        for keyFleet in fleetAll[numCompany].keys():
-            if type(keyFleet) is int:
-                compFleet = fleetAll[numCompany][keyFleet]
-                tOpTemp = compFleet['tOp']
-                if compFleet['delivery'] <= currentYear and compFleet['tOp'] < tOpSch:
-                    rEEDIreqCurrent = rEEDIreqCurrentFunc(compFleet['wDWT'],rEEDIreq)
-                    compFleet['EEDIref'][tOpTemp], compFleet['EEDIreq'][tOpTemp] = EEDIreqFunc(valueDict['kEEDI1'],compFleet['wDWT'],valueDict['kEEDI2'],rEEDIreqCurrent)
-                    compFleet['MCRM'][tOpTemp], compFleet['PA'][tOpTemp], compFleet['EEDIatt'][tOpTemp], compFleet['vDsgnRed'][tOpTemp] = EEDIattFunc(compFleet['wDWT'],valueDict['wMCR'],valueDict['kMCR1'],valueDict['kMCR2'],valueDict['kMCR3'],valueDict['kPAE1'],valueDict['kPAE2'],valueDict['rCCS'],valueDict['vDsgn'],valueDict['rWPS'],compFleet['Cco2ship'],valueDict['SfcM'],valueDict['SfcA'],valueDict['rSPS'],compFleet['Cco2aux'],compFleet['EEDIreq'][tOpTemp],compFleet['WPS'],compFleet['SPS'],compFleet['CCS'])
-                    fleetNum.append(keyFleet)
-                    if compFleet['fuelName'] == 'HFO':
-                        fuelType.append('HFO/Diesel')
-                    else:
-                        fuelType.append(compFleet['fuelName'])
-                    CAP.append(compFleet['CAPcnt'])
-                    if compFleet['WPS']:
-                        WPS.append('Yes')
-                    else:
-                        WPS.append('No')
-                    if compFleet['SPS']:
-                        SPS.append('Yes')
-                    else:
-                        SPS.append('No')
-                    if compFleet['CCS']:
-                        CCS.append('Yes')
-                    else:
-                        CCS.append('No')
-                    vDsgnRed.append(compFleet['vDsgnRed'][tOpTemp])
-                    EEXIreq.append('{:.3g}'.format(compFleet['EEDIreq'][tOpTemp]))
-                    EEXIatt.append('{:.3g}'.format(compFleet['EEDIatt'][tOpTemp]))
-
-
-        fleetList = pd.DataFrame({'fleetNum': fleetNum,
-                                  'fuelType': fuelType, 
-                                  'CAP': CAP,
-                                  'WPS': WPS,
-                                  'SPS': SPS,
-                                  'CCS': CCS,
-                                  'vDsgnRed': vDsgnRed,
-                                  'EEXIreq': EEXIreq,
-                                  'EEXIatt': EEXIatt,})
-
-        root = Tk()
-        root.title('Company '+str(numCompany)+' : Alive Fleet List in '+str(currentYear))
-        width = 1000
-        height = 300
-        placeX = root.winfo_screenwidth()/2 - width/2
-        placeY = root.winfo_screenheight()/2 - height/2
-        widgetSize = str(width)+'x'+str(height)+'+'+str(int(placeX))+'+'+str(int(placeY))
-        root.geometry(widgetSize)
-
-        tree = ttk.Treeview(root)
-        tree["column"] = (1, 2, 3, 4, 5, 6, 7, 8, 9)
-        tree["show"] = "headings"
-        tree.heading(1, text="No.")
-        tree.heading(2, text="Fuel type")
-        tree.heading(3, text="Capacity [TEU]")
-        tree.heading(4, text="WPS")
-        tree.heading(5, text="SPS")
-        tree.heading(6, text="CCS")
-        tree.heading(7, text="Maximum speed [kt]")
-        tree.heading(8, text="EEXIreq [g/(ton*NM)]")
-        tree.heading(9, text="EEXIatt [g/(ton*NM)]")
-        tree.column(1, width=40)
-        tree.column(2, width=100)
-        tree.column(3, width=100)
-        tree.column(4, width=50)
-        tree.column(5, width=50)
-        tree.column(6, width=50)
-        tree.column(7, width=80)
-        tree.column(8, width=130)
-        tree.column(9, width=130)
-
-
-        for row in fleetList.itertuples():
-            tree.insert("", "end", values=(row.fleetNum, row.fuelType, row.CAP, row.WPS, row.SPS,row.CCS, row.vDsgnRed, row.EEXIreq, row.EEXIatt))
-
-        tree.bind("<<TreeviewSelect>>", _selectTree)
-        tree.pack()
-        
-
-
-        # Frame
-        frame = ttk.Frame(root, padding=20)
-        frame.pack()
-        # Button
-        button = ttk.Button(frame, text='Next', command=lambda: _buttonCommand(root))
-
-        # Layout
-        button.grid(row=0, column=0, columnspan=2)
-
-        root.deiconify()
-        root.mainloop()
-
-        return
-    
-    def _scrapOrRefurbishGui(compFleet,numFleet,tOpSch,valueDict):
-        def _buttonCommandScrap(compFleet,root):
-            compFleet['tOp'] = tOpSch
-            root.quit()
-            root.destroy()
-        
-        def _buttonCommandNext(root):
-            if valueDict['vMin'] < compFleet['vDsgnRed'][tOpTemp]:
-                root.quit()
-                root.destroy()
-            else:
-                button2['state'] = 'disabled'
-                
-
-        def _buttonCommandCheck(compFleet,valueDict,rEEDIreq,v,labelS,label14,label15,label16,Sys,button):
-            tOpTemp = compFleet['tOp']
-            compFleet[Sys] = int(v.get())
-            compFleet['EEDIref'][tOpTemp], compFleet['EEDIreq'][tOpTemp] = EEDIreqFunc(valueDict['kEEDI1'],compFleet['wDWT'],valueDict['kEEDI2'],rEEDIreq)
-            compFleet['MCRM'][tOpTemp], compFleet['PA'][tOpTemp], compFleet['EEDIatt'][tOpTemp], compFleet['vDsgnRed'][tOpTemp] = EEDIattFunc(compFleet['wDWT'],valueDict['wMCR'],valueDict['kMCR1'],valueDict['kMCR2'],valueDict['kMCR3'],valueDict['kPAE1'],valueDict['kPAE2'],valueDict['rCCS'],valueDict['vDsgn'],valueDict['rWPS'],compFleet['Cco2ship'],valueDict['SfcM'],valueDict['SfcA'],valueDict['rSPS'],compFleet['Cco2aux'],compFleet['EEDIreq'][tOpTemp],compFleet['WPS'],compFleet['SPS'],compFleet['CCS'])
-                
-            if compFleet[Sys]:
-                labelS['text'] = 'Yes'
-            else:
-                labelS['text'] = 'No'
-            label14['text'] = str(compFleet['vDsgnRed'][tOpTemp])
-            label15['text'] = str('{:.3g}'.format(compFleet['EEDIreq'][tOpTemp]))
-            label16['text'] = str('{:.3g}'.format(compFleet['EEDIatt'][tOpTemp]))
-            if valueDict['vMin'] < compFleet['vDsgnRed'][tOpTemp]:
-                button['state'] = 'normal'
-
-        root = Tk()
-        root.title('Company '+str(numCompany)+' : Scrap or Refurbish  in '+str(currentYear))
-        width = 800
-        height = 200
-        placeX = root.winfo_screenwidth()/2 - width/2
-        placeY = root.winfo_screenheight()/2 - height/2
-        widgetSize = str(width)+'x'+str(height)+'+'+str(int(placeX))+'+'+str(int(placeY))
-        root.geometry(widgetSize)
-
-        # Frame
-        frame = ttk.Frame(root, padding=20)
-        frame.pack()
-
-        # Label
-        label0 = ttk.Label(frame, text='No.', padding=(5, 2))
-        label00 = ttk.Label(frame, text=str(numFleet), padding=(5, 2))
-        label1 = ttk.Label(frame, text='Fuel type', padding=(5, 2))
-        label2 = ttk.Label(frame, text='Capacity [TEU]', padding=(5, 2))
-        label3 = ttk.Label(frame, text='WPS', padding=(5, 2))
-        label4 = ttk.Label(frame, text='SPS', padding=(5, 2))
-        label5 = ttk.Label(frame, text='CCS', padding=(5, 2))
-        label6 = ttk.Label(frame, text='Maximum speed [kt]', padding=(5, 2))
-        label7 = ttk.Label(frame, text='EEXIreq [g/(ton*NM)]', padding=(5, 2))
-        label8 = ttk.Label(frame, text='EEXIatt [g/(ton*NM)]', padding=(5, 2))
-        if compFleet['fuelName'] == 'HFO':
-            label9 = ttk.Label(frame, text='HFO/Diesel', padding=(5, 2))
-        else:
-            label9 = ttk.Label(frame, text=compFleet['fuelName'], padding=(5, 2))
-        label10 = ttk.Label(frame, text=compFleet['CAPcnt'], padding=(5, 2))
-        if compFleet['WPS']:
-            label11 = ttk.Label(frame, text='Yes', padding=(5, 2))
-        else:
-            label11 = ttk.Label(frame, text='No', padding=(5, 2))
-        if compFleet['SPS']:
-            label12 = ttk.Label(frame, text='Yes', padding=(5, 2))
-        else:
-            label12 = ttk.Label(frame, text='No', padding=(5, 2))
-        if compFleet['CCS']:
-            label13 = ttk.Label(frame, text='Yes', padding=(5, 2))
-        else:
-            label13 = ttk.Label(frame, text='No', padding=(5, 2))
-        tOpTemp = compFleet['tOp']
-        label14 = ttk.Label(frame, text=compFleet['vDsgnRed'][tOpTemp], padding=(5, 2))
-        label15 = ttk.Label(frame, text='{:.3g}'.format(compFleet['EEDIreq'][tOpTemp]), padding=(5, 2))
-        label16 = ttk.Label(frame, text='{:.3g}'.format(compFleet['EEDIatt'][tOpTemp]), padding=(5, 2))
-
-        rEEDIreqCurrent = rEEDIreqCurrentFunc(compFleet['wDWT'],rEEDIreq)
-
-        # Button
-        button1 = ttk.Button(frame, text='Scrap', command=lambda: _buttonCommandScrap(compFleet,root))
-        if valueDict['vMin'] > compFleet['vDsgnRed'][tOpTemp]:
-            button2 = ttk.Button(frame, text='Next', state='disabled', command=lambda: _buttonCommandNext(root))
-        else:
-            button2 = ttk.Button(frame, text='Next', command=lambda: _buttonCommandNext(root))
-
-        # Checkbutton
-        v1 = StringVar()
-        if compFleet['WPS']:
-            v1.set('1')
-            cb1 = ttk.Checkbutton(frame, padding=(10), text='WPS', state='disable', command=lambda: _buttonCommandCheck(compFleet,valueDict,rEEDIreqCurrent,v1,label11,label14,label15,label16,'WPS',button2),variable=v1)
-        else:
-            v1.set('0')
-            cb1 = ttk.Checkbutton(frame, padding=(10), text='WPS', command=lambda: _buttonCommandCheck(compFleet,valueDict,rEEDIreqCurrent,v1,label11,label14,label15,label16,'WPS',button2),variable=v1)
-
-        # Checkbutton
-        v2 = StringVar()
-        if compFleet['SPS']:
-            v2.set('1')
-            cb2 = ttk.Checkbutton(frame, padding=(10), text='SPS', state='disable', command=lambda: _buttonCommandCheck(compFleet,valueDict,rEEDIreqCurrent,v2,label12,label14,label15,label16,'SPS',button2), variable=v2)
-        else:
-            v2.set('0')
-            cb2 = ttk.Checkbutton(frame, padding=(10), text='SPS', command=lambda: _buttonCommandCheck(compFleet,valueDict,rEEDIreqCurrent,v2,label12,label14,label15,label16,'SPS',button2), variable=v2)
-
-        # Checkbutton
-        v3 = StringVar()
-        if compFleet['CCS']:
-            v3.set('1')
-            cb3 = ttk.Checkbutton(frame, padding=(10), text='CCS', state='disable', command=lambda: _buttonCommandCheck(compFleet,valueDict,rEEDIreqCurrent,v3,label13,label14,label15,label16,'CCS',button2), variable=v3)
-        else:
-            v3.set('0')
-            cb3 = ttk.Checkbutton(frame, padding=(10), text='CCS', command=lambda: _buttonCommandCheck(compFleet,valueDict,rEEDIreqCurrent,v3,label13,label14,label15,label16,'CCS',button2), variable=v3)
-
-        # Layout
-        label0.grid(row=0, column=0)
-        label00.grid(row=1, column=0)
-        label1.grid(row=0, column=1)
-        label2.grid(row=0, column=2)
-        label3.grid(row=0, column=3)
-        label4.grid(row=0, column=4)
-        label5.grid(row=0, column=5)
-        label6.grid(row=0, column=6)
-        label7.grid(row=0, column=7)
-        label8.grid(row=0, column=8)
-        label9.grid(row=1, column=1)
-        label10.grid(row=1, column=2)
-        label11.grid(row=1, column=3)
-        label12.grid(row=1, column=4)
-        label13.grid(row=1, column=5)
-        label14.grid(row=1, column=6)
-        label15.grid(row=1, column=7)
-        label16.grid(row=1, column=8)
-        cb1.grid(row=2, column=3)
-        cb2.grid(row=2, column=4)
-        cb3.grid(row=2, column=5)
-        button1.grid(row=2, column=7)
-        button2.grid(row=2, column=8)
-
-        root.deiconify()
-        root.mainloop()
-
-        return compFleet
-    
-    def _scrapOrRefurbishGui2(fleetAll,numCompany,tOpSch,valueDict,currentYear,rEEDIreq):
+       
+    def _scrapOrRefurbishGui(fleetAll,numCompany,tOpSch,valueDict,currentYear,rEEDIreq):
         def _buttonCommandCheckButton(fleetAll,valueDict,rEEDIreq,v,Sys):
             NumFleet = len(fleetAll[numCompany])
             numAlive = 0
             for keyFleet in range(1,NumFleet):
-                compFleet = fleetAll[numCompany][keyFleet]
-                if compFleet['delivery'] <= currentYear and compFleet['tOp'] < tOpSch:
-                    tOpTemp = compFleet['tOp']
-                    compFleet[Sys] = int(v[numAlive].get())
-                    rEEDIreqCurrent = rEEDIreqCurrentFunc(compFleet['wDWT'],rEEDIreq)
-                    compFleet['EEDIref'][tOpTemp], compFleet['EEDIreq'][tOpTemp] = EEDIreqFunc(valueDict['kEEDI1'],compFleet['wDWT'],valueDict['kEEDI2'],rEEDIreqCurrent)
-                    compFleet['MCRM'][tOpTemp], compFleet['PA'][tOpTemp], compFleet['EEDIatt'][tOpTemp], compFleet['vDsgnRed'][tOpTemp] = EEDIattFunc(compFleet['wDWT'],valueDict['wMCR'],valueDict['kMCR1'],valueDict['kMCR2'],valueDict['kMCR3'],valueDict['kPAE1'],valueDict['kPAE2'],valueDict['rCCS'],valueDict['vDsgn'],valueDict['rWPS'],compFleet['Cco2ship'],valueDict['SfcM'],valueDict['SfcA'],valueDict['rSPS'],compFleet['Cco2aux'],compFleet['EEDIreq'][tOpTemp],compFleet['WPS'],compFleet['SPS'],compFleet['CCS'])
-                    label14[numAlive]['text'] = str(compFleet['vDsgnRed'][tOpTemp])
-                    label15[numAlive]['text'] = str('{:.3g}'.format(compFleet['EEDIreq'][tOpTemp]))
-                    label16[numAlive]['text'] = str('{:.3g}'.format(compFleet['EEDIatt'][tOpTemp]))
-                    #if valueDict['vMin'] < compFleet['vDsgnRed'][tOpTemp]:
-                    #    button['state'] = 'normal'
+                if fleetAll[numCompany][keyFleet]['delivery'] <= currentYear and fleetAll[numCompany][keyFleet]['tOp'] < tOpSch:
+                    tOpTemp = fleetAll[numCompany][keyFleet]['tOp']
+                    fleetAll[numCompany][keyFleet][Sys] = int(v[numAlive].get())
+                    rEEDIreqCurrent = rEEDIreqCurrentFunc(fleetAll[numCompany][keyFleet]['wDWT'],rEEDIreq)
+                    fleetAll[numCompany][keyFleet]['EEDIref'][tOpTemp], fleetAll[numCompany][keyFleet]['EEDIreq'][tOpTemp] = EEDIreqFunc(valueDict['kEEDI1'],fleetAll[numCompany][keyFleet]['wDWT'],valueDict['kEEDI2'],rEEDIreqCurrent)
+                    fleetAll[numCompany][keyFleet]['MCRM'][tOpTemp], fleetAll[numCompany][keyFleet]['PA'][tOpTemp], fleetAll[numCompany][keyFleet]['EEDIatt'][tOpTemp], fleetAll[numCompany][keyFleet]['vDsgnRed'][tOpTemp] = EEDIattFunc(fleetAll[numCompany][keyFleet]['wDWT'],valueDict['wMCR'],valueDict['kMCR1'],valueDict['kMCR2'],valueDict['kMCR3'],valueDict['kPAE1'],valueDict['kPAE2'],valueDict['rCCS'],valueDict['vDsgn'],valueDict['rWPS'],fleetAll[numCompany][keyFleet]['Cco2ship'],valueDict['SfcM'],valueDict['SfcA'],valueDict['rSPS'],fleetAll[numCompany][keyFleet]['Cco2aux'],fleetAll[numCompany][keyFleet]['EEDIreq'][tOpTemp],fleetAll[numCompany][keyFleet]['WPS'],fleetAll[numCompany][keyFleet]['SPS'],fleetAll[numCompany][keyFleet]['CCS'])
+                    label14[numAlive]['text'] = str(fleetAll[numCompany][keyFleet]['vDsgnRed'][tOpTemp])
+                    label15[numAlive]['text'] = str('{:.3g}'.format(fleetAll[numCompany][keyFleet]['EEDIreq'][tOpTemp]))
+                    label16[numAlive]['text'] = str('{:.3g}'.format(fleetAll[numCompany][keyFleet]['EEDIatt'][tOpTemp]))
+                    if valueDict['vMin'] < fleetAll[numCompany][keyFleet]['vDsgnRed'][tOpTemp]:
+                        button2['state'] = 'normal'
                     numAlive += 1
+                    #fleetAll[numCompany][keyFleet] = fleetAll[numCompany][keyFleet]
         
         def _buttonCommandNext(root,fleetAll,numCompany,tOpSch):
             NumFleet = len(fleetAll[numCompany])
             j = 0
             goAhead = True
-            for i in range(1,NumFleet):
-                compFleet = fleetAll[numCompany][i]
-                if compFleet['delivery'] <= currentYear and compFleet['tOp'] < tOpSch:
-                    tOpTemp = compFleet['tOp']
-                    if valueDict['vMin'] > compFleet['vDsgnRed'][tOpTemp]:
+            for keyFleet in range(1,NumFleet):
+                if fleetAll[numCompany][keyFleet]['delivery'] <= currentYear and fleetAll[numCompany][keyFleet]['tOp'] < tOpSch:
+                    tOpTemp = fleetAll[numCompany][keyFleet]['tOp']
+                    if valueDict['vMin'] > fleetAll[numCompany][keyFleet]['vDsgnRed'][tOpTemp]:
                         goAhead = False
                     j += 1
             if goAhead:
                 goAhead = True
                 j = 0
-                for i in range(1,NumFleet):
-                    compFleet = fleetAll[numCompany][i]
-                    if compFleet['delivery'] <= currentYear and compFleet['tOp'] < tOpSch:
+                for keyFleet in range(1,NumFleet):
+                    if fleetAll[numCompany][keyFleet]['delivery'] <= currentYear and fleetAll[numCompany][keyFleet]['tOp'] < tOpSch:
                         if v4[j].get() == '1':
-                            compFleet['tOp'] = tOpSch
+                            fleetAll[numCompany][keyFleet]['tOp'] = tOpSch
                         j += 1
+                        fleetAll[numCompany][keyFleet] = fleetAll[numCompany][keyFleet]
                 root.quit()
                 root.destroy()
             else:
@@ -787,23 +524,61 @@ def scrapRefurbishFunc(fleetAll,numCompany,elapsedYear,currentYear,valueDict,tOp
             NumFleet = len(fleetAll[numCompany])
             numAlive = 0
             for keyFleet in range(1,NumFleet):
-                compFleet = fleetAll[numCompany][keyFleet]
-                if compFleet['delivery'] <= currentYear and compFleet['tOp'] < tOpSch:
-                    tOpTemp = compFleet['tOp']
-                    compFleet['WPS'] = int(v1[numAlive].get())
-                    compFleet['SPS'] = int(v2[numAlive].get())
-                    compFleet['CCS'] = int(v3[numAlive].get())
-                    rEEDIreqCurrent = rEEDIreqCurrentFunc(compFleet['wDWT'],rEEDIreq)
-                    compFleet['EEDIref'][tOpTemp], compFleet['EEDIreq'][tOpTemp] = EEDIreqFunc(valueDict['kEEDI1'],compFleet['wDWT'],valueDict['kEEDI2'],rEEDIreqCurrent)
-                    compFleet['MCRM'][tOpTemp], compFleet['PA'][tOpTemp], compFleet['EEDIatt'][tOpTemp], compFleet['vDsgnRed'][tOpTemp] = EEDIattFunc(compFleet['wDWT'],valueDict['wMCR'],valueDict['kMCR1'],valueDict['kMCR2'],valueDict['kMCR3'],valueDict['kPAE1'],valueDict['kPAE2'],valueDict['rCCS'],valueDict['vDsgn'],valueDict['rWPS'],compFleet['Cco2ship'],valueDict['SfcM'],valueDict['SfcA'],valueDict['rSPS'],compFleet['Cco2aux'],compFleet['EEDIreq'][tOpTemp],compFleet['WPS'],compFleet['SPS'],compFleet['CCS'])
-                    if valueDict['vMin'] <= compFleet['vDsgnRed'][tOpTemp]:
+                if fleetAll[numCompany][keyFleet]['delivery'] <= currentYear and fleetAll[numCompany][keyFleet]['tOp'] < tOpSch:
+                    tOpTemp = fleetAll[numCompany][keyFleet]['tOp']
+                    fleetAll[numCompany][keyFleet]['WPS'] = int(v1[numAlive].get())
+                    fleetAll[numCompany][keyFleet]['SPS'] = int(v2[numAlive].get())
+                    fleetAll[numCompany][keyFleet]['CCS'] = int(v3[numAlive].get())
+                    rEEDIreqCurrent = rEEDIreqCurrentFunc(fleetAll[numCompany][keyFleet]['wDWT'],rEEDIreq)
+                    fleetAll[numCompany][keyFleet]['EEDIref'][tOpTemp], fleetAll[numCompany][keyFleet]['EEDIreq'][tOpTemp] = EEDIreqFunc(valueDict['kEEDI1'],fleetAll[numCompany][keyFleet]['wDWT'],valueDict['kEEDI2'],rEEDIreqCurrent)
+                    fleetAll[numCompany][keyFleet]['MCRM'][tOpTemp], fleetAll[numCompany][keyFleet]['PA'][tOpTemp], fleetAll[numCompany][keyFleet]['EEDIatt'][tOpTemp], fleetAll[numCompany][keyFleet]['vDsgnRed'][tOpTemp] = EEDIattFunc(fleetAll[numCompany][keyFleet]['wDWT'],valueDict['wMCR'],valueDict['kMCR1'],valueDict['kMCR2'],valueDict['kMCR3'],valueDict['kPAE1'],valueDict['kPAE2'],valueDict['rCCS'],valueDict['vDsgn'],valueDict['rWPS'],fleetAll[numCompany][keyFleet]['Cco2ship'],valueDict['SfcM'],valueDict['SfcA'],valueDict['rSPS'],fleetAll[numCompany][keyFleet]['Cco2aux'],fleetAll[numCompany][keyFleet]['EEDIreq'][tOpTemp],fleetAll[numCompany][keyFleet]['WPS'],fleetAll[numCompany][keyFleet]['SPS'],fleetAll[numCompany][keyFleet]['CCS'])
+                    if valueDict['vMin'] <= fleetAll[numCompany][keyFleet]['vDsgnRed'][tOpTemp]:
                         button2['state'] = 'normal'
                     numAlive += 1
+                    fleetAll[numCompany][keyFleet] = fleetAll[numCompany][keyFleet]
+                    
+        def _buttonCommandAtOnce(Sys):
+            NumFleet = len(fleetAll[numCompany])
+            j = 0
+            for keyFleet in range(1,NumFleet):
+                if fleetAll[numCompany][keyFleet]['delivery'] <= currentYear and fleetAll[numCompany][keyFleet]['tOp'] < tOpSch:
+                    if Sys == 'WPS':
+                        if label10[j].state() != ('disabled', 'selected'):
+                            if v1[j].get() == '1':
+                                v1[j].set('0')
+                            elif v1[j].get() == '0':
+                                v1[j].set('1')
+                        fleetAll[numCompany][keyFleet][Sys] = int(v1[j].get())
+                    elif Sys == 'SPS':
+                        if label11[j].state() != ('disabled', 'selected'):
+                            if v2[j].get() == '1':
+                                v2[j].set('0')
+                            elif v2[j].get() == '0':
+                                v2[j].set('1')
+                        fleetAll[numCompany][keyFleet][Sys] = int(v2[j].get())
+                    elif Sys == 'CCS':
+                        if label12[j].state() != ('disabled', 'selected'):
+                            if v3[j].get() == '1':
+                                v3[j].set('0')
+                            elif v3[j].get() == '0':
+                                v3[j].set('1')
+                        fleetAll[numCompany][keyFleet][Sys] = int(v3[j].get())
+                    tOpTemp = fleetAll[numCompany][keyFleet]['tOp']
+                    rEEDIreqCurrent = rEEDIreqCurrentFunc(fleetAll[numCompany][keyFleet]['wDWT'],rEEDIreq)
+                    fleetAll[numCompany][keyFleet]['EEDIref'][tOpTemp], fleetAll[numCompany][keyFleet]['EEDIreq'][tOpTemp] = EEDIreqFunc(valueDict['kEEDI1'],fleetAll[numCompany][keyFleet]['wDWT'],valueDict['kEEDI2'],rEEDIreqCurrent)
+                    fleetAll[numCompany][keyFleet]['MCRM'][tOpTemp], fleetAll[numCompany][keyFleet]['PA'][tOpTemp], fleetAll[numCompany][keyFleet]['EEDIatt'][tOpTemp], fleetAll[numCompany][keyFleet]['vDsgnRed'][tOpTemp] = EEDIattFunc(fleetAll[numCompany][keyFleet]['wDWT'],valueDict['wMCR'],valueDict['kMCR1'],valueDict['kMCR2'],valueDict['kMCR3'],valueDict['kPAE1'],valueDict['kPAE2'],valueDict['rCCS'],valueDict['vDsgn'],valueDict['rWPS'],fleetAll[numCompany][keyFleet]['Cco2ship'],valueDict['SfcM'],valueDict['SfcA'],valueDict['rSPS'],fleetAll[numCompany][keyFleet]['Cco2aux'],fleetAll[numCompany][keyFleet]['EEDIreq'][tOpTemp],fleetAll[numCompany][keyFleet]['WPS'],fleetAll[numCompany][keyFleet]['SPS'],fleetAll[numCompany][keyFleet]['CCS'])
+                    label14[j]['text'] = str(fleetAll[numCompany][keyFleet]['vDsgnRed'][tOpTemp])
+                    label15[j]['text'] = str('{:.3g}'.format(fleetAll[numCompany][keyFleet]['EEDIreq'][tOpTemp]))
+                    label16[j]['text'] = str('{:.3g}'.format(fleetAll[numCompany][keyFleet]['EEDIatt'][tOpTemp]))
+                    if valueDict['vMin'] < fleetAll[numCompany][keyFleet]['vDsgnRed'][tOpTemp]:
+                        button2['state'] = 'normal'
+                    fleetAll[numCompany][keyFleet] = fleetAll[numCompany][keyFleet]
+                    j += 1
 
 
         root = Tk()
-        root.title('Company '+str(numCompany)+' : Service Speed in '+str(currentYear))
-        width = 1000
+        root.title('Company '+str(numCompany)+' : Scrap or Refurbish in '+str(currentYear))
+        width = 1200
         height = 500
         placeX = root.winfo_screenwidth()/2 - width/2
         placeY = root.winfo_screenheight()/2 - height/2
@@ -843,47 +618,49 @@ def scrapRefurbishFunc(fleetAll,numCompany,elapsedYear,currentYear,valueDict,tOp
         v4 = []
         NumFleet = len(fleetAll[numCompany])
         for keyFleet in range(1,NumFleet):
-            compFleet = fleetAll[numCompany][keyFleet]
-            if compFleet['delivery'] <= currentYear and compFleet['tOp'] < tOpSch:
-                labelDeli1.append(ttk.Label(frame, text=str(compFleet['delivery']), padding=(5, 2)))
+            fleetAll[numCompany][keyFleet] = fleetAll[numCompany][keyFleet]
+            if fleetAll[numCompany][keyFleet]['delivery'] <= currentYear and fleetAll[numCompany][keyFleet]['tOp'] < tOpSch:
+                labelDeli1.append(ttk.Label(frame, text=str(fleetAll[numCompany][keyFleet]['delivery']), padding=(5, 2)))
                 label00.append(ttk.Label(frame, text=str(keyFleet), padding=(5, 2)))
-                tOpTemp = compFleet['tOp']
-                if compFleet['fuelName'] == 'HFO':
+                tOpTemp = fleetAll[numCompany][keyFleet]['tOp']
+                if fleetAll[numCompany][keyFleet]['fuelName'] == 'HFO':
                     label8.append(ttk.Label(frame, text='HFO/Diesel', padding=(5, 2)))
                 else:
-                    label8.append(ttk.Label(frame, text=compFleet['fuelName'], padding=(5, 2)))
-                label9.append(ttk.Label(frame, text=str(compFleet['CAPcnt']), padding=(5, 2)))
+                    label8.append(ttk.Label(frame, text=fleetAll[numCompany][keyFleet]['fuelName'], padding=(5, 2)))
+                label9.append(ttk.Label(frame, text=str(fleetAll[numCompany][keyFleet]['CAPcnt']), padding=(5, 2)))
                 v1.append(StringVar())
-                if compFleet['WPS']:
+                if fleetAll[numCompany][keyFleet]['WPS']:
                     v1[-1].set('1')
                     label10.append(ttk.Checkbutton(frame, padding=(10), state='disable', command=lambda: _buttonCommandCheckButton(fleetAll,valueDict,rEEDIreq,v1,'WPS'),variable=v1[-1]))
                 else:
                     v1[-1].set('0')
                     label10.append(ttk.Checkbutton(frame, padding=(10), command=lambda: _buttonCommandCheckButton(fleetAll,valueDict,rEEDIreq,v1,'WPS'),variable=v1[-1]))
                 v2.append(StringVar())
-                if compFleet['SPS']:
+                if fleetAll[numCompany][keyFleet]['SPS']:
                     v2[-1].set('1')
                     label11.append(ttk.Checkbutton(frame, padding=(10), state='disable', command=lambda: _buttonCommandCheckButton(fleetAll,valueDict,rEEDIreq,v2,'SPS'),variable=v2[-1]))
                 else:
                     v2[-1].set('0')
                     label11.append(ttk.Checkbutton(frame, padding=(10), command=lambda: _buttonCommandCheckButton(fleetAll,valueDict,rEEDIreq,v2,'SPS'),variable=v2[-1]))
                 v3.append(StringVar())
-                if compFleet['CCS']:
+                if fleetAll[numCompany][keyFleet]['CCS']:
                     v3[-1].set('1')
                     label12.append(ttk.Checkbutton(frame, padding=(10), state='disable', command=lambda: _buttonCommandCheckButton(fleetAll,valueDict,rEEDIreq,v3,'CCS'),variable=v3[-1]))
                 else:
                     v3[-1].set('0')
                     label12.append(ttk.Checkbutton(frame, padding=(10), command=lambda: _buttonCommandCheckButton(fleetAll,valueDict,rEEDIreq,v3,'CCS'),variable=v3[-1]))
-                label14.append(ttk.Label(frame, text=str(compFleet['vDsgnRed'][tOpTemp]), padding=(5, 2)))
-                label15.append(ttk.Label(frame, text='{:.3g}'.format(compFleet['EEDIreq'][tOpTemp]), padding=(5, 2)))
-                label16.append(ttk.Label(frame, text='{:.3g}'.format(compFleet['EEDIatt'][tOpTemp]), padding=(5, 2)))
+                label14.append(ttk.Label(frame, text=str(fleetAll[numCompany][keyFleet]['vDsgnRed'][tOpTemp]), padding=(5, 2)))
+                label15.append(ttk.Label(frame, text='{:.3g}'.format(fleetAll[numCompany][keyFleet]['EEDIreq'][tOpTemp]), padding=(5, 2)))
+                label16.append(ttk.Label(frame, text='{:.3g}'.format(fleetAll[numCompany][keyFleet]['EEDIatt'][tOpTemp]), padding=(5, 2)))
                 v4.append(StringVar())
                 buttonScrap.append(ttk.Checkbutton(frame, padding=(10), variable=v4[-1]))
         # Button
         button1 = ttk.Button(frame, text='Check', command=lambda: _buttonCommandCheck(fleetAll,valueDict,rEEDIreq))
         button2 = ttk.Button(frame, text='Next', state='disabled', command=lambda: _buttonCommandNext(root,fleetAll,numCompany,tOpSch))
+        buttonWPS = ttk.Button(frame, text='Check all WPS at once', command=lambda: _buttonCommandAtOnce('WPS'))
+        buttonSPS = ttk.Button(frame, text='Check all SPS at once', command=lambda: _buttonCommandAtOnce('SPS'))
+        buttonCCS = ttk.Button(frame, text='Check all CCS at once', command=lambda: _buttonCommandAtOnce('CCS'))
         
-
         # Layout
         label0.grid(row=0, column=0)
         labelDeli.grid(row=0, column=1)
@@ -910,6 +687,9 @@ def scrapRefurbishFunc(fleetAll,numCompany,elapsedYear,currentYear,valueDict,tOp
             buttonScrap[i].grid(row=i+1, column=10)
         button1.grid(row=i+2, column=9)
         button2.grid(row=i+2, column=10)
+        buttonWPS.grid(row=i+2, column=1)
+        buttonSPS.grid(row=i+2, column=2)
+        buttonCCS.grid(row=i+2, column=3)
 
         root.deiconify()
         root.mainloop()
@@ -958,53 +738,35 @@ def scrapRefurbishFunc(fleetAll,numCompany,elapsedYear,currentYear,valueDict,tOp
 
     # calculate EEDI
     NumFleet = len(fleetAll[numCompany])
-    for i in range(1,NumFleet):
-        compFleet = fleetAll[numCompany][i]
-        tOpTemp = compFleet['tOp']
-        if compFleet['delivery'] <= currentYear and compFleet['tOp'] < tOpSch:
-            rEEDIreqCurrent = rEEDIreqCurrentFunc(compFleet['wDWT'],rEEDIreq)
-            compFleet['EEDIref'][tOpTemp], compFleet['EEDIreq'][tOpTemp] = EEDIreqFunc(valueDict['kEEDI1'],compFleet['wDWT'],valueDict['kEEDI2'],rEEDIreqCurrent)
-            compFleet['MCRM'][tOpTemp], compFleet['PA'][tOpTemp], compFleet['EEDIatt'][tOpTemp], compFleet['vDsgnRed'][tOpTemp] = EEDIattFunc(compFleet['wDWT'],valueDict['wMCR'],valueDict['kMCR1'],valueDict['kMCR2'],valueDict['kMCR3'],valueDict['kPAE1'],valueDict['kPAE2'],valueDict['rCCS'],valueDict['vDsgn'],valueDict['rWPS'],compFleet['Cco2ship'],valueDict['SfcM'],valueDict['SfcA'],valueDict['rSPS'],compFleet['Cco2aux'],compFleet['EEDIreq'][tOpTemp],compFleet['WPS'],compFleet['SPS'],compFleet['CCS'])
-            fleetAll[numCompany][i] = compFleet
-
-    # show fleet list
-    _fleetListGui(fleetAll,numCompany)
+    for keyFleet in range(1,NumFleet):
+        tOpTemp = fleetAll[numCompany][keyFleet]['tOp']
+        if fleetAll[numCompany][keyFleet]['delivery'] <= currentYear and fleetAll[numCompany][keyFleet]['tOp'] < tOpSch:
+            rEEDIreqCurrent = rEEDIreqCurrentFunc(fleetAll[numCompany][keyFleet]['wDWT'],rEEDIreq)
+            fleetAll[numCompany][keyFleet]['EEDIref'][tOpTemp], fleetAll[numCompany][keyFleet]['EEDIreq'][tOpTemp] = EEDIreqFunc(valueDict['kEEDI1'],fleetAll[numCompany][keyFleet]['wDWT'],valueDict['kEEDI2'],rEEDIreqCurrent)
+            fleetAll[numCompany][keyFleet]['MCRM'][tOpTemp], fleetAll[numCompany][keyFleet]['PA'][tOpTemp], fleetAll[numCompany][keyFleet]['EEDIatt'][tOpTemp], fleetAll[numCompany][keyFleet]['vDsgnRed'][tOpTemp] = EEDIattFunc(fleetAll[numCompany][keyFleet]['wDWT'],valueDict['wMCR'],valueDict['kMCR1'],valueDict['kMCR2'],valueDict['kMCR3'],valueDict['kPAE1'],valueDict['kPAE2'],valueDict['rCCS'],valueDict['vDsgn'],valueDict['rWPS'],fleetAll[numCompany][keyFleet]['Cco2ship'],valueDict['SfcM'],valueDict['SfcA'],valueDict['rSPS'],fleetAll[numCompany][keyFleet]['Cco2aux'],fleetAll[numCompany][keyFleet]['EEDIreq'][tOpTemp],fleetAll[numCompany][keyFleet]['WPS'],fleetAll[numCompany][keyFleet]['SPS'],fleetAll[numCompany][keyFleet]['CCS'])      
     
     # decide to scrap or refurbish currently alive fleet
-    '''
-    for i in range(1,NumFleet):
-        compFleet = fleetAll[numCompany][i]
-        tOpTemp = compFleet['tOp']
-        if compFleet['delivery'] <= currentYear and compFleet['tOp'] < tOpSch:
-            compFleet = _scrapOrRefurbishGui(compFleet,i,tOpSch,valueDict)
+    fleetAll = _scrapOrRefurbishGui(fleetAll,numCompany,tOpSch,valueDict,currentYear,rEEDIreq)
+    for keyFleet in range(1,NumFleet):
+        tOpTemp = fleetAll[numCompany][keyFleet]['tOp']
+        if fleetAll[numCompany][keyFleet]['delivery'] <= currentYear and fleetAll[numCompany][keyFleet]['tOp'] < tOpSch:
             cAdditionalEquipment = 1
-            if compFleet['WPS']:
+            if fleetAll[numCompany][keyFleet]['WPS']:
                 cAdditionalEquipment += valueDict['dcostWPS']
-            elif compFleet['SPS']:
+            elif fleetAll[numCompany][keyFleet]['SPS']:
                 cAdditionalEquipment += valueDict['dcostSPS']
-            elif compFleet['CCS']:
+            elif fleetAll[numCompany][keyFleet]['CCS']:
                 cAdditionalEquipment += valueDict['dcostCCS']
-            compFleet['costRfrb'][tOpTemp] = cAdditionalEquipment * compFleet['costShipBasicHFO']
-            fleetAll[numCompany][i] = compFleet
-    '''
-    fleetAll = _scrapOrRefurbishGui2(fleetAll,numCompany,tOpSch,valueDict,currentYear,rEEDIreq)
+            fleetAll[numCompany][keyFleet]['costRfrb'][tOpTemp] = cAdditionalEquipment * fleetAll[numCompany][keyFleet]['costShipBasicHFO']
 
     # decide additional shipping fee per container
     _dcostCntGui(fleetAll,numCompany,elapsedYear)
-
-    #if decisionList[numCompany][currentYear]['Fee'] >= valueDict["dcostCntMin"] and decisionList[numCompany][currentYear]['Fee'] <= valueDict["dcostCntMax"]:
-            #    dcostCntSum += decisionList[numCompany][currentYear]['Fee'] - valueDict["dcostCntMin"]
-            #else:
-            #    print('ERROR: dcostCnt should be more equal than {0} and less equal than {1}, but now {2}. '.format(valueDict["dcostCntMin"], valueDict["dcostCntMax"], decisionList[numCompany][currentYear]['Fee']))
-            #    sys.exit()
 
     return fleetAll, fleetAll[numCompany]['total']['dcostCnt'][elapsedYear]
 
 def orderShipFunc(fleetAll,numCompany,fuelName,WPS,SPS,CCS,CAPcnt,tOpSch,tbid,iniT,currentYear,elapsedYear,valueDict,NShipFleet,parameterFile2,parameterFile12,parameterFile3,parameterFile5):
     NumFleet = len(fleetAll[numCompany])
     fleetAll[numCompany].setdefault(NumFleet,{})
-    compFleet = fleetAll[numCompany][NumFleet]
-    compTotal = fleetAll[numCompany]['total']
 
                 #if decisionList[numCompany][currentYear]['CAP'] >= valueDict["CAPcntMin"] and decisionList[numCompany][currentYear]['CAP'] <= valueDict["CAPcntMax"]:
                 #    fleets = rs.orderShipFunc(fleets,numCompany,decisionList[numCompany][currentYear]['fuelType'],decisionList[numCompany][currentYear]['WPS'],decisionList[numCompany][currentYear]['SPS'],decisionList[numCompany][currentYear]['CCS'],decisionList[numCompany][currentYear]['CAP'],tOpSch,tbid,0,currentYear,parameterFile2,parameterFile12,parameterFile3,parameterFile5)
@@ -1012,52 +774,50 @@ def orderShipFunc(fleetAll,numCompany,fuelName,WPS,SPS,CCS,CAPcnt,tOpSch,tbid,in
                 #    print('ERROR: CAPcnt should be more equal than {0} and less equal than {1}, but now {2}. '.format(valueDict["CAPcntMin"], valueDict["CAPcntMax"], decisionList[numCompany][currentYear]['CAP']))
                 #    sys.exit()
 
-    compFleet['fuelName'] = fuelName
-    compFleet['WPS'] = WPS
-    compFleet['SPS'] = SPS
-    compFleet['CCS'] = CCS
-    compFleet['CAPcnt'] = float(CAPcnt)
-    compFleet['wDWT'] = wDWTFunc(valueDict["kDWT1"],compFleet['CAPcnt'],valueDict["kDWT2"])
-    compFleet['wFLD'] = wFLDFunc(valueDict["kFLD1"],compFleet['wDWT'],valueDict["kFLD2"])
-    compFleet['CeqLHVship'] = CeqLHVFunc(parameterFile2,compFleet['fuelName'])
-    compFleet['CeqLHVaux'] = CeqLHVFunc(parameterFile12,compFleet['fuelName'])
-    compFleet['Cco2ship'] = Cco2Func(parameterFile3,compFleet['fuelName'])
+    fleetAll[numCompany][NumFleet]['fuelName'] = fuelName
+    fleetAll[numCompany][NumFleet]['WPS'] = WPS
+    fleetAll[numCompany][NumFleet]['SPS'] = SPS
+    fleetAll[numCompany][NumFleet]['CCS'] = CCS
+    fleetAll[numCompany][NumFleet]['CAPcnt'] = float(CAPcnt)
+    fleetAll[numCompany][NumFleet]['wDWT'] = wDWTFunc(valueDict["kDWT1"],fleetAll[numCompany][NumFleet]['CAPcnt'],valueDict["kDWT2"])
+    fleetAll[numCompany][NumFleet]['wFLD'] = wFLDFunc(valueDict["kFLD1"],fleetAll[numCompany][NumFleet]['wDWT'],valueDict["kFLD2"])
+    fleetAll[numCompany][NumFleet]['CeqLHVship'] = CeqLHVFunc(parameterFile2,fleetAll[numCompany][NumFleet]['fuelName'])
+    fleetAll[numCompany][NumFleet]['CeqLHVaux'] = CeqLHVFunc(parameterFile12,fleetAll[numCompany][NumFleet]['fuelName'])
+    fleetAll[numCompany][NumFleet]['Cco2ship'] = Cco2Func(parameterFile3,fleetAll[numCompany][NumFleet]['fuelName'])
     if fuelName == 'HFO':
-        compFleet['Cco2aux'] = Cco2Func(parameterFile3,'Diesel')
+        fleetAll[numCompany][NumFleet]['Cco2aux'] = Cco2Func(parameterFile3,'Diesel')
     else:
-        compFleet['Cco2aux'] = Cco2Func(parameterFile3,compFleet['fuelName'])
-    compFleet['rShipBasic'] = rShipBasicFunc(parameterFile5,compFleet['fuelName'],compFleet['CAPcnt'])
-    compFleet['delivery'] = currentYear+tbid
-    compFleet['tOp'] = iniT
-    compFleet['costShipBasicHFO'], compFleet['costShipBasic'], compFleet['costShipAdd'], compFleet['costShip'] = costShipFunc(valueDict["kShipBasic1"], compFleet["CAPcnt"], valueDict["kShipBasic2"], compFleet['rShipBasic'], valueDict["dcostWPS"], valueDict["dcostSPS"], valueDict["dcostCCS"], compFleet['WPS'], compFleet['SPS'], compFleet['CCS'])
+        fleetAll[numCompany][NumFleet]['Cco2aux'] = Cco2Func(parameterFile3,fleetAll[numCompany][NumFleet]['fuelName'])
+    fleetAll[numCompany][NumFleet]['rShipBasic'] = rShipBasicFunc(parameterFile5,fleetAll[numCompany][NumFleet]['fuelName'],fleetAll[numCompany][NumFleet]['CAPcnt'])
+    fleetAll[numCompany][NumFleet]['delivery'] = currentYear+tbid
+    fleetAll[numCompany][NumFleet]['tOp'] = iniT
+    fleetAll[numCompany][NumFleet]['costShipBasicHFO'], fleetAll[numCompany][NumFleet]['costShipBasic'], fleetAll[numCompany][NumFleet]['costShipAdd'], fleetAll[numCompany][NumFleet]['costShip'] = costShipFunc(valueDict["kShipBasic1"], fleetAll[numCompany][NumFleet]["CAPcnt"], valueDict["kShipBasic2"], fleetAll[numCompany][NumFleet]['rShipBasic'], valueDict["dcostWPS"], valueDict["dcostSPS"], valueDict["dcostCCS"], fleetAll[numCompany][NumFleet]['WPS'], fleetAll[numCompany][NumFleet]['SPS'], fleetAll[numCompany][NumFleet]['CCS'])
     if iniT == 0:
-        compTotal['costShip'][elapsedYear] += NShipFleet * compFleet['costShip']
-        compTotal['costShipBasicHFO'][elapsedYear] += NShipFleet * compFleet['costShipBasicHFO']
-    compFleet['v'] = np.zeros(tOpSch)
-    #compFleet['v'][:] = 1
-    compFleet['d'] = np.zeros(tOpSch)
-    compFleet['fShipORG'] = np.zeros(tOpSch)
-    compFleet['fAuxORG'] = np.zeros(tOpSch)
-    compFleet['gORG'] = np.zeros(tOpSch)
-    compFleet['costFuelORG'] = np.zeros(tOpSch)
-    compFleet['costFuel'] = np.zeros(tOpSch)
-    compFleet['dcostFuel'] = np.zeros(tOpSch)
-    compFleet['fShip'] = np.zeros(tOpSch)
-    compFleet['fAux'] = np.zeros(tOpSch)
-    compFleet['g'] = np.zeros(tOpSch)
-    compFleet['cta'] = np.zeros(tOpSch)
-    compFleet['dcostShipping'] = np.zeros(tOpSch)
-    compFleet['gTilde'] = np.zeros(tOpSch)
-    compFleet['costRfrb'] = np.zeros(tOpSch)
-    compFleet['EEDIref'] = np.zeros(tOpSch)
-    compFleet['EEDIreq'] = np.zeros(tOpSch)
-    compFleet['EEDIatt'] = np.zeros(tOpSch)
-    compFleet['vDsgnRed'] = np.zeros(tOpSch)
-    compFleet['MCRM'] = np.zeros(tOpSch)
-    compFleet['PA'] = np.zeros(tOpSch)
-    compFleet['year'] = np.zeros(tOpSch)
-    fleetAll[numCompany][NumFleet] = compFleet
-    fleetAll[numCompany]['total'] = compTotal
+        fleetAll[numCompany]['total']['costShip'][elapsedYear] += NShipFleet * fleetAll[numCompany][NumFleet]['costShip']
+        fleetAll[numCompany]['total']['costShipBasicHFO'][elapsedYear] += NShipFleet * fleetAll[numCompany][NumFleet]['costShipBasicHFO']
+    fleetAll[numCompany][NumFleet]['v'] = np.zeros(tOpSch)
+    fleetAll[numCompany][NumFleet]['d'] = np.zeros(tOpSch)
+    fleetAll[numCompany][NumFleet]['fShipORG'] = np.zeros(tOpSch)
+    fleetAll[numCompany][NumFleet]['fAuxORG'] = np.zeros(tOpSch)
+    fleetAll[numCompany][NumFleet]['gORG'] = np.zeros(tOpSch)
+    fleetAll[numCompany][NumFleet]['costFuelORG'] = np.zeros(tOpSch)
+    fleetAll[numCompany][NumFleet]['costFuel'] = np.zeros(tOpSch)
+    fleetAll[numCompany][NumFleet]['dcostFuel'] = np.zeros(tOpSch)
+    fleetAll[numCompany][NumFleet]['fShip'] = np.zeros(tOpSch)
+    fleetAll[numCompany][NumFleet]['fAux'] = np.zeros(tOpSch)
+    fleetAll[numCompany][NumFleet]['g'] = np.zeros(tOpSch)
+    fleetAll[numCompany][NumFleet]['cta'] = np.zeros(tOpSch)
+    fleetAll[numCompany][NumFleet]['dcostShipping'] = np.zeros(tOpSch)
+    fleetAll[numCompany][NumFleet]['gTilde'] = np.zeros(tOpSch)
+    fleetAll[numCompany][NumFleet]['costRfrb'] = np.zeros(tOpSch)
+    fleetAll[numCompany][NumFleet]['EEDIref'] = np.zeros(tOpSch)
+    fleetAll[numCompany][NumFleet]['EEDIreq'] = np.zeros(tOpSch)
+    fleetAll[numCompany][NumFleet]['EEDIatt'] = np.zeros(tOpSch)
+    fleetAll[numCompany][NumFleet]['vDsgnRed'] = np.zeros(tOpSch)
+    fleetAll[numCompany][NumFleet]['MCRM'] = np.zeros(tOpSch)
+    fleetAll[numCompany][NumFleet]['PA'] = np.zeros(tOpSch)
+    fleetAll[numCompany][NumFleet]['year'] = np.zeros(tOpSch)
+    fleetAll[numCompany]['total'] = fleetAll[numCompany]['total']
     return fleetAll
 
 def orderPhaseFunc(fleetAll,numCompany,valueDict,elapsedYear,tOpSch,tbid,currentYear,rEEDIreq,NShipFleet,parameterFile2,parameterFile12,parameterFile3,parameterFile5):
@@ -1228,73 +988,60 @@ def orderPhaseFunc(fleetAll,numCompany,valueDict,elapsedYear,tOpSch,tbid,current
 
 def yearlyOperationFunc(fleetAll,numCompany,pureDi,overDi,startYear,elapsedYear,NShipFleet,tOpSch,v,valueDict,parameterFile4,nextIf):
     NumFleet = len(fleetAll[numCompany])
-    compTotal = fleetAll[numCompany]['total']
-
-    #if decisionList[numCompany][currentYear]['Speed'] >= valueDict["vMin"]:
-            #    fleets = rs.yearlyOperationFunc(fleets,numCompany,Di,startYear,elapsedYear,NShipFleet,Alpha,tOpSch,decisionList[numCompany][currentYear]['Speed'],valueDict,parameterFile4)
-            #else:
-            #    print('ERROR: CAPcnt should be more equal than {0} , but now {1}. '.format(valueDict["vMin"], decisionList[numCompany][currentYear]['Speed']))
-            #    sys.exit()
-    #print('ERROR: rocc should be 0.0 < rocc but now',Di/maxCta,'.')
+    fleetAll[numCompany]['total'] = fleetAll[numCompany]['total']
 
     j = 0
     maxCta = 0
     currentYear = startYear+elapsedYear
-    for i in range(1,NumFleet):
-        compFleet = fleetAll[numCompany][i]
-        if compFleet['delivery'] <= currentYear and compFleet['tOp'] < tOpSch:
-            tOpTemp = compFleet['tOp']
-            compFleet['v'][tOpTemp] = float(v[j].get()) # input for each fleet
-            compFleet['d'][tOpTemp] = dFunc(valueDict["Dyear"],valueDict["Hday"],compFleet['v'][tOpTemp],valueDict["Rrun"])
-            maxCta += NShipFleet * maxCtaFunc(compFleet['CAPcnt'],compFleet['d'][tOpTemp])
-            fleetAll[numCompany][i] = compFleet
+    for keyFleet in range(1,NumFleet):
+        if fleetAll[numCompany][keyFleet]['delivery'] <= currentYear and fleetAll[numCompany][keyFleet]['tOp'] < tOpSch:
+            tOpTemp = fleetAll[numCompany][keyFleet]['tOp']
+            fleetAll[numCompany][keyFleet]['v'][tOpTemp] = float(v[j].get()) # input for each fleet
+            fleetAll[numCompany][keyFleet]['d'][tOpTemp] = dFunc(valueDict["Dyear"],valueDict["Hday"],fleetAll[numCompany][keyFleet]['v'][tOpTemp],valueDict["Rrun"])
+            maxCta += NShipFleet * maxCtaFunc(fleetAll[numCompany][keyFleet]['CAPcnt'],fleetAll[numCompany][keyFleet]['d'][tOpTemp])
             j += 1
     
-    compTotal['maxCta'][elapsedYear] = maxCta
+    fleetAll[numCompany]['total']['maxCta'][elapsedYear] = maxCta
     Di = overDi + pureDi
-
     if Di <= valueDict["rDMax"]*maxCta and Di / maxCta > 0.0:
-        compTotal['rocc'][elapsedYear] = Di / maxCta
+        fleetAll[numCompany]['total']['rocc'][elapsedYear] = Di / maxCta
     elif Di > valueDict["rDMax"]*maxCta:
-        compTotal['rocc'][elapsedYear] = valueDict["rDMax"]
+        fleetAll[numCompany]['total']['rocc'][elapsedYear] = valueDict["rDMax"]
         overDi = Di - valueDict["rDMax"]*maxCta
-        compTotal['overDi'][elapsedYear] = overDi
-        
-    compTotal['costRfrb'][elapsedYear] = 0
-    compTotal['g'][elapsedYear] = 0
-    compTotal['cta'][elapsedYear] = 0
-    compTotal['costFuel'][elapsedYear] = 0
-    for i in range(1,NumFleet):
-        compFleet = fleetAll[numCompany][i]
-        if compFleet['delivery'] <= currentYear and compFleet['tOp'] < tOpSch:
-            tOpTemp = compFleet['tOp']
-            unitCostFuel, unitCostFuelHFO = unitCostFuelFunc(parameterFile4,compFleet['fuelName'],currentYear)
-            compFleet['cta'][tOpTemp] = ctaFunc(compFleet['CAPcnt'],compTotal['rocc'][elapsedYear],compFleet['d'][tOpTemp])
-            compFleet['fShipORG'][tOpTemp], compFleet['fShip'][tOpTemp] = fShipFunc(valueDict["kShip1"],valueDict["kShip2"],compFleet['wDWT'],compFleet['wFLD'],compTotal['rocc'][elapsedYear],valueDict["CNM2km"],compFleet['v'][tOpTemp],compFleet['d'][tOpTemp],valueDict["rWPS"],compFleet['WPS'],compFleet['CeqLHVship'])
-            compFleet['fAuxORG'][tOpTemp], compFleet['fAux'][tOpTemp] = fAuxFunc(valueDict["Dyear"],valueDict["Hday"],valueDict["Rrun"],valueDict["kAux1"],valueDict["kAux2"],compFleet['wDWT'],valueDict["rSPS"],compFleet['SPS'],compFleet['CeqLHVaux'])
-            compFleet['gORG'][tOpTemp], compFleet['g'][tOpTemp] = gFunc(compFleet['Cco2ship'],compFleet['fShip'][tOpTemp],compFleet['Cco2aux'],compFleet['fAux'][tOpTemp],valueDict["rCCS"],compFleet['CCS'])     
-            compFleet['costFuelORG'][tOpTemp], compFleet['costFuel'][tOpTemp], compFleet['dcostFuel'][tOpTemp] = costFuelFunc(unitCostFuelHFO, unitCostFuel, compFleet['fShipORG'][tOpTemp], compFleet['fAuxORG'][tOpTemp], compFleet['fShip'][tOpTemp], compFleet['fAux'][tOpTemp])
-            compFleet['dcostShipping'][tOpTemp] = additionalShippingFeeFunc(tOpTemp, tOpSch, compFleet['dcostFuel'][tOpTemp], compFleet['costShip'], compFleet['costShipBasicHFO'])
-            compFleet['gTilde'][tOpTemp] = compFleet['g'][tOpTemp] / compFleet['cta'][tOpTemp]
-            compTotal['costRfrb'][elapsedYear] += NShipFleet * compFleet['costRfrb'][tOpTemp]
-            compTotal['g'][elapsedYear] += NShipFleet * compFleet['g'][tOpTemp]
-            compTotal['cta'][elapsedYear] += NShipFleet * compFleet['cta'][tOpTemp]
-            compTotal['costFuel'][elapsedYear] += NShipFleet * compFleet['costFuel'][tOpTemp]
+        fleetAll[numCompany]['total']['overDi'][elapsedYear] = overDi
+    fleetAll[numCompany]['total']['costRfrb'][elapsedYear] = 0
+    fleetAll[numCompany]['total']['g'][elapsedYear] = 0
+    fleetAll[numCompany]['total']['cta'][elapsedYear] = 0
+    fleetAll[numCompany]['total']['costFuel'][elapsedYear] = 0
+    for keyFleet in range(1,NumFleet):
+        if fleetAll[numCompany][keyFleet]['delivery'] <= currentYear and fleetAll[numCompany][keyFleet]['tOp'] < tOpSch:
+            tOpTemp = fleetAll[numCompany][keyFleet]['tOp']
+            unitCostFuel, unitCostFuelHFO = unitCostFuelFunc(parameterFile4,fleetAll[numCompany][keyFleet]['fuelName'],currentYear)
+            fleetAll[numCompany][keyFleet]['cta'][tOpTemp] = ctaFunc(fleetAll[numCompany][keyFleet]['CAPcnt'],fleetAll[numCompany]['total']['rocc'][elapsedYear],fleetAll[numCompany][keyFleet]['d'][tOpTemp])
+            fleetAll[numCompany][keyFleet]['fShipORG'][tOpTemp], fleetAll[numCompany][keyFleet]['fShip'][tOpTemp] = fShipFunc(valueDict["kShip1"],valueDict["kShip2"],fleetAll[numCompany][keyFleet]['wDWT'],fleetAll[numCompany][keyFleet]['wFLD'],fleetAll[numCompany]['total']['rocc'][elapsedYear],valueDict["CNM2km"],fleetAll[numCompany][keyFleet]['v'][tOpTemp],fleetAll[numCompany][keyFleet]['d'][tOpTemp],valueDict["rWPS"],fleetAll[numCompany][keyFleet]['WPS'],fleetAll[numCompany][keyFleet]['CeqLHVship'])
+            fleetAll[numCompany][keyFleet]['fAuxORG'][tOpTemp], fleetAll[numCompany][keyFleet]['fAux'][tOpTemp] = fAuxFunc(valueDict["Dyear"],valueDict["Hday"],valueDict["Rrun"],valueDict["kAux1"],valueDict["kAux2"],fleetAll[numCompany][keyFleet]['wDWT'],valueDict["rSPS"],fleetAll[numCompany][keyFleet]['SPS'],fleetAll[numCompany][keyFleet]['CeqLHVaux'])
+            fleetAll[numCompany][keyFleet]['gORG'][tOpTemp], fleetAll[numCompany][keyFleet]['g'][tOpTemp] = gFunc(fleetAll[numCompany][keyFleet]['Cco2ship'],fleetAll[numCompany][keyFleet]['fShip'][tOpTemp],fleetAll[numCompany][keyFleet]['Cco2aux'],fleetAll[numCompany][keyFleet]['fAux'][tOpTemp],valueDict["rCCS"],fleetAll[numCompany][keyFleet]['CCS'])     
+            fleetAll[numCompany][keyFleet]['costFuelORG'][tOpTemp], fleetAll[numCompany][keyFleet]['costFuel'][tOpTemp], fleetAll[numCompany][keyFleet]['dcostFuel'][tOpTemp] = costFuelFunc(unitCostFuelHFO, unitCostFuel, fleetAll[numCompany][keyFleet]['fShipORG'][tOpTemp], fleetAll[numCompany][keyFleet]['fAuxORG'][tOpTemp], fleetAll[numCompany][keyFleet]['fShip'][tOpTemp], fleetAll[numCompany][keyFleet]['fAux'][tOpTemp])
+            fleetAll[numCompany][keyFleet]['dcostShipping'][tOpTemp] = additionalShippingFeeFunc(tOpTemp, tOpSch, fleetAll[numCompany][keyFleet]['dcostFuel'][tOpTemp], fleetAll[numCompany][keyFleet]['costShip'], fleetAll[numCompany][keyFleet]['costShipBasicHFO'])
+            fleetAll[numCompany][keyFleet]['gTilde'][tOpTemp] = fleetAll[numCompany][keyFleet]['g'][tOpTemp] / fleetAll[numCompany][keyFleet]['cta'][tOpTemp]
+            fleetAll[numCompany]['total']['costRfrb'][elapsedYear] += NShipFleet * fleetAll[numCompany][keyFleet]['costRfrb'][tOpTemp]
+            fleetAll[numCompany]['total']['g'][elapsedYear] += NShipFleet * fleetAll[numCompany][keyFleet]['g'][tOpTemp]
+            fleetAll[numCompany]['total']['cta'][elapsedYear] += NShipFleet * fleetAll[numCompany][keyFleet]['cta'][tOpTemp]
+            fleetAll[numCompany]['total']['costFuel'][elapsedYear] += NShipFleet * fleetAll[numCompany][keyFleet]['costFuel'][tOpTemp]
+                
+    for keyFleet in range(1,NumFleet):
+        if fleetAll[numCompany][keyFleet]['delivery'] <= currentYear and fleetAll[numCompany][keyFleet]['tOp'] < tOpSch:
             if nextIf:
-                compFleet['year'][tOpTemp] = currentYear
-                compFleet['tOp'] += 1
-            fleetAll[numCompany][i] = compFleet
+                fleetAll[numCompany][keyFleet]['year'][fleetAll[numCompany][keyFleet]['tOp']] = currentYear
+                fleetAll[numCompany][keyFleet]['tOp'] += 1
 
-    compTotal['costAll'][elapsedYear] = compTotal['costFuel'][elapsedYear] + compTotal['costShip'][elapsedYear]/tOpSch + compTotal['costRfrb'][elapsedYear]
-    compTotal['dcostEco'][elapsedYear] = compTotal['costFuel'][elapsedYear] + (compTotal['costShip'][elapsedYear]-compTotal['costShipBasicHFO'][elapsedYear])/tOpSch + compTotal['costRfrb'][elapsedYear]
-    compTotal['nTransCnt'][elapsedYear] = compTotal['cta'][elapsedYear] / valueDict['dJPNA']
-    compTotal['sale'][elapsedYear] = compTotal['nTransCnt'][elapsedYear] * (compTotal['dcostCnt'][elapsedYear] + valueDict['costCntNom'])
-
-    compTotal['gTilde'][elapsedYear] = compTotal['g'][elapsedYear] / compTotal['cta'][elapsedYear]
-    compTotal['costTilde'][elapsedYear] = compTotal['costAll'][elapsedYear] / compTotal['cta'][elapsedYear]
-    compTotal['saleTilde'][elapsedYear] = compTotal['sale'][elapsedYear] / compTotal['cta'][elapsedYear]
-
-    fleetAll[numCompany]['total'] = compTotal
+    fleetAll[numCompany]['total']['costAll'][elapsedYear] = fleetAll[numCompany]['total']['costFuel'][elapsedYear] + fleetAll[numCompany]['total']['costShip'][elapsedYear]/tOpSch + fleetAll[numCompany]['total']['costRfrb'][elapsedYear]
+    fleetAll[numCompany]['total']['dcostEco'][elapsedYear] = fleetAll[numCompany]['total']['costFuel'][elapsedYear] + (fleetAll[numCompany]['total']['costShip'][elapsedYear]-fleetAll[numCompany]['total']['costShipBasicHFO'][elapsedYear])/tOpSch + fleetAll[numCompany]['total']['costRfrb'][elapsedYear]
+    fleetAll[numCompany]['total']['nTransCnt'][elapsedYear] = fleetAll[numCompany]['total']['cta'][elapsedYear] / valueDict['dJPNA']
+    fleetAll[numCompany]['total']['sale'][elapsedYear] = fleetAll[numCompany]['total']['nTransCnt'][elapsedYear] * (fleetAll[numCompany]['total']['dcostCnt'][elapsedYear] + valueDict['costCntNom'])
+    fleetAll[numCompany]['total']['gTilde'][elapsedYear] = fleetAll[numCompany]['total']['g'][elapsedYear] / fleetAll[numCompany]['total']['cta'][elapsedYear]
+    fleetAll[numCompany]['total']['costTilde'][elapsedYear] = fleetAll[numCompany]['total']['costAll'][elapsedYear] / fleetAll[numCompany]['total']['cta'][elapsedYear]
+    fleetAll[numCompany]['total']['saleTilde'][elapsedYear] = fleetAll[numCompany]['total']['sale'][elapsedYear] / fleetAll[numCompany]['total']['cta'][elapsedYear]
     return fleetAll, overDi
 
 def yearlyOperationPhaseFunc(fleetAll,numCompany,pureDi,overDi,startYear,elapsedYear,NShipFleet,tOpSch,valueDict,parameterFile4):
@@ -1304,15 +1051,15 @@ def yearlyOperationPhaseFunc(fleetAll,numCompany,pureDi,overDi,startYear,elapsed
             NumFleet = len(fleetAll[numCompany])
             j = 0
             goAhead = True
-            for i in range(1,NumFleet):
-                compFleet = fleetAll[numCompany][i]
-                if compFleet['delivery'] <= currentYear and compFleet['tOp'] < tOpSch:
-                    tOpTemp = compFleet['tOp']
-                    if float(v13[j].get()) < 12 or float(v13[j].get()) > compFleet['vDsgnRed'][tOpTemp]:
+            for keyFleet in range(1,NumFleet):
+                if fleetAll[numCompany][keyFleet]['delivery'] <= currentYear and fleetAll[numCompany][keyFleet]['tOp'] < tOpSch:
+                    tOpTemp = fleetAll[numCompany][keyFleet]['tOp']
+                    if float(v13[j].get()) < 12 or float(v13[j].get()) > fleetAll[numCompany][keyFleet]['vDsgnRed'][tOpTemp]:
                         goAhead = False
                     j += 1
             if goAhead:
                 fleetAll, overDi = yearlyOperationFunc(fleetAll,numCompany,pureDi,overDi,startYear,elapsedYear,NShipFleet,tOpSch,v13,valueDict,parameterFile4,True)
+                fleetAll[numCompany]['total']['atOnce'][elapsedYear] = float(vAtOnce.get())
                 root.quit()
                 root.destroy()
             else:
@@ -1320,25 +1067,37 @@ def yearlyOperationPhaseFunc(fleetAll,numCompany,pureDi,overDi,startYear,elapsed
 
         def _buttonCommandCalc(fleetAll,numCompany,pureDi,overDi,startYear,elapsedYear,NShipFleet,tOpSch,valueDict,parameterFile4):
             fleetAll, _ = yearlyOperationFunc(fleetAll,numCompany,pureDi,overDi,startYear,elapsedYear,NShipFleet,tOpSch,v13,valueDict,parameterFile4,False)
-            compTotal = fleetAll[numCompany]['total']
-            labelRes4['text'] = str('{:.3g}'.format(compTotal['cta'][elapsedYear]))
-            labelRes6['text'] = str('{:.3g}'.format(compTotal['rocc'][elapsedYear]))
-            labelRes8['text'] = str('{:.3g}'.format(compTotal['costFuel'][elapsedYear]))
-            labelRes10['text'] = str('{:.3g}'.format(compTotal['g'][elapsedYear]))
+            fleetAll[numCompany]['total'] = fleetAll[numCompany]['total']
+            labelRes4['text'] = str('{:.3g}'.format(fleetAll[numCompany]['total']['cta'][elapsedYear]))
+            labelRes6['text'] = str('{:.3g}'.format(fleetAll[numCompany]['total']['rocc'][elapsedYear]))
+            labelRes8['text'] = str('{:.3g}'.format(fleetAll[numCompany]['total']['costFuel'][elapsedYear]))
+            labelRes10['text'] = str('{:.3g}'.format(fleetAll[numCompany]['total']['g'][elapsedYear]))
             button2['state'] = 'normal'
             NumFleet = len(fleetAll[numCompany])
             j = 0
-            for i in range(1,NumFleet):
-                compFleet = fleetAll[numCompany][i]
-                if compFleet['delivery'] <= currentYear and compFleet['tOp'] < tOpSch:
-                    tOpTemp = compFleet['tOp']
-                    if float(v13[j].get()) < 12 or float(v13[j].get()) > compFleet['vDsgnRed'][tOpTemp]:
+            for keyFleet in range(1,NumFleet):
+                if fleetAll[numCompany][keyFleet]['delivery'] <= currentYear and fleetAll[numCompany][keyFleet]['tOp'] < tOpSch:
+                    tOpTemp = fleetAll[numCompany][keyFleet]['tOp']
+                    if float(v13[j].get()) < 12 or float(v13[j].get()) > fleetAll[numCompany][keyFleet]['vDsgnRed'][tOpTemp]:
                         button2['state'] = 'disabled'
                     j += 1
 
+        def _buttonCommandAtOnce():
+            NumFleet = len(fleetAll[numCompany])
+            j = 0
+            for keyFleet in range(1,NumFleet):
+                if fleetAll[numCompany][keyFleet]['delivery'] <= currentYear and fleetAll[numCompany][keyFleet]['tOp'] < tOpSch:
+                    tOpTemp = fleetAll[numCompany][keyFleet]['tOp']
+                    if fleetAll[numCompany][keyFleet]['v'][tOpTemp-1] == 0:
+                        v13[j].set(str(min([float(vAtOnce.get()),fleetAll[numCompany][keyFleet]['vDsgnRed'][tOpTemp]])))
+                    else:
+                        v13[j].set(str(min([float(vAtOnce.get()),fleetAll[numCompany][keyFleet]['v'][tOpTemp-1]])))
+                    j += 1
+            button1['state'] = 'normal'
+
         root = Tk()
         root.title('Company '+str(numCompany)+' : Service Speed in '+str(startYear+elapsedYear))
-        width = 1000
+        width = 1200
         height = 500
         placeX = root.winfo_screenwidth()/2 - width/2
         placeY = root.winfo_screenheight()/2 - height/2
@@ -1350,6 +1109,13 @@ def yearlyOperationPhaseFunc(fleetAll,numCompany,pureDi,overDi,startYear,elapsed
         frame.pack()
 
         # Label
+        labelAtOnce = ttk.Label(frame, text='Input all service speeds at once (12<=) [kt]:', padding=(5, 2))
+        vAtOnce = StringVar()
+        if elapsedYear == 0:
+            vAtOnce.set('23')
+        else:
+            vAtOnce.set(str(fleetAll[numCompany]['total']['atOnce'][elapsedYear-1]))
+        labelAtOnce2 = ttk.Entry(frame, textvariable=vAtOnce)
         labelRes1 = ttk.Label(frame, text='Assigned demand [TEU*NM]:', padding=(5, 2))
         labelRes2 = ttk.Label(frame, text=str('{:.3g}'.format(pureDi+overDi)), padding=(5, 2))
         labelRes3 = ttk.Label(frame, text='Cargo trasnsport amount [TEU*NM]:', padding=(5, 2))
@@ -1379,40 +1145,41 @@ def yearlyOperationPhaseFunc(fleetAll,numCompany,pureDi,overDi,startYear,elapsed
         v13 = []
         currentYear = startYear+elapsedYear
         NumFleet = len(fleetAll[numCompany])
-        for i in range(1,NumFleet):
-            compFleet = fleetAll[numCompany][i]
-            if compFleet['delivery'] <= currentYear and compFleet['tOp'] < tOpSch:
-                label00.append(ttk.Label(frame, text=str(i), padding=(5, 2)))
-                tOpTemp = compFleet['tOp']
-                if compFleet['fuelName'] == 'HFO':
+        for keyFleet in range(1,NumFleet):
+            if fleetAll[numCompany][keyFleet]['delivery'] <= currentYear and fleetAll[numCompany][keyFleet]['tOp'] < tOpSch:
+                label00.append(ttk.Label(frame, text=str(keyFleet), padding=(5, 2)))
+                tOpTemp = fleetAll[numCompany][keyFleet]['tOp']
+                if fleetAll[numCompany][keyFleet]['fuelName'] == 'HFO':
                     label8.append(ttk.Label(frame, text='HFO/Diesel', padding=(5, 2)))
                 else:
-                    label8.append(ttk.Label(frame, text=compFleet['fuelName'], padding=(5, 2)))
-                label9.append(ttk.Label(frame, text=str(compFleet['CAPcnt']), padding=(5, 2)))
-                if compFleet['WPS']:
+                    label8.append(ttk.Label(frame, text=fleetAll[numCompany][keyFleet]['fuelName'], padding=(5, 2)))
+                label9.append(ttk.Label(frame, text=str(fleetAll[numCompany][keyFleet]['CAPcnt']), padding=(5, 2)))
+                if fleetAll[numCompany][keyFleet]['WPS']:
                     label10.append(ttk.Label(frame, text='Yes', padding=(5, 2)))
                 else:
                     label10.append(ttk.Label(frame, text='No', padding=(5, 2)))
-                if compFleet['SPS']:
+                if fleetAll[numCompany][keyFleet]['SPS']:
                     label11.append(ttk.Label(frame, text='Yes', padding=(5, 2)))
                 else:
                     label11.append(ttk.Label(frame, text='No', padding=(5, 2)))
-                if compFleet['CCS']:
+                if fleetAll[numCompany][keyFleet]['CCS']:
                     label12.append(ttk.Label(frame, text='Yes', padding=(5, 2)))
                 else:
                     label12.append(ttk.Label(frame, text='No', padding=(5, 2)))
-                tOpTemp = compFleet['tOp']
+                tOpTemp = fleetAll[numCompany][keyFleet]['tOp']
                 v13.append(StringVar())
-                if compFleet['v'][tOpTemp-1] == 0:
-                    v13[-1].set(str(compFleet['vDsgnRed'][tOpTemp]))
-                else:
-                    v13[-1].set(str(compFleet['v'][tOpTemp-1]))
+                #if fleetAll[numCompany][keyFleet]['v'][tOpTemp-1] == 0:
+                #    v13[-1].set(str(fleetAll[numCompany][keyFleet]['vDsgnRed'][tOpTemp]))
+                #else:
+                #    v13[-1].set(str(fleetAll[numCompany][keyFleet]['v'][tOpTemp-1]))
+                v13[-1].set('None')
                 label13.append(ttk.Entry(frame, textvariable=v13[-1]))
-                label14.append(ttk.Label(frame, text=str(compFleet['vDsgnRed'][tOpTemp]), padding=(5, 2)))
+                label14.append(ttk.Label(frame, text=str(fleetAll[numCompany][keyFleet]['vDsgnRed'][tOpTemp]), padding=(5, 2)))
 
         # Button
-        button1 = ttk.Button(frame, text='Calculate', command=lambda: _buttonCommandCalc(fleetAll,numCompany,pureDi,overDi,startYear,elapsedYear,NShipFleet,tOpSch,valueDict,parameterFile4))
+        button1 = ttk.Button(frame, text='Calculate', state='disabled', command=lambda: _buttonCommandCalc(fleetAll,numCompany,pureDi,overDi,startYear,elapsedYear,NShipFleet,tOpSch,valueDict,parameterFile4))
         button2 = ttk.Button(frame, text='Next', state='disabled', command=lambda: _buttonCommandNext(root,fleetAll,numCompany,pureDi,overDi,startYear,elapsedYear,NShipFleet,tOpSch,valueDict,parameterFile4))
+        button3 = ttk.Button(frame, text='Input', command=lambda: _buttonCommandAtOnce())
 
         # Layout
         labelRes1.grid(row=0, column=1)
@@ -1442,6 +1209,9 @@ def yearlyOperationPhaseFunc(fleetAll,numCompany,pureDi,overDi,startYear,elapsed
             label12[i].grid(row=i+4, column=5)
             label13[i].grid(row=i+4, column=6)
             label14[i].grid(row=i+4, column=7)
+        labelAtOnce.grid(row=i+5, column=1)
+        labelAtOnce2.grid(row=i+5, column=2)
+        button3.grid(row=i+5, column=3)
         button1.grid(row=i+5, column=6)
         button2.grid(row=i+5, column=7)
 
@@ -1528,34 +1298,34 @@ def outputGuiFunc(fleetAll,startYear,elapsedYear,lastYear,tOpSch,unitDict):
 def outputEachCompanyFunc(fleetAll,numCompany,startYear,elapsedYear,lastYear,tOpSch,decisionListName):
     fig, ax = plt.subplots(2, 2, figsize=(10.0, 10.0))
     plt.subplots_adjust(wspace=0.4, hspace=0.6)
-    compTotal = fleetAll[numCompany]['total']
+    fleetAll[numCompany]['total'] = fleetAll[numCompany]['total']
 
-    SPlot = compTotal['S'][:elapsedYear+1]
-    ax[0,0].plot(fleetAll['year'][:elapsedYear+1],compTotal['S'][:elapsedYear+1])
+    SPlot = fleetAll[numCompany]['total']['S'][:elapsedYear+1]
+    ax[0,0].plot(fleetAll['year'][:elapsedYear+1],fleetAll[numCompany]['total']['S'][:elapsedYear+1])
     ax[0,0].set_title(r"$ ( \Delta C_{shipping} - \alpha g) \ / \ cta$")
     ax[0,0].set_xlabel('Year')
     ax[0,0].yaxis.set_major_formatter(ScalarFormatter(useMathText=True))
     ax[0,0].ticklabel_format(style="sci",  axis="y",scilimits=(0,0))
     #ax[0].set_ylabel('Year')
 
-    gTildePlot = compTotal['gTilde'][:elapsedYear+1]*1000000
-    ax[1,0].plot(fleetAll['year'][:elapsedYear+1],compTotal['gTilde'][:elapsedYear+1]*1000000)
+    gTildePlot = fleetAll[numCompany]['total']['gTilde'][:elapsedYear+1]*1000000
+    ax[1,0].plot(fleetAll['year'][:elapsedYear+1],fleetAll[numCompany]['total']['gTilde'][:elapsedYear+1]*1000000)
     ax[1,0].set_title("g / cta")
     ax[1,0].set_xlabel('Year')
     ax[1,0].set_ylabel('g / (TEU $\cdot$ NM)')
     #ax[1,0].yaxis.set_major_formatter(ScalarFormatter(useMathText=True))
     ax[1,0].ticklabel_format(style="sci",  axis="y",scilimits=(0,0))
 
-    gPlot = compTotal['g'][:elapsedYear+1]/1000000
-    ax[0,1].plot(fleetAll['year'][:elapsedYear+1],compTotal['g'][:elapsedYear+1]/1000000)
+    gPlot = fleetAll[numCompany]['total']['g'][:elapsedYear+1]/1000000
+    ax[0,1].plot(fleetAll['year'][:elapsedYear+1],fleetAll[numCompany]['total']['g'][:elapsedYear+1]/1000000)
     ax[0,1].set_title("g")
     ax[0,1].set_xlabel('Year')
     ax[0,1].set_ylabel('Millions ton')
     ax[0,1].yaxis.set_major_formatter(ScalarFormatter(useMathText=True))
     ax[0,1].ticklabel_format(style="sci",  axis="y",scilimits=(0,0))
 
-    dcostShippingTildePlot = compTotal['dcostShippingTilde'][:elapsedYear+1]
-    ax[1,1].plot(fleetAll['year'][:elapsedYear+1],compTotal['dcostShippingTilde'][:elapsedYear+1])
+    dcostShippingTildePlot = fleetAll[numCompany]['total']['dcostShippingTilde'][:elapsedYear+1]
+    ax[1,1].plot(fleetAll['year'][:elapsedYear+1],fleetAll[numCompany]['total']['dcostShippingTilde'][:elapsedYear+1])
     ax[1,1].set_title("$\Delta C_{shipping} \ / \ cta$")
     ax[1,1].set_xlabel('Year')
     ax[1,1].set_ylabel('\$ / (TEU $\cdot$ NM)')
@@ -1735,13 +1505,13 @@ def outputCsvFunc(fleetAll,startYear,elapsedYear,lastYear,tOpSch):
             valueName = []
             outputList = []
             if type(keyFleet) is int:
-                compFleet = fleetAll[numCompany][keyFleet]
-                for keyValue in compFleet.keys():
-                    if type(compFleet[keyValue]) is np.ndarray:
+                fleetAll[numCompany][keyFleet] = fleetAll[numCompany][keyFleet]
+                for keyValue in fleetAll[numCompany][keyFleet].keys():
+                    if type(fleetAll[numCompany][keyFleet][keyValue]) is np.ndarray:
                         valueName.append(keyValue)
-                        outputList.append(compFleet[keyValue])
+                        outputList.append(fleetAll[numCompany][keyFleet][keyValue])
                 
                 outputData2 = np.stack(outputList,1)
-                outputDf2 = pd.DataFrame(data=outputData2, index=compFleet['year'], columns=valueName, dtype='float')
+                outputDf2 = pd.DataFrame(data=outputData2, index=fleetAll[numCompany][keyFleet]['year'], columns=valueName, dtype='float')
                 outputDf2.to_csv(str(resPath)+"\Company"+str(numCompany)+'_'+'Fleet'+str(keyFleet)+'.csv')
 
