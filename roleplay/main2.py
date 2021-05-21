@@ -15,7 +15,7 @@ def roleplayRun():
     tOpSch = 20
     startYear = 2021
     regYear = [2025,2030,2035,2040,2045]
-    lastYear = 2030
+    lastYear = 2050
     NShipFleet = 6
     tbid = 2
 

@@ -236,19 +236,21 @@ def demandScenarioFunc(year,kDem1,kDem2,kDem3,kDem4):
 def playOrderFunc(cost,playOrder):
     unique, counts = np.unique(cost, return_counts=True)
     if np.amax(counts) == 1:
-        playOrder = playOrder[np.argsort(cost)]
+        playOrderNew = playOrder[np.argsort(cost)]
     elif np.amax(counts) == 2:
         minCost = np.amin(cost)
         maxCost = np.amax(cost)
         if minCost == unique[counts == 1]:
-            playOrder[0] = playOrder[cost == minCost]
-            playOrder[1:3] = np.random.permutation(playOrder[cost!=minCost])
+            playOrderNew = np.zeros(3)
+            playOrderNew[0] = playOrder[cost == minCost]
+            playOrderNew[1:3] = np.random.permutation(playOrder[cost!=minCost])
         else:
-            playOrder[2] = playOrder[cost == maxCost]
-            playOrder[0:2] = np.random.permutation(playOrder[cost!=maxCost])
+            playOrderNew = np.zeros(3)
+            playOrderNew[2] = playOrder[cost == maxCost]
+            playOrderNew[0:2] = np.random.permutation(playOrder[cost!=maxCost])
     else:
-        playOrder = np.random.permutation(playOrder)
-    return playOrder
+        playOrderNew = np.random.permutation(playOrder)
+    return playOrderNew
 
 def rEEDIreqCurrentFunc(wDWT,rEEDIreq):
     if wDWT >= 200000:
