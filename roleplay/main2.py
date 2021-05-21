@@ -72,8 +72,6 @@ def roleplayRun():
         if currentYear == regYear[nRegAct]+2:
             nRegAct += 1
 
-        print(currentYear,regYear[nRegAct],regDec['rEEDIreq'][nRegAct])
-
         #'''
         # scrap & refurbish phase (also decide additional shipping fee per container)
         dcostTemp = np.zeros(3)
