@@ -19,9 +19,6 @@ from pathlib import Path
 
 def readinput(filename):
     csv_input = pd.read_csv(filepath_or_buffer=filename, encoding="utf_8", sep=",")
-    #print("variableAll")
-    #display(csv_input[0:24])
-    #print("\n")
     symbol = csv_input['Symbol']
     value = csv_input['Value']
     unit = csv_input['Unit']
@@ -34,9 +31,6 @@ def readinput(filename):
 
 def CeqLHVFunc(filename,fuelName):
     csv_input = pd.read_csv(filepath_or_buffer=filename, encoding="utf_8", sep=",")
-    #print("CeqLHV")
-    #display(csv_input)
-    #print("\n")
     fuelType = csv_input['Fuel type']
     CeqLHV = csv_input['CeqLHV']
     fuelDict = {}
@@ -46,9 +40,6 @@ def CeqLHVFunc(filename,fuelName):
 
 def Cco2Func(filename,fuelName):
     csv_input = pd.read_csv(filepath_or_buffer=filename, encoding="utf_8", sep=",")
-    #print("Cco2")
-    #display(csv_input)
-    #print("\n")
     fuelType = csv_input['Fuel type']
     Cco2 = csv_input['Cco2']
     Cco2Dict = {}
@@ -127,9 +118,6 @@ def fleetPreparationFunc(fleetAll,initialFleetFile,numCompany,startYear,lastYear
 
 def unitCostFuelFunc(filename,fuelName,year):
     csv_input = pd.read_csv(filepath_or_buffer=filename, encoding="utf_8", sep=",")
-    #print("unitCostFuel")
-    #display(csv_input)
-    #print("\n")
     measureYear = np.array(csv_input['Year'],dtype='float64')
     measureHFO = np.array(csv_input['HFO'],dtype='float64')
     measure = np.array(csv_input[fuelName],dtype='float64')
@@ -145,9 +133,6 @@ def unitCostFuelFunc(filename,fuelName,year):
 
 def rShipBasicFunc(filename,fuelName,CAPcnt):
     csv_input = pd.read_csv(filepath_or_buffer=filename, encoding="utf_8", sep=",")
-    #print("CeqLHV")
-    #display(csv_input)
-    #print("\n")
     fuelType = csv_input['Fuel type']
     rShipBasic = csv_input['rShipBasic']
     fuelDict = {}
@@ -260,7 +245,7 @@ def rEEDIreqCurrentFunc(wDWT,rEEDIreq):
 
 def EEDIreqFunc(kEEDI1,wDWT,kEEDI2,rEEDIreq):
     EEDIref = kEEDI1*wDWT**kEEDI2
-    EEDIreq = (1-rEEDIreq/100)*EEDIref
+    EEDIreq = (1-rEEDIreq)*EEDIref
     return EEDIref, EEDIreq
 
 def EEDIattFunc(wDWT,wMCR,kMCR1,kMCR2,kMCR3,kPAE1,kPAE2,rCCS,vDsgn,rWPS,Cco2ship,SfcM,SfcA,rSPS,Cco2aux,EEDIreq,flagWPS,flagSPS,flagCCS):
@@ -268,6 +253,15 @@ def EEDIattFunc(wDWT,wMCR,kMCR1,kMCR2,kMCR3,kPAE1,kPAE2,rCCS,vDsgn,rWPS,Cco2ship
         MCRM = kMCR1*wDWT + kMCR2
     else:
         MCRM = kMCR3
+
+    '''MCRM = np.zeros(wDWT.shape)
+    for i in range(wDWT.shape[0]):
+        if wDWT[i] < wMCR:
+            MCRM[i] = kMCR1*wDWT[i] + kMCR2
+        else:
+            MCRM[i] = kMCR3'''
+
+
     PA = kPAE1*MCRM+kPAE2
 
     def _EEDIcalc(vDsgnRed):
@@ -283,7 +277,6 @@ def EEDIattFunc(wDWT,wMCR,kMCR1,kMCR2,kMCR3,kPAE1,kPAE2,rCCS,vDsgn,rWPS,Cco2ship
             rCCStemp = rCCS
         else:
             rCCStemp = 0
-        print(vDsgn)
         return ((1-rCCStemp)/(0.7*wDWT*vDsgnRed))*((1-rWPStemp)*Cco2ship*0.75*MCRM*SfcM*(vDsgnRed/vDsgn)**3 + (1-rSPStemp)*Cco2aux*PA*SfcA)
 
     vDsgnRed = vDsgn
@@ -326,15 +319,24 @@ def regDecFunc(regDec,nReg,currentYear):
 
         root = Tk()
         root.title('Regulator : Reduction Rate for EEXI / EEDI in '+str(currentYear))
-        width = 500
+        width = 600
         height = 300
         placeX = root.winfo_screenwidth()/2 - width/2
         placeY = root.winfo_screenheight()/2 - height/2
         widgetSize = str(width)+'x'+str(height)+'+'+str(int(placeX))+'+'+str(int(placeY))
         root.geometry(widgetSize)
+        root['bg'] = '#a3d6cc'
+
+        style = ttk.Style()
+        style.theme_use('default')
+        style.configure('new.TFrame', foreground='black', background='#a3d6cc')
+        style.configure('new.TLabel', foreground='black', background='#a3d6cc')
+        style.configure('new.TButton', foreground='black', background='#a3d6cc')
+        style.configure('new.TCheckbutton', foreground='black', background='#a3d6cc')
+        style.configure('new.TEntry', foreground='black', background='#a3d6cc')
 
         # Frame
-        frame = ttk.Frame(root, padding=20)
+        frame = ttk.Frame(root, style='new.TFrame', padding=20)
         frame.pack()
 
         # Checkbutton
@@ -343,11 +345,12 @@ def regDecFunc(regDec,nReg,currentYear):
             v1.set('0') # 初期化
         else:
             v1.set(str(100*regDec['rEEDIreq'][nReg-1,0])) # 初期化
-        cb1 = ttk.Entry(frame, textvariable=v1)
-        label1 = ttk.Label(frame, text='wDWT >= 200,000', padding=(5, 2))
-        label11 = ttk.Label(frame, text='% <= 100%', padding=(5, 2))
-        label111 = ttk.Label(frame, text='0% <=', padding=(5, 2))
+        cb1 = ttk.Entry(frame, style='new.TEntry', textvariable=v1)
+        label1 = ttk.Label(frame, style='new.TLabel',text='wDWT >= 200,000', padding=(5, 2))
+        label11 = ttk.Label(frame, style='new.TLabel',text='% <= 100%', padding=(5, 2))
+        label111 = ttk.Label(frame, style='new.TLabel',text='0% <=', padding=(5, 2))
 
+        labelExpl = ttk.Label(frame, style='new.TLabel', text='Guide: Input reduction rate for EEXI / EEDI, and then click "Check" & "Next".', padding=(5, 2))
 
         # Checkbutton
         v2 = StringVar()
@@ -355,10 +358,10 @@ def regDecFunc(regDec,nReg,currentYear):
             v2.set('0') # 初期化
         else:
             v2.set(str(100*regDec['rEEDIreq'][nReg-1,1])) # 初期化
-        cb2 = ttk.Entry(frame, textvariable=v2)
-        label2 = ttk.Label(frame, text='120,000 <= wDWT < 200,000', padding=(5, 2))
-        label22 = ttk.Label(frame, text='% <= 100%', padding=(5, 2))
-        label222 = ttk.Label(frame, text='0% <=', padding=(5, 2))
+        cb2 = ttk.Entry(frame, style='new.TEntry', textvariable=v2)
+        label2 = ttk.Label(frame, style='new.TLabel',text='120,000 <= wDWT < 200,000', padding=(5, 2))
+        label22 = ttk.Label(frame, style='new.TLabel',text='% <= 100%', padding=(5, 2))
+        label222 = ttk.Label(frame, style='new.TLabel',text='0% <=', padding=(5, 2))
 
         # Checkbutton
         v3 = StringVar()
@@ -366,14 +369,14 @@ def regDecFunc(regDec,nReg,currentYear):
             v3.set('0') # 初期化
         else:
             v3.set(str(100*regDec['rEEDIreq'][nReg-1,2])) # 初期化
-        cb3 = ttk.Entry(frame, textvariable=v3)
-        label3 = ttk.Label(frame, text='wDWT < 120,000', padding=(5, 2))
-        label33 = ttk.Label(frame, text='% <= 100%', padding=(5, 2))
-        label333 = ttk.Label(frame, text='0% <=', padding=(5, 2))
+        cb3 = ttk.Entry(frame, style='new.TEntry', textvariable=v3)
+        label3 = ttk.Label(frame, style='new.TLabel',text='wDWT < 120,000', padding=(5, 2))
+        label33 = ttk.Label(frame, style='new.TLabel',text='% <= 100%', padding=(5, 2))
+        label333 = ttk.Label(frame, style='new.TLabel',text='0% <=', padding=(5, 2))
 
         # Button
-        button = ttk.Button(frame, text='Next', state='disabled', command=lambda: _buttonCommand(regDec,nReg,root))
-        button1 = ttk.Button(frame, text='Check', command=lambda: _buttonCommandCheck())
+        button = ttk.Button(frame, style='new.TButton',text='Next', state='disabled', command=lambda: _buttonCommand(regDec,nReg,root))
+        button1 = ttk.Button(frame, style='new.TButton',text='Check', command=lambda: _buttonCommandCheck())
 
         # Layout
         label11.grid(row=0, column=3)
@@ -390,6 +393,7 @@ def regDecFunc(regDec,nReg,currentYear):
         label3.grid(row=2, column=0)
         button.grid(row=3, column=3)
         button1.grid(row=3, column=2)
+        labelExpl.grid(row=5, column=0, columnspan=3)
 
         root.deiconify()
         root.mainloop()
@@ -415,15 +419,24 @@ def regDecFunc(regDec,nReg,currentYear):
 
         root = Tk()
         root.title('Regulator : Subsidy & Carbon tax in'+str(currentYear))
-        width = 500
+        width = 800
         height = 300
         placeX = root.winfo_screenwidth()/2 - width/2
         placeY = root.winfo_screenheight()/2 - height/2
         widgetSize = str(width)+'x'+str(height)+'+'+str(int(placeX))+'+'+str(int(placeY))
         root.geometry(widgetSize)
+        root['bg'] = '#a3d6cc'
+
+        style = ttk.Style()
+        style.theme_use('default')
+        style.configure('new.TFrame', foreground='black', background='#a3d6cc')
+        style.configure('new.TLabel', foreground='black', background='#a3d6cc')
+        style.configure('new.TButton', foreground='black', background='#a3d6cc')
+        style.configure('new.TCheckbutton', foreground='black', background='#a3d6cc')
+        style.configure('new.TEntry', foreground='black', background='#a3d6cc')
 
         # Frame
-        frame = ttk.Frame(root, padding=20)
+        frame = ttk.Frame(root, style='new.TFrame', padding=20)
         frame.pack()
 
         # Checkbutton
@@ -432,10 +445,12 @@ def regDecFunc(regDec,nReg,currentYear):
             v1.set('0') # 初期化
         else:
             v1.set(str(100*regDec['Subsidy'][nReg-1])) # 初期化
-        cb1 = ttk.Entry(frame, textvariable=v1)
-        label1 = ttk.Label(frame, text='Subsidy rate', padding=(5, 2))
-        label11 = ttk.Label(frame, text='% <= 100%', padding=(5, 2))
-        label111 = ttk.Label(frame, text='0% <=', padding=(5, 2))
+        cb1 = ttk.Entry(frame, style='new.TEntry', textvariable=v1)
+        label1 = ttk.Label(frame, style='new.TLabel', text='Subsidy rate', padding=(5, 2))
+        label11 = ttk.Label(frame, style='new.TLabel', text='% <= 100%', padding=(5, 2))
+        label111 = ttk.Label(frame, style='new.TLabel', text='0% <=', padding=(5, 2))
+
+        labelExpl = ttk.Label(frame, style='new.TLabel', text='Guide: Input subsidy and carbon tax, and then click "Check" & "Next".', padding=(5, 2))
 
 
         # Checkbutton
@@ -444,14 +459,14 @@ def regDecFunc(regDec,nReg,currentYear):
             v2.set('0') # 初期化
         else:
             v2.set(str(100*regDec['Ctax'][nReg-1])) # 初期化
-        cb2 = ttk.Entry(frame, textvariable=v2)
-        label2 = ttk.Label(frame, text='Carbon tax rate', padding=(5, 2))
-        label22 = ttk.Label(frame, text='% <= 100%', padding=(5, 2))
-        label222 = ttk.Label(frame, text='0% <=', padding=(5, 2))
+        cb2 = ttk.Entry(frame, style='new.TEntry', textvariable=v2)
+        label2 = ttk.Label(frame, style='new.TLabel', text='Carbon tax rate', padding=(5, 2))
+        label22 = ttk.Label(frame, style='new.TLabel', text='% <= 100%', padding=(5, 2))
+        label222 = ttk.Label(frame, style='new.TLabel', text='0% <=', padding=(5, 2))
 
         # Button
-        button = ttk.Button(frame, text='Next', state='disabled', command=lambda: _buttonCommand(regDec,nReg,root))
-        button1 = ttk.Button(frame, text='Check', command=lambda: _buttonCommandCheck())
+        button = ttk.Button(frame, style='new.TButton', text='Next', state='disabled', command=lambda: _buttonCommand(regDec,nReg,root))
+        button1 = ttk.Button(frame, style='new.TButton', text='Check', command=lambda: _buttonCommandCheck())
 
         # Layout
         label11.grid(row=0, column=3)
@@ -464,6 +479,7 @@ def regDecFunc(regDec,nReg,currentYear):
         label2.grid(row=1, column=0)
         button.grid(row=3, column=3)
         button1.grid(row=3, column=2)
+        labelExpl.grid(row=5, column=0, columnspan=3)
 
         root.deiconify()
         root.mainloop()
@@ -584,23 +600,38 @@ def scrapRefurbishFunc(fleetAll,numCompany,elapsedYear,currentYear,valueDict,tOp
         placeY = root.winfo_screenheight()/2 - height/2
         widgetSize = str(width)+'x'+str(height)+'+'+str(int(placeX))+'+'+str(int(placeY))
         root.geometry(widgetSize)
+        
 
         # Frame
-        frame = ttk.Frame(root, padding=20)
+        style = ttk.Style()
+        style.theme_use('default')
+        if numCompany == 1:
+            color = '#ffcccc'
+        elif numCompany == 2:
+            color = '#ffedab'
+        elif numCompany == 3:
+            color = '#a4a8d4'
+        root['bg'] = color
+        style.configure('new.TFrame', foreground='black', background=color)
+        style.configure('new.TLabel', foreground='black', background=color)
+        style.configure('new.TButton', foreground='black', background=color)
+        style.configure('new.TCheckbutton', foreground='black', background=color)
+        frame = ttk.Frame(root, style='new.TFrame', padding=20)
         frame.pack()
+        
 
         # Label
-        label0 = ttk.Label(frame, text='No.', padding=(5, 2))
-        labelDeli = ttk.Label(frame, text='Delivery year', padding=(5, 2))
-        label1 = ttk.Label(frame, text='Fuel type', padding=(5, 2))
-        label2 = ttk.Label(frame, text='Capacity [TEU]', padding=(5, 2))
-        label3 = ttk.Label(frame, text='WPS', padding=(5, 2))
-        label4 = ttk.Label(frame, text='SPS', padding=(5, 2))
-        label5 = ttk.Label(frame, text='CCS', padding=(5, 2))
-        label7 = ttk.Label(frame, text='Maximum speed [kt]', padding=(5, 2))
-        label152 = ttk.Label(frame, text='EEXIreq [g/(ton*NM)]', padding=(5, 2))
-        label162 = ttk.Label(frame, text='EEXIatt [g/(ton*NM)]', padding=(5, 2))
-        labelScrap = ttk.Label(frame, text='Scrap', padding=(5, 2))
+        label0 = ttk.Label(frame, style='new.TLabel', text='No.', padding=(5, 2))
+        labelDeli = ttk.Label(frame, style='new.TLabel',text='Delivery year', padding=(5, 2))
+        label1 = ttk.Label(frame, style='new.TLabel',text='Fuel type', padding=(5, 2))
+        label2 = ttk.Label(frame, style='new.TLabel',text='Capacity [TEU]', padding=(5, 2))
+        label3 = ttk.Label(frame, style='new.TLabel',text='WPS', padding=(5, 2))
+        label4 = ttk.Label(frame, style='new.TLabel',text='SPS', padding=(5, 2))
+        label5 = ttk.Label(frame, style='new.TLabel',text='CCS', padding=(5, 2))
+        label7 = ttk.Label(frame, style='new.TLabel',text='Maximum speed [kt]', padding=(5, 2))
+        label152 = ttk.Label(frame, style='new.TLabel',text='EEXIreq [g/(ton*NM)]', padding=(5, 2))
+        label162 = ttk.Label(frame, style='new.TLabel',text='EEXIatt [g/(ton*NM)]', padding=(5, 2))
+        labelScrap = ttk.Label(frame, style='new.TLabel',text='Scrap', padding=(5, 2))
         label00 = []
         labelDeli1 = []
         label8 = []
@@ -620,46 +651,49 @@ def scrapRefurbishFunc(fleetAll,numCompany,elapsedYear,currentYear,valueDict,tOp
         for keyFleet in range(1,NumFleet):
             fleetAll[numCompany][keyFleet] = fleetAll[numCompany][keyFleet]
             if fleetAll[numCompany][keyFleet]['delivery'] <= currentYear and fleetAll[numCompany][keyFleet]['tOp'] < tOpSch:
-                labelDeli1.append(ttk.Label(frame, text=str(fleetAll[numCompany][keyFleet]['delivery']), padding=(5, 2)))
-                label00.append(ttk.Label(frame, text=str(keyFleet), padding=(5, 2)))
+                labelDeli1.append(ttk.Label(frame, style='new.TLabel',text=str(fleetAll[numCompany][keyFleet]['delivery']), padding=(5, 2)))
+                label00.append(ttk.Label(frame, style='new.TLabel',text=str(keyFleet), padding=(5, 2)))
                 tOpTemp = fleetAll[numCompany][keyFleet]['tOp']
                 if fleetAll[numCompany][keyFleet]['fuelName'] == 'HFO':
-                    label8.append(ttk.Label(frame, text='HFO/Diesel', padding=(5, 2)))
+                    label8.append(ttk.Label(frame, style='new.TLabel',text='HFO/Diesel', padding=(5, 2)))
                 else:
-                    label8.append(ttk.Label(frame, text=fleetAll[numCompany][keyFleet]['fuelName'], padding=(5, 2)))
-                label9.append(ttk.Label(frame, text=str(fleetAll[numCompany][keyFleet]['CAPcnt']), padding=(5, 2)))
+                    label8.append(ttk.Label(frame, style='new.TLabel',text=fleetAll[numCompany][keyFleet]['fuelName'], padding=(5, 2)))
+                label9.append(ttk.Label(frame, style='new.TLabel',text=str(fleetAll[numCompany][keyFleet]['CAPcnt']), padding=(5, 2)))
                 v1.append(StringVar())
                 if fleetAll[numCompany][keyFleet]['WPS']:
                     v1[-1].set('1')
-                    label10.append(ttk.Checkbutton(frame, padding=(10), state='disable', command=lambda: _buttonCommandCheckButton(fleetAll,valueDict,rEEDIreq,v1,'WPS'),variable=v1[-1]))
+                    label10.append(ttk.Checkbutton(frame, style='new.TCheckbutton', padding=(10), state='disable', command=lambda: _buttonCommandCheckButton(fleetAll,valueDict,rEEDIreq,v1,'WPS'),variable=v1[-1]))
                 else:
                     v1[-1].set('0')
-                    label10.append(ttk.Checkbutton(frame, padding=(10), command=lambda: _buttonCommandCheckButton(fleetAll,valueDict,rEEDIreq,v1,'WPS'),variable=v1[-1]))
+                    label10.append(ttk.Checkbutton(frame, style='new.TCheckbutton',padding=(10), command=lambda: _buttonCommandCheckButton(fleetAll,valueDict,rEEDIreq,v1,'WPS'),variable=v1[-1]))
                 v2.append(StringVar())
                 if fleetAll[numCompany][keyFleet]['SPS']:
                     v2[-1].set('1')
-                    label11.append(ttk.Checkbutton(frame, padding=(10), state='disable', command=lambda: _buttonCommandCheckButton(fleetAll,valueDict,rEEDIreq,v2,'SPS'),variable=v2[-1]))
+                    label11.append(ttk.Checkbutton(frame, style='new.TCheckbutton',padding=(10), state='disable', command=lambda: _buttonCommandCheckButton(fleetAll,valueDict,rEEDIreq,v2,'SPS'),variable=v2[-1]))
                 else:
                     v2[-1].set('0')
-                    label11.append(ttk.Checkbutton(frame, padding=(10), command=lambda: _buttonCommandCheckButton(fleetAll,valueDict,rEEDIreq,v2,'SPS'),variable=v2[-1]))
+                    label11.append(ttk.Checkbutton(frame, style='new.TCheckbutton',padding=(10), command=lambda: _buttonCommandCheckButton(fleetAll,valueDict,rEEDIreq,v2,'SPS'),variable=v2[-1]))
                 v3.append(StringVar())
                 if fleetAll[numCompany][keyFleet]['CCS']:
                     v3[-1].set('1')
-                    label12.append(ttk.Checkbutton(frame, padding=(10), state='disable', command=lambda: _buttonCommandCheckButton(fleetAll,valueDict,rEEDIreq,v3,'CCS'),variable=v3[-1]))
+                    label12.append(ttk.Checkbutton(frame, style='new.TCheckbutton',padding=(10), state='disable', command=lambda: _buttonCommandCheckButton(fleetAll,valueDict,rEEDIreq,v3,'CCS'),variable=v3[-1]))
                 else:
                     v3[-1].set('0')
-                    label12.append(ttk.Checkbutton(frame, padding=(10), command=lambda: _buttonCommandCheckButton(fleetAll,valueDict,rEEDIreq,v3,'CCS'),variable=v3[-1]))
-                label14.append(ttk.Label(frame, text=str(fleetAll[numCompany][keyFleet]['vDsgnRed'][tOpTemp]), padding=(5, 2)))
-                label15.append(ttk.Label(frame, text='{:.3g}'.format(fleetAll[numCompany][keyFleet]['EEDIreq'][tOpTemp]), padding=(5, 2)))
-                label16.append(ttk.Label(frame, text='{:.3g}'.format(fleetAll[numCompany][keyFleet]['EEDIatt'][tOpTemp]), padding=(5, 2)))
+                    label12.append(ttk.Checkbutton(frame, style='new.TCheckbutton',padding=(10), command=lambda: _buttonCommandCheckButton(fleetAll,valueDict,rEEDIreq,v3,'CCS'),variable=v3[-1]))
+                label14.append(ttk.Label(frame, style='new.TLabel',text=str(fleetAll[numCompany][keyFleet]['vDsgnRed'][tOpTemp]), padding=(5, 2)))
+                label15.append(ttk.Label(frame, style='new.TLabel',text='{:.3g}'.format(fleetAll[numCompany][keyFleet]['EEDIreq'][tOpTemp]), padding=(5, 2)))
+                label16.append(ttk.Label(frame, style='new.TLabel',text='{:.3g}'.format(fleetAll[numCompany][keyFleet]['EEDIatt'][tOpTemp]), padding=(5, 2)))
                 v4.append(StringVar())
-                buttonScrap.append(ttk.Checkbutton(frame, padding=(10), variable=v4[-1]))
+                buttonScrap.append(ttk.Checkbutton(frame, style='new.TCheckbutton',padding=(10), variable=v4[-1]))
+
+        labelExpl = ttk.Label(frame, style='new.TLabel', text='Guide: Check additional systems and scrap button if you want, and then click "Check" & "Next". You can check all the button at once by "Check all at once".', padding=(5, 2))
+    
         # Button
-        button1 = ttk.Button(frame, text='Check', command=lambda: _buttonCommandCheck(fleetAll,valueDict,rEEDIreq))
-        button2 = ttk.Button(frame, text='Next', state='disabled', command=lambda: _buttonCommandNext(root,fleetAll,numCompany,tOpSch))
-        buttonWPS = ttk.Button(frame, text='Check all WPS at once', command=lambda: _buttonCommandAtOnce('WPS'))
-        buttonSPS = ttk.Button(frame, text='Check all SPS at once', command=lambda: _buttonCommandAtOnce('SPS'))
-        buttonCCS = ttk.Button(frame, text='Check all CCS at once', command=lambda: _buttonCommandAtOnce('CCS'))
+        button1 = ttk.Button(frame, style='new.TButton', text='Check', command=lambda: _buttonCommandCheck(fleetAll,valueDict,rEEDIreq))
+        button2 = ttk.Button(frame, style='new.TButton', text='Next', state='disabled', command=lambda: _buttonCommandNext(root,fleetAll,numCompany,tOpSch))
+        buttonWPS = ttk.Button(frame, style='new.TButton', text='Check all WPS at once', command=lambda: _buttonCommandAtOnce('WPS'))
+        buttonSPS = ttk.Button(frame, style='new.TButton', text='Check all SPS at once', command=lambda: _buttonCommandAtOnce('SPS'))
+        buttonCCS = ttk.Button(frame, style='new.TButton', text='Check all CCS at once', command=lambda: _buttonCommandAtOnce('CCS'))
         
         # Layout
         label0.grid(row=0, column=0)
@@ -690,6 +724,7 @@ def scrapRefurbishFunc(fleetAll,numCompany,elapsedYear,currentYear,valueDict,tOp
         buttonWPS.grid(row=i+2, column=1)
         buttonSPS.grid(row=i+2, column=2)
         buttonCCS.grid(row=i+2, column=3)
+        labelExpl.grid(row=i+3, column=0, columnspan=10)
 
         root.deiconify()
         root.mainloop()
@@ -713,23 +748,39 @@ def scrapRefurbishFunc(fleetAll,numCompany,elapsedYear,currentYear,valueDict,tOp
         root.geometry(widgetSize)
 
         # Frame
-        frame = ttk.Frame(root, padding=20)
+        style = ttk.Style()
+        style.theme_use('default')
+        if numCompany == 1:
+            color = '#ffcccc'
+        elif numCompany == 2:
+            color = '#ffedab'
+        elif numCompany == 3:
+            color = '#a4a8d4'
+        root['bg'] = color
+        style.configure('new.TFrame', foreground='black', background=color)
+        style.configure('new.TLabel', foreground='black', background=color)
+        style.configure('new.TButton', foreground='black', background=color)
+        style.configure('new.TCheckbutton', foreground='black', background=color)
+        style.configure('new.TEntry', foreground='black', background=color)
+        frame = ttk.Frame(root, style='new.TFrame', padding=20)
         frame.pack()
 
         v1 = StringVar()
         v1.set('0')
-        cb1 = ttk.Entry(frame, textvariable=v1)
-        label1 = ttk.Label(frame, text='dcontCnt (-1000 <= dcostCnt <= 1000)', padding=(5, 2))
-        label2 = ttk.Label(frame, text='Nominal shipping cost: 1500 $/container', padding=(5, 2))
-        label3 = ttk.Label(frame, text='$', padding=(5, 2))
+        cb1 = ttk.Entry(frame, style='new.TEntry', textvariable=v1)
+        label1 = ttk.Label(frame, style='new.TLabel', text='dcontCnt (-1000 <= dcostCnt <= 1000)', padding=(5, 2))
+        label2 = ttk.Label(frame, style='new.TLabel', text='Nominal shipping cost: 1500 $/container', padding=(5, 2))
+        label3 = ttk.Label(frame, style='new.TLabel', text='$', padding=(5, 2))
+        labelExpl = ttk.Label(frame, style='new.TLabel', text='Guide: Input additional shipping fee per container, and then click "Complete".', padding=(5, 2))
 
-        button = ttk.Button(frame, text='Complete', command=lambda: _buttonCommand(fleetAll,numCompany,elapsedYear,root,v1))
+        button = ttk.Button(frame, style='new.TButton', text='Complete', command=lambda: _buttonCommand(fleetAll,numCompany,elapsedYear,root,v1))
 
         label1.grid(row=1, column=0)
         label2.grid(row=0, column=0)
         label3.grid(row=1, column=2)
         cb1.grid(row=1, column=1)
         button.grid(row=2, column=1)
+        labelExpl.grid(row=3, column=0,columnspan=5)
 
         root.deiconify()
         root.mainloop()
@@ -767,13 +818,6 @@ def scrapRefurbishFunc(fleetAll,numCompany,elapsedYear,currentYear,valueDict,tOp
 def orderShipFunc(fleetAll,numCompany,fuelName,WPS,SPS,CCS,CAPcnt,tOpSch,tbid,iniT,currentYear,elapsedYear,valueDict,NShipFleet,parameterFile2,parameterFile12,parameterFile3,parameterFile5):
     NumFleet = len(fleetAll[numCompany])
     fleetAll[numCompany].setdefault(NumFleet,{})
-
-                #if decisionList[numCompany][currentYear]['CAP'] >= valueDict["CAPcntMin"] and decisionList[numCompany][currentYear]['CAP'] <= valueDict["CAPcntMax"]:
-                #    fleets = rs.orderShipFunc(fleets,numCompany,decisionList[numCompany][currentYear]['fuelType'],decisionList[numCompany][currentYear]['WPS'],decisionList[numCompany][currentYear]['SPS'],decisionList[numCompany][currentYear]['CCS'],decisionList[numCompany][currentYear]['CAP'],tOpSch,tbid,0,currentYear,parameterFile2,parameterFile12,parameterFile3,parameterFile5)
-                #else:
-                #    print('ERROR: CAPcnt should be more equal than {0} and less equal than {1}, but now {2}. '.format(valueDict["CAPcntMin"], valueDict["CAPcntMax"], decisionList[numCompany][currentYear]['CAP']))
-                #    sys.exit()
-
     fleetAll[numCompany][NumFleet]['fuelName'] = fuelName
     fleetAll[numCompany][NumFleet]['WPS'] = WPS
     fleetAll[numCompany][NumFleet]['SPS'] = SPS
@@ -841,7 +885,6 @@ def orderPhaseFunc(fleetAll,numCompany,valueDict,elapsedYear,tOpSch,tbid,current
             _, _, EEDIatt, vDsgnRed = EEDIattFunc(wDWT,valueDict['wMCR'],valueDict['kMCR1'],valueDict['kMCR2'],valueDict['kMCR3'],valueDict['kPAE1'],valueDict['kPAE2'],valueDict['rCCS'],valueDict['vDsgn'],valueDict['rWPS'],Cco2ship,valueDict['SfcM'],valueDict['SfcA'],valueDict['rSPS'],Cco2aux,EEDIreq,WPS,SPS,CCS)
             return CAP, vDsgnRed, EEDIreq, EEDIatt
 
-
         def _buttonCommandAnother(fleetAll,numCompany,tOpSch,tbid,currentYear,elapsedYear,NShipFleet,parameterFile2,parameterFile12,parameterFile3,parameterFile5):
             CAP, vDsgnRed, EEDIreq, EEDIatt = _EEDIcalc(rEEDIreq,parameterFile3,valueDict)
             if valueDict['vMin'] < vDsgnRed and CAP >= 8000 and CAP <= 24000:
@@ -907,53 +950,69 @@ def orderPhaseFunc(fleetAll,numCompany,valueDict,elapsedYear,tOpSch,tbid,current
         root.geometry(widgetSize)
 
         # Frame
-        frame = ttk.Frame(root, padding=20)
+        style = ttk.Style()
+        style.theme_use('default')
+        if numCompany == 1:
+            color = '#ffcccc'
+        elif numCompany == 2:
+            color = '#ffedab'
+        elif numCompany == 3:
+            color = '#a4a8d4'
+        root['bg'] = color
+        style.configure('new.TFrame', foreground='black', background=color)
+        style.configure('new.TLabel', foreground='black', background=color)
+        style.configure('new.TButton', foreground='black', background=color)
+        style.configure('new.TCheckbutton', foreground='black', background=color)
+        style.configure('new.TEntry', foreground='black', background=color)
+        style.configure('new.TCombobox', foreground='black', background=color)
+        frame = ttk.Frame(root, style='new.TFrame', padding=20)
         frame.pack()
 
         # Label
-        label1 = ttk.Label(frame, text='Fuel type', padding=(5, 2))
-        label2 = ttk.Label(frame, text='Capacity (8000<=Capacity<=24000) [TEU]', padding=(5, 2))
-        label3 = ttk.Label(frame, text='Maximum speed [kt]', padding=(5, 2))
-        label4 = ttk.Label(frame, text='EEDIreq [g/(ton*NM)]', padding=(5, 2))
-        label5 = ttk.Label(frame, text='EEDIatt [g/(ton*NM)]', padding=(5, 2))
-        label6 = ttk.Label(frame, text='None', padding=(5, 2))
-        label7 = ttk.Label(frame, text='None', padding=(5, 2))
-        label8 = ttk.Label(frame, text='None', padding=(5, 2))
-        label9 = ttk.Label(frame, text='WPS', padding=(5, 2))
-        label10 = ttk.Label(frame, text='SPS', padding=(5, 2))
-        label11 = ttk.Label(frame, text='CCS', padding=(5, 2))
+        label1 = ttk.Label(frame, style='new.TLabel', text='Fuel type', padding=(5, 2))
+        label2 = ttk.Label(frame, style='new.TLabel', text='Capacity (8000<=Capacity<=24000) [TEU]', padding=(5, 2))
+        label3 = ttk.Label(frame, style='new.TLabel', text='Maximum speed [kt]', padding=(5, 2))
+        label4 = ttk.Label(frame, style='new.TLabel', text='EEDIreq [g/(ton*NM)]', padding=(5, 2))
+        label5 = ttk.Label(frame, style='new.TLabel', text='EEDIatt [g/(ton*NM)]', padding=(5, 2))
+        label6 = ttk.Label(frame, style='new.TLabel', text='None', padding=(5, 2))
+        label7 = ttk.Label(frame, style='new.TLabel', text='None', padding=(5, 2))
+        label8 = ttk.Label(frame, style='new.TLabel', text='None', padding=(5, 2))
+        label9 = ttk.Label(frame, style='new.TLabel', text='WPS', padding=(5, 2))
+        label10 = ttk.Label(frame, style='new.TLabel', text='SPS', padding=(5, 2))
+        label11 = ttk.Label(frame, style='new.TLabel', text='CCS', padding=(5, 2))
+        labelExpl = ttk.Label(frame, style='new.TLabel', text='Guide: When you want to order a fleet, select the setting and click "another fleet" or "complete". Ohterwise, click "No order".', padding=(5, 2))
 
         # List box
         fuelTypeList = ['HFO/Diesel','LNG','NH3','H2']
         v1 = StringVar()
-        lb = ttk.Combobox(frame,textvariable=v1,values=fuelTypeList)
+        lb = ttk.Combobox(frame, style='new.TCombobox', textvariable=v1,values=fuelTypeList)
         lb.set(fuelTypeList[0])
 
         # Entry
         v2 = StringVar()
         v2.set('20000')
-        cb1 = ttk.Entry(frame, textvariable=v2)
+        cb1 = ttk.Entry(frame, style='new.TEntry', textvariable=v2)
 
         # Checkbutton
         v3 = StringVar()
         v3.set('0') # 初期化
-        cb2 = ttk.Checkbutton(frame, padding=(10), text='WPS', variable=v3)
+        cb2 = ttk.Checkbutton(frame, style='new.TCheckbutton', padding=(10), text='WPS', variable=v3)
 
         # Checkbutton
         v4 = StringVar()
         v4.set('0') # 初期化
-        cb3 = ttk.Checkbutton(frame, padding=(10), text='SPS', variable=v4)
+        cb3 = ttk.Checkbutton(frame, style='new.TCheckbutton', padding=(10), text='SPS', variable=v4)
 
         # Checkbutton
         v5 = StringVar()
         v5.set('0') # 初期化
-        cb4 = ttk.Checkbutton(frame, padding=(10), text='CCS', variable=v5)
+        cb4 = ttk.Checkbutton(frame, style='new.TCheckbutton', padding=(10), text='CCS', variable=v5)
 
         # Button
-        button1 = ttk.Button(frame, text='Another fleet', state='disabled', command=lambda: _buttonCommandAnother(fleetAll,numCompany,tOpSch,tbid,currentYear,elapsedYear,NShipFleet,parameterFile2,parameterFile12,parameterFile3,parameterFile5))
-        button2 = ttk.Button(frame, text='Complete', state='disabled', command=lambda: _buttonCommandComplete(root,fleetAll,numCompany,tOpSch,tbid,currentYear,elapsedYear,NShipFleet,parameterFile2,parameterFile12,parameterFile3,parameterFile5))
-        button3 = ttk.Button(frame, text='EEDI check', command=lambda: _buttonCommandCheck(valueDict,parameterFile3,rEEDIreq))
-        button4 = ttk.Button(frame, text='No order', command=lambda: _buttonCommandNoOrder(root))
+        button1 = ttk.Button(frame, style='new.TButton', text='Another fleet', state='disabled', command=lambda: _buttonCommandAnother(fleetAll,numCompany,tOpSch,tbid,currentYear,elapsedYear,NShipFleet,parameterFile2,parameterFile12,parameterFile3,parameterFile5))
+        button2 = ttk.Button(frame, style='new.TButton', text='Complete', state='disabled', command=lambda: _buttonCommandComplete(root,fleetAll,numCompany,tOpSch,tbid,currentYear,elapsedYear,NShipFleet,parameterFile2,parameterFile12,parameterFile3,parameterFile5))
+        button3 = ttk.Button(frame, style='new.TButton', text='EEDI check', command=lambda: _buttonCommandCheck(valueDict,parameterFile3,rEEDIreq))
+        button4 = ttk.Button(frame, style='new.TButton', text='No order', command=lambda: _buttonCommandNoOrder(root))
 
         # Layout
         label1.grid(row=0, column=0)
@@ -976,6 +1035,7 @@ def orderPhaseFunc(fleetAll,numCompany,valueDict,elapsedYear,tOpSch,tbid,current
         button2.grid(row=4, column=4)
         button3.grid(row=4, column=1)
         button4.grid(row=4, column=0)
+        labelExpl.grid(row=5, column=0, columnspan=5)
 
         root.deiconify()
         root.mainloop()
@@ -988,7 +1048,6 @@ def orderPhaseFunc(fleetAll,numCompany,valueDict,elapsedYear,tOpSch,tbid,current
 
 def yearlyOperationFunc(fleetAll,numCompany,pureDi,overDi,startYear,elapsedYear,NShipFleet,tOpSch,v,valueDict,parameterFile4,nextIf):
     NumFleet = len(fleetAll[numCompany])
-    fleetAll[numCompany]['total'] = fleetAll[numCompany]['total']
 
     j = 0
     maxCta = 0
@@ -1042,7 +1101,7 @@ def yearlyOperationFunc(fleetAll,numCompany,pureDi,overDi,startYear,elapsedYear,
     fleetAll[numCompany]['total']['gTilde'][elapsedYear] = fleetAll[numCompany]['total']['g'][elapsedYear] / fleetAll[numCompany]['total']['cta'][elapsedYear]
     fleetAll[numCompany]['total']['costTilde'][elapsedYear] = fleetAll[numCompany]['total']['costAll'][elapsedYear] / fleetAll[numCompany]['total']['cta'][elapsedYear]
     fleetAll[numCompany]['total']['saleTilde'][elapsedYear] = fleetAll[numCompany]['total']['sale'][elapsedYear] / fleetAll[numCompany]['total']['cta'][elapsedYear]
-    return fleetAll, overDi
+    return fleetAll
 
 def yearlyOperationPhaseFunc(fleetAll,numCompany,pureDi,overDi,startYear,elapsedYear,NShipFleet,tOpSch,valueDict,parameterFile4):
     def _surviceSpeedGui(fleetAll,numCompany,pureDi,overDi,startYear,elapsedYear,NShipFleet,tOpSch,valueDict,parameterFile4):
@@ -1058,7 +1117,7 @@ def yearlyOperationPhaseFunc(fleetAll,numCompany,pureDi,overDi,startYear,elapsed
                         goAhead = False
                     j += 1
             if goAhead:
-                fleetAll, overDi = yearlyOperationFunc(fleetAll,numCompany,pureDi,overDi,startYear,elapsedYear,NShipFleet,tOpSch,v13,valueDict,parameterFile4,True)
+                fleetAll = yearlyOperationFunc(fleetAll,numCompany,pureDi,overDi,startYear,elapsedYear,NShipFleet,tOpSch,v13,valueDict,parameterFile4,True)
                 fleetAll[numCompany]['total']['atOnce'][elapsedYear] = float(vAtOnce.get())
                 root.quit()
                 root.destroy()
@@ -1066,10 +1125,9 @@ def yearlyOperationPhaseFunc(fleetAll,numCompany,pureDi,overDi,startYear,elapsed
                 button2['state'] = 'disabled'
 
         def _buttonCommandCalc(fleetAll,numCompany,pureDi,overDi,startYear,elapsedYear,NShipFleet,tOpSch,valueDict,parameterFile4):
-            fleetAll, _ = yearlyOperationFunc(fleetAll,numCompany,pureDi,overDi,startYear,elapsedYear,NShipFleet,tOpSch,v13,valueDict,parameterFile4,False)
-            fleetAll[numCompany]['total'] = fleetAll[numCompany]['total']
+            fleetAll = yearlyOperationFunc(fleetAll,numCompany,pureDi,overDi,startYear,elapsedYear,NShipFleet,tOpSch,v13,valueDict,parameterFile4,False)
             labelRes4['text'] = str('{:.3g}'.format(fleetAll[numCompany]['total']['cta'][elapsedYear]))
-            labelRes6['text'] = str('{:.3g}'.format(fleetAll[numCompany]['total']['rocc'][elapsedYear]))
+            labelRes6['text'] = str('{:.4g}'.format(fleetAll[numCompany]['total']['rocc'][elapsedYear]))
             labelRes8['text'] = str('{:.3g}'.format(fleetAll[numCompany]['total']['costFuel'][elapsedYear]))
             labelRes10['text'] = str('{:.3g}'.format(fleetAll[numCompany]['total']['g'][elapsedYear]))
             button2['state'] = 'normal'
@@ -1105,35 +1163,49 @@ def yearlyOperationPhaseFunc(fleetAll,numCompany,pureDi,overDi,startYear,elapsed
         root.geometry(widgetSize)
 
         # Frame
-        frame = ttk.Frame(root, padding=20)
+        style = ttk.Style()
+        style.theme_use('default')
+        if numCompany == 1:
+            color = '#ffcccc'
+        elif numCompany == 2:
+            color = '#ffedab'
+        elif numCompany == 3:
+            color = '#a4a8d4'
+        root['bg'] = color
+        style.configure('new.TFrame', foreground='black', background=color)
+        style.configure('new.TLabel', foreground='black', background=color)
+        style.configure('new.TButton', foreground='black', background=color)
+        style.configure('new.TCheckbutton', foreground='black', background=color)
+        style.configure('new.TEntry', foreground='black', background=color)
+        frame = ttk.Frame(root, style='new.TFrame', padding=20)
         frame.pack()
 
         # Label
-        labelAtOnce = ttk.Label(frame, text='Input all service speeds at once (12<=) [kt]:', padding=(5, 2))
+        labelAtOnce = ttk.Label(frame, style='new.TLabel', text='Input all service speeds at once (12<=) [kt]:', padding=(5, 2))
         vAtOnce = StringVar()
         if elapsedYear == 0:
             vAtOnce.set('23')
         else:
             vAtOnce.set(str(fleetAll[numCompany]['total']['atOnce'][elapsedYear-1]))
-        labelAtOnce2 = ttk.Entry(frame, textvariable=vAtOnce)
-        labelRes1 = ttk.Label(frame, text='Assigned demand [TEU*NM]:', padding=(5, 2))
-        labelRes2 = ttk.Label(frame, text=str('{:.3g}'.format(pureDi+overDi)), padding=(5, 2))
-        labelRes3 = ttk.Label(frame, text='Cargo trasnsport amount [TEU*NM]:', padding=(5, 2))
-        labelRes4 = ttk.Label(frame, text='None', padding=(5, 2))
-        labelRes5 = ttk.Label(frame, text='Occupancy rate [%]:', padding=(5, 2))
-        labelRes6 = ttk.Label(frame, text='None', padding=(5, 2))
-        labelRes7 = ttk.Label(frame, text='Fuel cost [$]:', padding=(5, 2))
-        labelRes8 = ttk.Label(frame, text='None', padding=(5, 2))
-        labelRes9 = ttk.Label(frame, text='CO2 [ton]:', padding=(5, 2))
-        labelRes10 = ttk.Label(frame, text='None', padding=(5, 2))
-        label0 = ttk.Label(frame, text='No.', padding=(5, 2))
-        label1 = ttk.Label(frame, text='Fuel type', padding=(5, 2))
-        label2 = ttk.Label(frame, text='Capacity [TEU]', padding=(5, 2))
-        label3 = ttk.Label(frame, text='WPS', padding=(5, 2))
-        label4 = ttk.Label(frame, text='SPS', padding=(5, 2))
-        label5 = ttk.Label(frame, text='CCS', padding=(5, 2))
-        label6 = ttk.Label(frame, text='Service speed (12<=) [kt]', padding=(5, 2))
-        label7 = ttk.Label(frame, text='Maximum speed [kt]', padding=(5, 2))
+        labelAtOnce2 = ttk.Entry(frame, style='new.TEntry', textvariable=vAtOnce)
+        labelRes1 = ttk.Label(frame, style='new.TLabel',text='Assigned demand [TEU*NM]:', padding=(5, 2))
+        labelRes2 = ttk.Label(frame, style='new.TLabel',text=str('{:.3g}'.format(pureDi+overDi)), padding=(5, 2))
+        labelRes3 = ttk.Label(frame, style='new.TLabel',text='Cargo trasnsport amount [TEU*NM]:', padding=(5, 2))
+        labelRes4 = ttk.Label(frame, style='new.TLabel',text='None', padding=(5, 2))
+        labelRes5 = ttk.Label(frame, style='new.TLabel',text='Occupancy rate [%]:', padding=(5, 2))
+        labelRes6 = ttk.Label(frame, style='new.TLabel',text='None', padding=(5, 2))
+        labelRes7 = ttk.Label(frame, style='new.TLabel',text='Fuel cost [$]:', padding=(5, 2))
+        labelRes8 = ttk.Label(frame, style='new.TLabel',text='None', padding=(5, 2))
+        labelRes9 = ttk.Label(frame, style='new.TLabel',text='CO2 [ton]:', padding=(5, 2))
+        labelRes10 = ttk.Label(frame, style='new.TLabel',text='None', padding=(5, 2))
+        label0 = ttk.Label(frame, style='new.TLabel',text='No.', padding=(5, 2))
+        label1 = ttk.Label(frame, style='new.TLabel',text='Fuel type', padding=(5, 2))
+        label2 = ttk.Label(frame, style='new.TLabel',text='Capacity [TEU]', padding=(5, 2))
+        label3 = ttk.Label(frame, style='new.TLabel',text='WPS', padding=(5, 2))
+        label4 = ttk.Label(frame, style='new.TLabel',text='SPS', padding=(5, 2))
+        label5 = ttk.Label(frame, style='new.TLabel',text='CCS', padding=(5, 2))
+        label6 = ttk.Label(frame, style='new.TLabel',text='Service speed (12<=) [kt]', padding=(5, 2))
+        label7 = ttk.Label(frame, style='new.TLabel',text='Maximum speed [kt]', padding=(5, 2))
         label00 = []
         label8 = []
         label9 = []
@@ -1147,25 +1219,25 @@ def yearlyOperationPhaseFunc(fleetAll,numCompany,pureDi,overDi,startYear,elapsed
         NumFleet = len(fleetAll[numCompany])
         for keyFleet in range(1,NumFleet):
             if fleetAll[numCompany][keyFleet]['delivery'] <= currentYear and fleetAll[numCompany][keyFleet]['tOp'] < tOpSch:
-                label00.append(ttk.Label(frame, text=str(keyFleet), padding=(5, 2)))
+                label00.append(ttk.Label(frame, style='new.TLabel',text=str(keyFleet), padding=(5, 2)))
                 tOpTemp = fleetAll[numCompany][keyFleet]['tOp']
                 if fleetAll[numCompany][keyFleet]['fuelName'] == 'HFO':
-                    label8.append(ttk.Label(frame, text='HFO/Diesel', padding=(5, 2)))
+                    label8.append(ttk.Label(frame, style='new.TLabel',text='HFO/Diesel', padding=(5, 2)))
                 else:
-                    label8.append(ttk.Label(frame, text=fleetAll[numCompany][keyFleet]['fuelName'], padding=(5, 2)))
-                label9.append(ttk.Label(frame, text=str(fleetAll[numCompany][keyFleet]['CAPcnt']), padding=(5, 2)))
+                    label8.append(ttk.Label(frame, style='new.TLabel',text=fleetAll[numCompany][keyFleet]['fuelName'], padding=(5, 2)))
+                label9.append(ttk.Label(frame, style='new.TLabel',text=str(fleetAll[numCompany][keyFleet]['CAPcnt']), padding=(5, 2)))
                 if fleetAll[numCompany][keyFleet]['WPS']:
-                    label10.append(ttk.Label(frame, text='Yes', padding=(5, 2)))
+                    label10.append(ttk.Label(frame, style='new.TLabel',text='Yes', padding=(5, 2)))
                 else:
-                    label10.append(ttk.Label(frame, text='No', padding=(5, 2)))
+                    label10.append(ttk.Label(frame, style='new.TLabel',text='No', padding=(5, 2)))
                 if fleetAll[numCompany][keyFleet]['SPS']:
-                    label11.append(ttk.Label(frame, text='Yes', padding=(5, 2)))
+                    label11.append(ttk.Label(frame, style='new.TLabel',text='Yes', padding=(5, 2)))
                 else:
-                    label11.append(ttk.Label(frame, text='No', padding=(5, 2)))
+                    label11.append(ttk.Label(frame, style='new.TLabel',text='No', padding=(5, 2)))
                 if fleetAll[numCompany][keyFleet]['CCS']:
-                    label12.append(ttk.Label(frame, text='Yes', padding=(5, 2)))
+                    label12.append(ttk.Label(frame, style='new.TLabel',text='Yes', padding=(5, 2)))
                 else:
-                    label12.append(ttk.Label(frame, text='No', padding=(5, 2)))
+                    label12.append(ttk.Label(frame, style='new.TLabel',text='No', padding=(5, 2)))
                 tOpTemp = fleetAll[numCompany][keyFleet]['tOp']
                 v13.append(StringVar())
                 #if fleetAll[numCompany][keyFleet]['v'][tOpTemp-1] == 0:
@@ -1173,13 +1245,15 @@ def yearlyOperationPhaseFunc(fleetAll,numCompany,pureDi,overDi,startYear,elapsed
                 #else:
                 #    v13[-1].set(str(fleetAll[numCompany][keyFleet]['v'][tOpTemp-1]))
                 v13[-1].set('None')
-                label13.append(ttk.Entry(frame, textvariable=v13[-1]))
-                label14.append(ttk.Label(frame, text=str(fleetAll[numCompany][keyFleet]['vDsgnRed'][tOpTemp]), padding=(5, 2)))
+                label13.append(ttk.Entry(frame, style='new.TEntry',textvariable=v13[-1]))
+                label14.append(ttk.Label(frame, style='new.TLabel',text=str(fleetAll[numCompany][keyFleet]['vDsgnRed'][tOpTemp]), padding=(5, 2)))
+
+        labelExpl = ttk.Label(frame, style='new.TLabel', text='Guide: Input a service speed for all fleets at first and click "Input", and then change each speed if you want. After inputting all values, click "Calculate" and "Next".', padding=(5, 2))
 
         # Button
-        button1 = ttk.Button(frame, text='Calculate', state='disabled', command=lambda: _buttonCommandCalc(fleetAll,numCompany,pureDi,overDi,startYear,elapsedYear,NShipFleet,tOpSch,valueDict,parameterFile4))
-        button2 = ttk.Button(frame, text='Next', state='disabled', command=lambda: _buttonCommandNext(root,fleetAll,numCompany,pureDi,overDi,startYear,elapsedYear,NShipFleet,tOpSch,valueDict,parameterFile4))
-        button3 = ttk.Button(frame, text='Input', command=lambda: _buttonCommandAtOnce())
+        button1 = ttk.Button(frame, style='new.TButton',text='Calculate', state='disabled', command=lambda: _buttonCommandCalc(fleetAll,numCompany,pureDi,overDi,startYear,elapsedYear,NShipFleet,tOpSch,valueDict,parameterFile4))
+        button2 = ttk.Button(frame, style='new.TButton',text='Next', state='disabled', command=lambda: _buttonCommandNext(root,fleetAll,numCompany,pureDi,overDi,startYear,elapsedYear,NShipFleet,tOpSch,valueDict,parameterFile4))
+        button3 = ttk.Button(frame, style='new.TButton',text='Input', command=lambda: _buttonCommandAtOnce())
 
         # Layout
         labelRes1.grid(row=0, column=1)
@@ -1214,6 +1288,7 @@ def yearlyOperationPhaseFunc(fleetAll,numCompany,pureDi,overDi,startYear,elapsed
         button3.grid(row=i+5, column=3)
         button1.grid(row=i+5, column=6)
         button2.grid(row=i+5, column=7)
+        labelExpl.grid(row=i+6, column=0,columnspan=8)
 
         root.deiconify()
         root.mainloop()
@@ -1222,7 +1297,7 @@ def yearlyOperationPhaseFunc(fleetAll,numCompany,pureDi,overDi,startYear,elapsed
 
     fleetAll = _surviceSpeedGui(fleetAll,numCompany,pureDi,overDi,startYear,elapsedYear,NShipFleet,tOpSch,valueDict,parameterFile4)
 
-    return fleetAll, overDi
+    return fleetAll
 
 def outputGuiFunc(fleetAll,startYear,elapsedYear,lastYear,tOpSch,unitDict):
     def _eachFrame(frame,fig,keyi,keyList,root):

@@ -37,8 +37,8 @@ def roleplayRun():
     parameterFile12 = path+"eqLHVaux.csv"
 
     valueDict, unitDict = rs.readinput(parameterFile1)
-    #regYear = np.linspace(valueDict['regStart'],valueDict['lastYear'],int((valueDict['lastYear']-valueDict['regStart'])//valueDict['regSpan']+1))
-    regYear = np.linspace(2021,valueDict['lastYear'],int((valueDict['lastYear']-valueDict['regStart'])//valueDict['regSpan']+1))
+    regYear = np.linspace(valueDict['regStart'],valueDict['lastYear'],int((valueDict['lastYear']-valueDict['regStart'])//valueDict['regSpan']+1))
+    #regYear = np.linspace(2021,valueDict['lastYear'],int((valueDict['lastYear']-valueDict['regStart'])//valueDict['regSpan']+1))
 
     # prepare fleets
     lastYear = int(valueDict['lastYear'])
@@ -55,6 +55,24 @@ def roleplayRun():
     #decisionList.setdefault(1,rs.decisionListFunc(parameterFile9))
     #decisionList.setdefault(2,rs.decisionListFunc(parameterFile10))
     #decisionList.setdefault(3,rs.decisionListFunc(parameterFile11))
+
+
+    '''CAPcnt = np.linspace(8000,24000,1000)
+    wDWT = rs.wDWTFunc(valueDict['kDWT1'],CAPcnt,valueDict['kDWT2'])
+    rEEDIreqCurrent = 0.5
+    Cco2ship = rs.Cco2Func(parameterFile3,'HFO')
+    Cco2aux = rs.Cco2Func(parameterFile3,'Diesel')
+    _, EEDIreq = rs.EEDIreqFunc(valueDict['kEEDI1'],wDWT,valueDict['kEEDI2'],rEEDIreqCurrent)
+    _, _, EEDIatt, vDsgnRed = rs.EEDIattFunc(wDWT,valueDict['wMCR'],valueDict['kMCR1'],valueDict['kMCR2'],valueDict['kMCR3'],valueDict['kPAE1'],valueDict['kPAE2'],valueDict['rCCS'],valueDict['vDsgn'],valueDict['rWPS'],Cco2ship,valueDict['SfcM'],valueDict['SfcA'],valueDict['rSPS'],Cco2aux,EEDIreq,0,0,0)      
+
+    fig, ax = plt.subplots(1, 1, figsize=(7.5, 4.5))
+    ax.plot(CAPcnt,EEDIatt,label='EEDIatt')
+    ax.plot(CAPcnt,EEDIreq,label='EEDIreq')
+    ax.set_xlabel('CAP')
+    ax.set_ylabel('EEXI/EEDI')
+    ax.legend()
+    ax.set_title('vDsgnRed 12 kt')
+    plt.show()'''
 
     # start ship operation
     nRegAct = 0
@@ -88,10 +106,11 @@ def roleplayRun():
         
         # order & yearly operation phase
         overDi = 0
-        for numCompany in playOrder:
+        for numCompany in playOrder.astype(int):
             Di = Dasg[numCompany-1]
             fleets = rs.orderPhaseFunc(fleets,numCompany,valueDict,elapsedYear,tOpSch,tbid,currentYear,regDec['rEEDIreq'][nRegAct],NShipFleet,parameterFile2,parameterFile12,parameterFile3,parameterFile5)
-            fleets, overDi = rs.yearlyOperationPhaseFunc(fleets,numCompany,Di,overDi,startYear,elapsedYear,NShipFleet,tOpSch,valueDict,parameterFile4)
+            fleets = rs.yearlyOperationPhaseFunc(fleets,numCompany,Di,overDi,startYear,elapsedYear,NShipFleet,tOpSch,valueDict,parameterFile4)
+            overDi = fleets[numCompany]['total']['overDi'][elapsedYear]
         
         rs.outputGuiFunc(fleets,startYear,elapsedYear,lastYear,tOpSch,unitDict)
         #'''
