@@ -16,6 +16,7 @@ import shutil
 import random
 from matplotlib.ticker import MaxNLocator
 from pathlib import Path
+from decimal import Decimal, ROUND_HALF_UP
 
 def readinput(filename):
     csv_input = pd.read_csv(filepath_or_buffer=filename, encoding="utf_8", sep=",")
@@ -106,6 +107,8 @@ def fleetPreparationFunc(fleetAll,initialFleetFile,numCompany,startYear,lastYear
     fleetAll[numCompany]['total']['dcostEco'] = np.zeros(lastYear-startYear+1)
     fleetAll[numCompany]['total']['nTransCnt'] = np.zeros(lastYear-startYear+1)
     fleetAll[numCompany]['total']['atOnce'] = np.zeros(lastYear-startYear+1)
+    fleetAll[numCompany]['total']['lastOrderFuel'] = 'HFO/Diesel'
+    fleetAll[numCompany]['total']['lastOrderCAP'] = 20000
 
     initialFleets = initialFleetFunc(initialFleetFile)
 
@@ -253,15 +256,6 @@ def EEDIattFunc(wDWT,wMCR,kMCR1,kMCR2,kMCR3,kPAE1,kPAE2,rCCS,vDsgn,rWPS,Cco2ship
         MCRM = kMCR1*wDWT + kMCR2
     else:
         MCRM = kMCR3
-
-    '''MCRM = np.zeros(wDWT.shape)
-    for i in range(wDWT.shape[0]):
-        if wDWT[i] < wMCR:
-            MCRM[i] = kMCR1*wDWT[i] + kMCR2
-        else:
-            MCRM[i] = kMCR3'''
-
-
     PA = kPAE1*MCRM+kPAE2
 
     def _EEDIcalc(vDsgnRed):
@@ -284,6 +278,8 @@ def EEDIattFunc(wDWT,wMCR,kMCR1,kMCR2,kMCR3,kPAE1,kPAE2,rCCS,vDsgn,rWPS,Cco2ship
     while EEDIatt > EEDIreq:
         vDsgnRed -= 1
         EEDIatt = _EEDIcalc(vDsgnRed)
+        if vDsgnRed == 0:
+            print(vDsgnRed)
 
     return MCRM, PA, EEDIatt, vDsgnRed
 
@@ -680,7 +676,7 @@ def scrapRefurbishFunc(fleetAll,numCompany,elapsedYear,currentYear,valueDict,tOp
                 else:
                     v3[-1].set('0')
                     label12.append(ttk.Checkbutton(frame, style='new.TCheckbutton',padding=(10), command=lambda: _buttonCommandCheckButton(fleetAll,valueDict,rEEDIreq,v3,'CCS'),variable=v3[-1]))
-                label14.append(ttk.Label(frame, style='new.TLabel',text=str(fleetAll[numCompany][keyFleet]['vDsgnRed'][tOpTemp]), padding=(5, 2)))
+                label14.append(ttk.Label(frame, style='new.TLabel',text=str(Decimal(str(fleetAll[numCompany][keyFleet]['vDsgnRed'][tOpTemp])).quantize(Decimal('0'), rounding=ROUND_HALF_UP)), padding=(5, 2)))
                 label15.append(ttk.Label(frame, style='new.TLabel',text='{:.3g}'.format(fleetAll[numCompany][keyFleet]['EEDIreq'][tOpTemp]), padding=(5, 2)))
                 label16.append(ttk.Label(frame, style='new.TLabel',text='{:.3g}'.format(fleetAll[numCompany][keyFleet]['EEDIatt'][tOpTemp]), padding=(5, 2)))
                 v4.append(StringVar())
@@ -766,7 +762,10 @@ def scrapRefurbishFunc(fleetAll,numCompany,elapsedYear,currentYear,valueDict,tOp
         frame.pack()
 
         v1 = StringVar()
-        v1.set('0')
+        if elapsedYear == 0:
+            v1.set('0')
+        else:
+            v1.set(str(fleetAll[numCompany]['total']['dcostCnt'][elapsedYear-1]))
         cb1 = ttk.Entry(frame, style='new.TEntry', textvariable=v1)
         label1 = ttk.Label(frame, style='new.TLabel', text='dcontCnt (-1000 <= dcostCnt <= 1000)', padding=(5, 2))
         label2 = ttk.Label(frame, style='new.TLabel', text='Nominal shipping cost: 1500 $/container', padding=(5, 2))
@@ -801,13 +800,16 @@ def scrapRefurbishFunc(fleetAll,numCompany,elapsedYear,currentYear,valueDict,tOp
     for keyFleet in range(1,NumFleet):
         tOpTemp = fleetAll[numCompany][keyFleet]['tOp']
         if fleetAll[numCompany][keyFleet]['delivery'] <= currentYear and fleetAll[numCompany][keyFleet]['tOp'] < tOpSch:
-            cAdditionalEquipment = 1
-            if fleetAll[numCompany][keyFleet]['WPS']:
-                cAdditionalEquipment += valueDict['dcostWPS']
-            elif fleetAll[numCompany][keyFleet]['SPS']:
-                cAdditionalEquipment += valueDict['dcostSPS']
-            elif fleetAll[numCompany][keyFleet]['CCS']:
-                cAdditionalEquipment += valueDict['dcostCCS']
+            if fleetAll[numCompany][keyFleet]['WPS'] or fleetAll[numCompany][keyFleet]['SPS'] or fleetAll[numCompany][keyFleet]['CCS']:
+                cAdditionalEquipment = 1
+                if fleetAll[numCompany][keyFleet]['WPS']:
+                    cAdditionalEquipment += valueDict['dcostWPS']
+                elif fleetAll[numCompany][keyFleet]['SPS']:
+                    cAdditionalEquipment += valueDict['dcostSPS']
+                elif fleetAll[numCompany][keyFleet]['CCS']:
+                    cAdditionalEquipment += valueDict['dcostCCS']
+            else:
+                cAdditionalEquipment = 0
             fleetAll[numCompany][keyFleet]['costRfrb'][tOpTemp] = cAdditionalEquipment * fleetAll[numCompany][keyFleet]['costShipBasicHFO']
 
     # decide additional shipping fee per container
@@ -893,8 +895,10 @@ def orderPhaseFunc(fleetAll,numCompany,valueDict,elapsedYear,tOpSch,tbid,current
                 else:
                     fuelName = v1.get()
                 fleetAll = orderShipFunc(fleetAll,numCompany,fuelName,int(v3.get()),int(v4.get()),int(v5.get()),float(v2.get()),tOpSch,tbid,0,currentYear,elapsedYear,valueDict,NShipFleet,parameterFile2,parameterFile12,parameterFile3,parameterFile5)
+                fleetAll[numCompany]['total']['lastOrderFuel'] = v1.get()
+                fleetAll[numCompany]['total']['lastOrderCAP'] = v2.get()
                 cb1.delete(0,"end")
-                cb1.insert(0, '20000')
+                cb1.insert(0, fleetAll[numCompany]['total']['lastOrderCAP'])
                 v3.set('0')
                 v4.set('0')
                 v5.set('0')
@@ -918,6 +922,8 @@ def orderPhaseFunc(fleetAll,numCompany,valueDict,elapsedYear,tOpSch,tbid,current
                 else:
                     fuelName = v1.get()
                 fleetAll = orderShipFunc(fleetAll,numCompany,fuelName,int(v3.get()),int(v4.get()),int(v5.get()),float(v2.get()),tOpSch,tbid,0,currentYear,elapsedYear,valueDict,NShipFleet,parameterFile2,parameterFile12,parameterFile3,parameterFile5)
+                fleetAll[numCompany]['total']['lastOrderFuel'] = v1.get()
+                fleetAll[numCompany]['total']['lastOrderCAP'] = v2.get()
                 root.quit()
                 root.destroy()
             else:
@@ -926,7 +932,7 @@ def orderPhaseFunc(fleetAll,numCompany,valueDict,elapsedYear,tOpSch,tbid,current
 
         def _buttonCommandCheck(valueDict,parameterFile3,rEEDIreq):
             CAP, vDsgnRed, EEDIreq, EEDIatt = _EEDIcalc(rEEDIreq,parameterFile3,valueDict)
-            label6['text'] = str(vDsgnRed)
+            label6['text'] = str(Decimal(str(vDsgnRed)).quantize(Decimal('0'), rounding=ROUND_HALF_UP))
             label7['text'] = str('{:.3g}'.format(EEDIreq))
             label8['text'] = str('{:.3g}'.format(EEDIatt))
             if valueDict['vMin'] < vDsgnRed:
@@ -986,11 +992,17 @@ def orderPhaseFunc(fleetAll,numCompany,valueDict,elapsedYear,tOpSch,tbid,current
         fuelTypeList = ['HFO/Diesel','LNG','NH3','H2']
         v1 = StringVar()
         lb = ttk.Combobox(frame, style='new.TCombobox', textvariable=v1,values=fuelTypeList)
-        lb.set(fuelTypeList[0])
+        if elapsedYear == 0:
+            lb.set('HFO/Diesel')
+        else:
+            lb.set(fleetAll[numCompany]['total']['lastOrderFuel'])
 
         # Entry
         v2 = StringVar()
-        v2.set('20000')
+        if elapsedYear == 0:
+            v2.set('20000')
+        else:
+            v2.set(str(fleetAll[numCompany]['total']['lastOrderCAP']))
         cb1 = ttk.Entry(frame, style='new.TEntry', textvariable=v2)
 
         # Checkbutton
@@ -1147,9 +1159,9 @@ def yearlyOperationPhaseFunc(fleetAll,numCompany,pureDi,overDi,startYear,elapsed
                 if fleetAll[numCompany][keyFleet]['delivery'] <= currentYear and fleetAll[numCompany][keyFleet]['tOp'] < tOpSch:
                     tOpTemp = fleetAll[numCompany][keyFleet]['tOp']
                     if fleetAll[numCompany][keyFleet]['v'][tOpTemp-1] == 0:
-                        v13[j].set(str(min([float(vAtOnce.get()),fleetAll[numCompany][keyFleet]['vDsgnRed'][tOpTemp]])))
+                        v13[j].set(str(Decimal(str(min([float(vAtOnce.get()),fleetAll[numCompany][keyFleet]['vDsgnRed'][tOpTemp]]))).quantize(Decimal('0'), rounding=ROUND_HALF_UP)))
                     else:
-                        v13[j].set(str(min([float(vAtOnce.get()),fleetAll[numCompany][keyFleet]['v'][tOpTemp-1]])))
+                        v13[j].set(str(Decimal(str(min([float(vAtOnce.get()),fleetAll[numCompany][keyFleet]['v'][tOpTemp-1]]))).quantize(Decimal('0'), rounding=ROUND_HALF_UP)))
                     j += 1
             button1['state'] = 'normal'
 
@@ -1309,8 +1321,9 @@ def outputGuiFunc(fleetAll,startYear,elapsedYear,lastYear,tOpSch,unitDict):
 
         def _buttonCommandNext(root,fig):
             for keyi in keyList:
-                fig[keyi].clf()
-                plt.close(fig[keyi])
+                if type(fleetAll[1]['total'][keyi]) is np.ndarray:
+                    fig[keyi].clf()
+                    plt.close(fig[keyi])
             root.quit()     # stops mainloop
             root.destroy()  # this is necessary on Windows to prevent
             
@@ -1359,11 +1372,13 @@ def outputGuiFunc(fleetAll,startYear,elapsedYear,lastYear,tOpSch,unitDict):
     frame = {}
     keyList = list(fleetAll[1]['total'].keys())
     for keyi in keyList:
-        fig[keyi] = outputAllCompany2Func(fleetAll,startYear,elapsedYear,keyi,unitDict)
-        frame[keyi] = ttk.Frame(root, height=height, width=width)
+        if type(fleetAll[1]['total'][keyi]) is np.ndarray:
+            fig[keyi] = outputAllCompany2Func(fleetAll,startYear,elapsedYear,keyi,unitDict)
+            frame[keyi] = ttk.Frame(root, height=height, width=width)
     
     for keyi in keyList:
-        _eachFrame(frame,fig,keyi,keyList,root)
+        if type(fleetAll[1]['total'][keyi]) is np.ndarray:
+            _eachFrame(frame,fig,keyi,keyList,root)
 
     frame[keyList[0]].tkraise()
 
