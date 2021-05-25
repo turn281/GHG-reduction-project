@@ -277,9 +277,10 @@ def EEDIattFunc(wDWT,wMCR,kMCR1,kMCR2,kMCR3,kPAE1,kPAE2,rCCS,vDsgn,rWPS,Cco2ship
     EEDIatt = _EEDIcalc(vDsgnRed)
     while EEDIatt > EEDIreq:
         vDsgnRed -= 1
-        EEDIatt = _EEDIcalc(vDsgnRed)
         if vDsgnRed == 0:
-            print(vDsgnRed)
+            break
+        EEDIatt = _EEDIcalc(vDsgnRed)
+        
 
     return MCRM, PA, EEDIatt, vDsgnRed
 
