@@ -1585,8 +1585,9 @@ def outputCsvFunc(fleetAll,startYear,elapsedYear,lastYear,tOpSch):
         valueName = []
         outputList = []
         for keyi in fleetAll[numCompany]['total'].keys():
-            valueName.append(keyi)
-            outputList.append(fleetAll[numCompany]['total'][keyi][:elapsedYear+1])
+            if type(fleetAll[numCompany]['total'][keyi]) is np.ndarray:
+                valueName.append(keyi)
+                outputList.append(fleetAll[numCompany]['total'][keyi][:elapsedYear+1])
                     
         outputData1 = np.stack(outputList,1)
         outputDf1 = pd.DataFrame(data=outputData1, index=year, columns=valueName, dtype='float')

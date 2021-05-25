@@ -32,7 +32,7 @@ dcostCCS,Additional cost by CCS,$,Constant parameter,0.35
 kDem1,,-,Constant parameter,0.612224477
 kDem2,,-,Constant parameter,-2410.243165
 kDem3,,-,Constant parameter,2372173.603
-kDem4,,-,Constant parameter,6.08
+kDem4,,-,Constant parameter,6.69
 dcostCntMin,,$,Constant parameter,-1000
 dcostCntMax,,$,Constant parameter,1000
 rDMax,,-,Constant parameter,0.9
