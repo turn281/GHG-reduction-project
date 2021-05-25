@@ -109,7 +109,6 @@ def fleetPreparationFunc(fleetAll,initialFleetFile,numCompany,startYear,lastYear
     fleetAll[numCompany]['total']['atOnce'] = np.zeros(lastYear-startYear+1)
     fleetAll[numCompany]['total']['lastOrderFuel'] = 'HFO/Diesel'
     fleetAll[numCompany]['total']['lastOrderCAP'] = 20000
-
     initialFleets = initialFleetFunc(initialFleetFile)
 
     for i in range(len(initialFleets)):
@@ -196,7 +195,7 @@ def costFuelFunc(unitCostFuelHFO, unitCostFuel, fShipORG, fAuxORG, fShip, fAux):
 def costShipFunc(kShipBasic1, CAPcnt, kShipBasic2, rShipBasic, dcostWPS, dcostSPS, dcostCCS, flagWPS, flagSPS, flagCCS):
     costShipBasicHFO = kShipBasic1 * CAPcnt + kShipBasic2
     costShipBasic = rShipBasic * costShipBasicHFO
-    cAdditionalEquipment = 1
+    cAdditionalEquipment = 0
     if flagWPS:
         cAdditionalEquipment += dcostWPS
     elif flagSPS:
@@ -204,8 +203,8 @@ def costShipFunc(kShipBasic1, CAPcnt, kShipBasic2, rShipBasic, dcostWPS, dcostSP
     elif flagCCS:
         cAdditionalEquipment += dcostCCS
     costShipAdd = cAdditionalEquipment * costShipBasicHFO
-    costShipAll = costShipBasic + costShipAdd
-    return costShipBasicHFO, costShipBasic, costShipAdd, costShipAll
+    costShip = costShipBasic + costShipAdd
+    return costShipBasicHFO, costShipBasic, costShipAdd, costShip
 
 def additionalShippingFeeFunc(tOp, tOpSch, dcostFuelAll, costShipAll, costShipBasicHFO):
     if tOp <= tOpSch:
@@ -516,18 +515,16 @@ def scrapRefurbishFunc(fleetAll,numCompany,elapsedYear,currentYear,valueDict,tOp
             for keyFleet in range(1,NumFleet):
                 if fleetAll[numCompany][keyFleet]['delivery'] <= currentYear and fleetAll[numCompany][keyFleet]['tOp'] < tOpSch:
                     tOpTemp = fleetAll[numCompany][keyFleet]['tOp']
-                    if valueDict['vMin'] > fleetAll[numCompany][keyFleet]['vDsgnRed'][tOpTemp]:
+                    if valueDict['vMin'] > fleetAll[numCompany][keyFleet]['vDsgnRed'][tOpTemp] and v4[j].get() != '1':
                         goAhead = False
                     j += 1
             if goAhead:
-                goAhead = True
                 j = 0
                 for keyFleet in range(1,NumFleet):
                     if fleetAll[numCompany][keyFleet]['delivery'] <= currentYear and fleetAll[numCompany][keyFleet]['tOp'] < tOpSch:
                         if v4[j].get() == '1':
                             fleetAll[numCompany][keyFleet]['tOp'] = tOpSch
                         j += 1
-                        fleetAll[numCompany][keyFleet] = fleetAll[numCompany][keyFleet]
                 root.quit()
                 root.destroy()
             else:
@@ -536,6 +533,7 @@ def scrapRefurbishFunc(fleetAll,numCompany,elapsedYear,currentYear,valueDict,tOp
         def _buttonCommandCheck(fleetAll,valueDict,rEEDIreq):
             NumFleet = len(fleetAll[numCompany])
             numAlive = 0
+            goAhead = True
             for keyFleet in range(1,NumFleet):
                 if fleetAll[numCompany][keyFleet]['delivery'] <= currentYear and fleetAll[numCompany][keyFleet]['tOp'] < tOpSch:
                     tOpTemp = fleetAll[numCompany][keyFleet]['tOp']
@@ -545,10 +543,15 @@ def scrapRefurbishFunc(fleetAll,numCompany,elapsedYear,currentYear,valueDict,tOp
                     rEEDIreqCurrent = rEEDIreqCurrentFunc(fleetAll[numCompany][keyFleet]['wDWT'],rEEDIreq)
                     fleetAll[numCompany][keyFleet]['EEDIref'][tOpTemp], fleetAll[numCompany][keyFleet]['EEDIreq'][tOpTemp] = EEDIreqFunc(valueDict['kEEDI1'],fleetAll[numCompany][keyFleet]['wDWT'],valueDict['kEEDI2'],rEEDIreqCurrent)
                     fleetAll[numCompany][keyFleet]['MCRM'][tOpTemp], fleetAll[numCompany][keyFleet]['PA'][tOpTemp], fleetAll[numCompany][keyFleet]['EEDIatt'][tOpTemp], fleetAll[numCompany][keyFleet]['vDsgnRed'][tOpTemp] = EEDIattFunc(fleetAll[numCompany][keyFleet]['wDWT'],valueDict['wMCR'],valueDict['kMCR1'],valueDict['kMCR2'],valueDict['kMCR3'],valueDict['kPAE1'],valueDict['kPAE2'],valueDict['rCCS'],valueDict['vDsgn'],valueDict['rWPS'],fleetAll[numCompany][keyFleet]['Cco2ship'],valueDict['SfcM'],valueDict['SfcA'],valueDict['rSPS'],fleetAll[numCompany][keyFleet]['Cco2aux'],fleetAll[numCompany][keyFleet]['EEDIreq'][tOpTemp],fleetAll[numCompany][keyFleet]['WPS'],fleetAll[numCompany][keyFleet]['SPS'],fleetAll[numCompany][keyFleet]['CCS'])
-                    if valueDict['vMin'] <= fleetAll[numCompany][keyFleet]['vDsgnRed'][tOpTemp]:
-                        button2['state'] = 'normal'
+                    if valueDict['vMin'] > fleetAll[numCompany][keyFleet]['vDsgnRed'][tOpTemp] and v4[numAlive].get() != '1':
+                        goAhead = False
                     numAlive += 1
-                    fleetAll[numCompany][keyFleet] = fleetAll[numCompany][keyFleet]
+            if goAhead:
+                button2['state'] = 'normal'
+
+        def _buttonCommandNext2(root):
+            root.quit()
+            root.destroy()             
                     
         def _buttonCommandAtOnce(Sys):
             NumFleet = len(fleetAll[numCompany])
@@ -588,16 +591,15 @@ def scrapRefurbishFunc(fleetAll,numCompany,elapsedYear,currentYear,valueDict,tOp
                     fleetAll[numCompany][keyFleet] = fleetAll[numCompany][keyFleet]
                     j += 1
 
-
         root = Tk()
         root.title('Company '+str(numCompany)+' : Scrap or Refurbish in '+str(currentYear))
-        width = 1200
+        width = 1000
         height = 500
         placeX = root.winfo_screenwidth()/2 - width/2
         placeY = root.winfo_screenheight()/2 - height/2
         widgetSize = str(width)+'x'+str(height)+'+'+str(int(placeX))+'+'+str(int(placeY))
         root.geometry(widgetSize)
-        
+        canvas = Canvas(root, width=width, height=height)
 
         # Frame
         style = ttk.Style()
@@ -615,7 +617,17 @@ def scrapRefurbishFunc(fleetAll,numCompany,elapsedYear,currentYear,valueDict,tOp
         style.configure('new.TCheckbutton', foreground='black', background=color)
         frame = ttk.Frame(root, style='new.TFrame', padding=20)
         frame.pack()
-        
+
+        frame.bind("<Configure>", lambda e: canvas.configure(scrollregion=canvas.bbox("all")))
+        vbar = Scrollbar(root, orient="vertical")
+        vbar.config(command=canvas.yview)
+        vbar.pack(side=RIGHT,fill="y")
+        canvas['bg'] = color
+        canvas.create_window((placeX, placeY), window=frame, anchor=CENTER)
+        canvas.pack()
+        canvas.update_idletasks()
+        canvas.configure(yscrollcommand=vbar.set)
+        canvas.yview_moveto(0)
 
         # Label
         label0 = ttk.Label(frame, style='new.TLabel', text='No.', padding=(5, 2))
@@ -684,44 +696,50 @@ def scrapRefurbishFunc(fleetAll,numCompany,elapsedYear,currentYear,valueDict,tOp
                 buttonScrap.append(ttk.Checkbutton(frame, style='new.TCheckbutton',padding=(10), variable=v4[-1]))
 
         labelExpl = ttk.Label(frame, style='new.TLabel', text='Guide: Check additional systems and scrap button if you want, and then click "Check" & "Next". You can check all the button at once by "Check all at once".', padding=(5, 2))
-    
+        labelExpl2 = ttk.Label(frame, style='new.TLabel', text='Guide: You have no fleet. Click "Next".', padding=(5, 2))
+        
         # Button
         button1 = ttk.Button(frame, style='new.TButton', text='Check', command=lambda: _buttonCommandCheck(fleetAll,valueDict,rEEDIreq))
         button2 = ttk.Button(frame, style='new.TButton', text='Next', state='disabled', command=lambda: _buttonCommandNext(root,fleetAll,numCompany,tOpSch))
         buttonWPS = ttk.Button(frame, style='new.TButton', text='Check all WPS at once', command=lambda: _buttonCommandAtOnce('WPS'))
         buttonSPS = ttk.Button(frame, style='new.TButton', text='Check all SPS at once', command=lambda: _buttonCommandAtOnce('SPS'))
         buttonCCS = ttk.Button(frame, style='new.TButton', text='Check all CCS at once', command=lambda: _buttonCommandAtOnce('CCS'))
-        
+        button22 = ttk.Button(frame, style='new.TButton',text='Next', command=lambda: _buttonCommandNext2(root))
+
         # Layout
-        label0.grid(row=0, column=0)
-        labelDeli.grid(row=0, column=1)
-        label1.grid(row=0, column=2)
-        label2.grid(row=0, column=3)
-        label3.grid(row=0, column=4)
-        label4.grid(row=0, column=5)
-        label5.grid(row=0, column=6)
-        label7.grid(row=0, column=7)
-        label152.grid(row=0, column=8)
-        label162.grid(row=0, column=9)
-        labelScrap.grid(row=0, column=10)
-        for i, j in enumerate(label8):
-            labelDeli1[i].grid(row=i+1, column=1)
-            label00[i].grid(row=i+1, column=0)
-            label8[i].grid(row=i+1, column=2)
-            label9[i].grid(row=i+1, column=3)
-            label10[i].grid(row=i+1, column=4)
-            label11[i].grid(row=i+1, column=5)
-            label12[i].grid(row=i+1, column=6)
-            label14[i].grid(row=i+1, column=7)
-            label15[i].grid(row=i+1, column=8)
-            label16[i].grid(row=i+1, column=9)
-            buttonScrap[i].grid(row=i+1, column=10)
-        button1.grid(row=i+2, column=9)
-        button2.grid(row=i+2, column=10)
-        buttonWPS.grid(row=i+2, column=1)
-        buttonSPS.grid(row=i+2, column=2)
-        buttonCCS.grid(row=i+2, column=3)
-        labelExpl.grid(row=i+3, column=0, columnspan=10)
+        if len(label8) > 0:
+            label0.grid(row=0, column=0)
+            labelDeli.grid(row=0, column=1)
+            label1.grid(row=0, column=2)
+            label2.grid(row=0, column=3)
+            label3.grid(row=0, column=4)
+            label4.grid(row=0, column=5)
+            label5.grid(row=0, column=6)
+            label7.grid(row=0, column=7)
+            label152.grid(row=0, column=8)
+            label162.grid(row=0, column=9)
+            labelScrap.grid(row=0, column=10)
+            for i, j in enumerate(label8):
+                labelDeli1[i].grid(row=i+1, column=1, pady=0)
+                label00[i].grid(row=i+1, column=0, pady=0)
+                label8[i].grid(row=i+1, column=2, pady=0)
+                label9[i].grid(row=i+1, column=3, pady=0)
+                label10[i].grid(row=i+1, column=4, pady=0)
+                label11[i].grid(row=i+1, column=5, pady=0)
+                label12[i].grid(row=i+1, column=6, pady=0)
+                label14[i].grid(row=i+1, column=7, pady=0)
+                label15[i].grid(row=i+1, column=8, pady=0)
+                label16[i].grid(row=i+1, column=9, pady=0)
+                buttonScrap[i].grid(row=i+1, column=10, pady=0)
+            button1.grid(row=i+2, column=9)
+            button2.grid(row=i+2, column=10)
+            buttonWPS.grid(row=i+2, column=1)
+            buttonSPS.grid(row=i+2, column=2)
+            buttonCCS.grid(row=i+2, column=3)
+            labelExpl.grid(row=i+3, column=0, columnspan=10)
+        else:
+            labelExpl2.grid(row=0, column=0)
+            button22.grid(row=0, column=1)
 
         root.deiconify()
         root.mainloop()
@@ -801,16 +819,13 @@ def scrapRefurbishFunc(fleetAll,numCompany,elapsedYear,currentYear,valueDict,tOp
     for keyFleet in range(1,NumFleet):
         tOpTemp = fleetAll[numCompany][keyFleet]['tOp']
         if fleetAll[numCompany][keyFleet]['delivery'] <= currentYear and fleetAll[numCompany][keyFleet]['tOp'] < tOpSch:
-            if fleetAll[numCompany][keyFleet]['WPS'] or fleetAll[numCompany][keyFleet]['SPS'] or fleetAll[numCompany][keyFleet]['CCS']:
-                cAdditionalEquipment = 1
-                if fleetAll[numCompany][keyFleet]['WPS']:
-                    cAdditionalEquipment += valueDict['dcostWPS']
-                elif fleetAll[numCompany][keyFleet]['SPS']:
-                    cAdditionalEquipment += valueDict['dcostSPS']
-                elif fleetAll[numCompany][keyFleet]['CCS']:
-                    cAdditionalEquipment += valueDict['dcostCCS']
-            else:
-                cAdditionalEquipment = 0
+            cAdditionalEquipment = 0
+            if fleetAll[numCompany][keyFleet]['WPS']:
+                cAdditionalEquipment += valueDict['dcostWPS']
+            elif fleetAll[numCompany][keyFleet]['SPS']:
+                cAdditionalEquipment += valueDict['dcostSPS']
+            elif fleetAll[numCompany][keyFleet]['CCS']:
+                cAdditionalEquipment += valueDict['dcostCCS']
             fleetAll[numCompany][keyFleet]['costRfrb'][tOpTemp] = cAdditionalEquipment * fleetAll[numCompany][keyFleet]['costShipBasicHFO']
 
     # decide additional shipping fee per container
@@ -840,8 +855,8 @@ def orderShipFunc(fleetAll,numCompany,fuelName,WPS,SPS,CCS,CAPcnt,tOpSch,tbid,in
     fleetAll[numCompany][NumFleet]['tOp'] = iniT
     fleetAll[numCompany][NumFleet]['costShipBasicHFO'], fleetAll[numCompany][NumFleet]['costShipBasic'], fleetAll[numCompany][NumFleet]['costShipAdd'], fleetAll[numCompany][NumFleet]['costShip'] = costShipFunc(valueDict["kShipBasic1"], fleetAll[numCompany][NumFleet]["CAPcnt"], valueDict["kShipBasic2"], fleetAll[numCompany][NumFleet]['rShipBasic'], valueDict["dcostWPS"], valueDict["dcostSPS"], valueDict["dcostCCS"], fleetAll[numCompany][NumFleet]['WPS'], fleetAll[numCompany][NumFleet]['SPS'], fleetAll[numCompany][NumFleet]['CCS'])
     if iniT == 0:
-        fleetAll[numCompany]['total']['costShip'][elapsedYear] += NShipFleet * fleetAll[numCompany][NumFleet]['costShip']
-        fleetAll[numCompany]['total']['costShipBasicHFO'][elapsedYear] += NShipFleet * fleetAll[numCompany][NumFleet]['costShipBasicHFO']
+        fleetAll[numCompany]['total']['costShip'][elapsedYear+2] += NShipFleet * fleetAll[numCompany][NumFleet]['costShip']
+        fleetAll[numCompany]['total']['costShipBasicHFO'][elapsedYear+2] += NShipFleet * fleetAll[numCompany][NumFleet]['costShipBasicHFO']
     fleetAll[numCompany][NumFleet]['v'] = np.zeros(tOpSch)
     fleetAll[numCompany][NumFleet]['d'] = np.zeros(tOpSch)
     fleetAll[numCompany][NumFleet]['fShipORG'] = np.zeros(tOpSch)
@@ -864,7 +879,6 @@ def orderShipFunc(fleetAll,numCompany,fuelName,WPS,SPS,CCS,CAPcnt,tOpSch,tbid,in
     fleetAll[numCompany][NumFleet]['MCRM'] = np.zeros(tOpSch)
     fleetAll[numCompany][NumFleet]['PA'] = np.zeros(tOpSch)
     fleetAll[numCompany][NumFleet]['year'] = np.zeros(tOpSch)
-    fleetAll[numCompany]['total'] = fleetAll[numCompany]['total']
     return fleetAll
 
 def orderPhaseFunc(fleetAll,numCompany,valueDict,elapsedYear,tOpSch,tbid,currentYear,rEEDIreq,NShipFleet,parameterFile2,parameterFile12,parameterFile3,parameterFile5):
@@ -890,7 +904,7 @@ def orderPhaseFunc(fleetAll,numCompany,valueDict,elapsedYear,tOpSch,tbid,current
 
         def _buttonCommandAnother(fleetAll,numCompany,tOpSch,tbid,currentYear,elapsedYear,NShipFleet,parameterFile2,parameterFile12,parameterFile3,parameterFile5):
             CAP, vDsgnRed, EEDIreq, EEDIatt = _EEDIcalc(rEEDIreq,parameterFile3,valueDict)
-            if valueDict['vMin'] < vDsgnRed and CAP >= 8000 and CAP <= 24000:
+            if valueDict['vMin'] <= vDsgnRed and CAP >= 8000 and CAP <= 24000:
                 if v1.get() == 'HFO/Diesel':
                     fuelName = 'HFO'
                 else:
@@ -917,7 +931,7 @@ def orderPhaseFunc(fleetAll,numCompany,valueDict,elapsedYear,tOpSch,tbid,current
 
         def _buttonCommandComplete(root,fleetAll,numCompany,tOpSch,tbid,currentYear,elapsedYear,NShipFleet,parameterFile2,parameterFile12,parameterFile3,parameterFile5):
             CAP, vDsgnRed, EEDIreq, EEDIatt = _EEDIcalc(rEEDIreq,parameterFile3,valueDict)
-            if valueDict['vMin'] < vDsgnRed and CAP >= 8000 and CAP <= 24000:
+            if valueDict['vMin'] <= vDsgnRed and CAP >= 8000 and CAP <= 24000:
                 if v1.get() == 'HFO/Diesel':
                     fuelName = 'HFO'
                 else:
@@ -1136,6 +1150,10 @@ def yearlyOperationPhaseFunc(fleetAll,numCompany,pureDi,overDi,startYear,elapsed
                 root.destroy()
             else:
                 button2['state'] = 'disabled'
+        
+        def _buttonCommandNext2(root):
+            root.quit()
+            root.destroy()
 
         def _buttonCommandCalc(fleetAll,numCompany,pureDi,overDi,startYear,elapsedYear,NShipFleet,tOpSch,valueDict,parameterFile4):
             fleetAll = yearlyOperationFunc(fleetAll,numCompany,pureDi,overDi,startYear,elapsedYear,NShipFleet,tOpSch,v13,valueDict,parameterFile4,False)
@@ -1168,12 +1186,13 @@ def yearlyOperationPhaseFunc(fleetAll,numCompany,pureDi,overDi,startYear,elapsed
 
         root = Tk()
         root.title('Company '+str(numCompany)+' : Service Speed in '+str(startYear+elapsedYear))
-        width = 1200
-        height = 500
+        width = 1000
+        height = 400
         placeX = root.winfo_screenwidth()/2 - width/2
         placeY = root.winfo_screenheight()/2 - height/2
         widgetSize = str(width)+'x'+str(height)+'+'+str(int(placeX))+'+'+str(int(placeY))
         root.geometry(widgetSize)
+        canvas = Canvas(root, width=width, height=height)
 
         # Frame
         style = ttk.Style()
@@ -1192,6 +1211,16 @@ def yearlyOperationPhaseFunc(fleetAll,numCompany,pureDi,overDi,startYear,elapsed
         style.configure('new.TEntry', foreground='black', background=color)
         frame = ttk.Frame(root, style='new.TFrame', padding=20)
         frame.pack()
+        frame.bind("<Configure>", lambda e: canvas.configure(scrollregion=canvas.bbox("all")))
+        vbar = Scrollbar(root, orient="vertical")
+        vbar.config(command=canvas.yview)
+        vbar.pack(side=RIGHT,fill="y")
+        canvas['bg'] = color
+        canvas.create_window((placeX, placeY), window=frame, anchor=CENTER)
+        canvas.pack()
+        canvas.update_idletasks()
+        canvas.configure(yscrollcommand=vbar.set)
+        canvas.yview_moveto(0)
 
         # Label
         labelAtOnce = ttk.Label(frame, style='new.TLabel', text='Input all service speeds at once (12<=) [kt]:', padding=(5, 2))
@@ -1262,46 +1291,52 @@ def yearlyOperationPhaseFunc(fleetAll,numCompany,pureDi,overDi,startYear,elapsed
                 label14.append(ttk.Label(frame, style='new.TLabel',text=str(fleetAll[numCompany][keyFleet]['vDsgnRed'][tOpTemp]), padding=(5, 2)))
 
         labelExpl = ttk.Label(frame, style='new.TLabel', text='Guide: Input a service speed for all fleets at first and click "Input", and then change each speed if you want. After inputting all values, click "Calculate" and "Next".', padding=(5, 2))
+        labelExpl2 = ttk.Label(frame, style='new.TLabel', text='Guide: You have no fleet. Click "Next".', padding=(5, 2))
 
         # Button
         button1 = ttk.Button(frame, style='new.TButton',text='Calculate', state='disabled', command=lambda: _buttonCommandCalc(fleetAll,numCompany,pureDi,overDi,startYear,elapsedYear,NShipFleet,tOpSch,valueDict,parameterFile4))
         button2 = ttk.Button(frame, style='new.TButton',text='Next', state='disabled', command=lambda: _buttonCommandNext(root,fleetAll,numCompany,pureDi,overDi,startYear,elapsedYear,NShipFleet,tOpSch,valueDict,parameterFile4))
+        button22 = ttk.Button(frame, style='new.TButton',text='Next', command=lambda: _buttonCommandNext2(root))
         button3 = ttk.Button(frame, style='new.TButton',text='Input', command=lambda: _buttonCommandAtOnce())
 
         # Layout
-        labelRes1.grid(row=0, column=1)
-        labelRes2.grid(row=0, column=2)
-        labelRes3.grid(row=0, column=4)
-        labelRes4.grid(row=0, column=5)
-        labelRes5.grid(row=1, column=1)
-        labelRes6.grid(row=1, column=2)
-        labelRes7.grid(row=1, column=4)
-        labelRes8.grid(row=1, column=5)
-        labelRes9.grid(row=2, column=1)
-        labelRes10.grid(row=2, column=2)
-        label0.grid(row=3, column=0)
-        label1.grid(row=3, column=1)
-        label2.grid(row=3, column=2)
-        label3.grid(row=3, column=3)
-        label4.grid(row=3, column=4)
-        label5.grid(row=3, column=5)
-        label6.grid(row=3, column=6)
-        label7.grid(row=3, column=7)
-        for i, j in enumerate(label8):
-            label00[i].grid(row=i+4, column=0)
-            label8[i].grid(row=i+4, column=1)
-            label9[i].grid(row=i+4, column=2)
-            label10[i].grid(row=i+4, column=3)
-            label11[i].grid(row=i+4, column=4)
-            label12[i].grid(row=i+4, column=5)
-            label13[i].grid(row=i+4, column=6)
-            label14[i].grid(row=i+4, column=7)
-        labelAtOnce.grid(row=i+5, column=1)
-        labelAtOnce2.grid(row=i+5, column=2)
-        button3.grid(row=i+5, column=3)
-        button1.grid(row=i+5, column=6)
-        button2.grid(row=i+5, column=7)
-        labelExpl.grid(row=i+6, column=0,columnspan=8)
+        if len(label8) > 0:
+            labelRes1.grid(row=0, column=1)
+            labelRes2.grid(row=0, column=2)
+            labelRes3.grid(row=0, column=4)
+            labelRes4.grid(row=0, column=5)
+            labelRes5.grid(row=1, column=1)
+            labelRes6.grid(row=1, column=2)
+            labelRes7.grid(row=1, column=4)
+            labelRes8.grid(row=1, column=5)
+            labelRes9.grid(row=2, column=1)
+            labelRes10.grid(row=2, column=2)
+            label0.grid(row=3, column=0)
+            label1.grid(row=3, column=1)
+            label2.grid(row=3, column=2)
+            label3.grid(row=3, column=3)
+            label4.grid(row=3, column=4)
+            label5.grid(row=3, column=5)
+            label6.grid(row=3, column=6)
+            label7.grid(row=3, column=7)
+            for i, j in enumerate(label8):
+                label00[i].grid(row=i+4, column=0)
+                label8[i].grid(row=i+4, column=1)
+                label9[i].grid(row=i+4, column=2)
+                label10[i].grid(row=i+4, column=3)
+                label11[i].grid(row=i+4, column=4)
+                label12[i].grid(row=i+4, column=5)
+                label13[i].grid(row=i+4, column=6)
+                label14[i].grid(row=i+4, column=7)
+            labelAtOnce.grid(row=i+5, column=1)
+            labelAtOnce2.grid(row=i+5, column=2)
+            button3.grid(row=i+5, column=3)
+            button1.grid(row=i+5, column=6)
+            button2.grid(row=i+5, column=7)
+            labelExpl.grid(row=i+6, column=0,columnspan=8)
+        else:
+            labelExpl2.grid(row=0, column=0)
+            button22.grid(row=0, column=1)
 
         root.deiconify()
         root.mainloop()
@@ -1547,7 +1582,13 @@ def outputAllCompany2Func(fleetAll,startYear,elapsedYear,keyi,unitDict):
     if elapsedYear > 0:
         year = fleetAll['year'][:elapsedYear+1]
         for numCompany in range(1,4):
-            ax.plot(year,fleetAll[numCompany]['total'][keyi][:elapsedYear+1],marker=".",label="Company"+str(numCompany))
+            if numCompany == 1:
+                color = 'tomato'
+            elif numCompany == 2:
+                color = 'gold'
+            elif numCompany == 3:
+                color = 'royalblue'
+            ax.plot(year,fleetAll[numCompany]['total'][keyi][:elapsedYear+1],color=color, marker=".",label="Company"+str(numCompany))
             ax.set_title(keyi)
             ax.set_xlabel('Year')
             ax.legend()
