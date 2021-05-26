@@ -107,6 +107,8 @@ def fleetPreparationFunc(fleetAll,initialFleetFile,numCompany,startYear,lastYear
     fleetAll[numCompany]['total']['dcostEco'] = np.zeros(lastYear-startYear+1)
     fleetAll[numCompany]['total']['nTransCnt'] = np.zeros(lastYear-startYear+1)
     fleetAll[numCompany]['total']['atOnce'] = np.zeros(lastYear-startYear+1)
+    fleetAll[numCompany]['total']['mSubs'] = np.zeros(lastYear-startYear+1)
+    fleetAll[numCompany]['total']['mTax'] = np.zeros(lastYear-startYear+1)
     fleetAll[numCompany]['total']['lastOrderFuel'] = 'HFO/Diesel'
     fleetAll[numCompany]['total']['lastOrderCAP'] = 20000
     initialFleets = initialFleetFunc(initialFleetFile)
@@ -672,6 +674,9 @@ def scrapRefurbishFunc(fleetAll,numCompany,elapsedYear,currentYear,valueDict,tOp
                 if fleetAll[numCompany][keyFleet]['WPS']:
                     v1[-1].set('1')
                     label10.append(ttk.Checkbutton(frame, style='new.TCheckbutton', padding=(10), state='disable', command=lambda: _buttonCommandCheckButton(fleetAll,valueDict,rEEDIreq,v1,'WPS'),variable=v1[-1]))
+                elif currentYear < valueDict['addSysYear']+2:
+                    v1[-1].set('0')
+                    label10.append(ttk.Checkbutton(frame, style='new.TCheckbutton', padding=(10), state='disable', command=lambda: _buttonCommandCheckButton(fleetAll,valueDict,rEEDIreq,v1,'WPS'),variable=v1[-1]))
                 else:
                     v1[-1].set('0')
                     label10.append(ttk.Checkbutton(frame, style='new.TCheckbutton',padding=(10), command=lambda: _buttonCommandCheckButton(fleetAll,valueDict,rEEDIreq,v1,'WPS'),variable=v1[-1]))
@@ -679,6 +684,9 @@ def scrapRefurbishFunc(fleetAll,numCompany,elapsedYear,currentYear,valueDict,tOp
                 if fleetAll[numCompany][keyFleet]['SPS']:
                     v2[-1].set('1')
                     label11.append(ttk.Checkbutton(frame, style='new.TCheckbutton',padding=(10), state='disable', command=lambda: _buttonCommandCheckButton(fleetAll,valueDict,rEEDIreq,v2,'SPS'),variable=v2[-1]))
+                elif currentYear < valueDict['addSysYear']+2:
+                    v2[-1].set('0')
+                    label11.append(ttk.Checkbutton(frame, style='new.TCheckbutton', padding=(10), state='disable', command=lambda: _buttonCommandCheckButton(fleetAll,valueDict,rEEDIreq,v2,'SPS'),variable=v2[-1]))
                 else:
                     v2[-1].set('0')
                     label11.append(ttk.Checkbutton(frame, style='new.TCheckbutton',padding=(10), command=lambda: _buttonCommandCheckButton(fleetAll,valueDict,rEEDIreq,v2,'SPS'),variable=v2[-1]))
@@ -686,6 +694,9 @@ def scrapRefurbishFunc(fleetAll,numCompany,elapsedYear,currentYear,valueDict,tOp
                 if fleetAll[numCompany][keyFleet]['CCS']:
                     v3[-1].set('1')
                     label12.append(ttk.Checkbutton(frame, style='new.TCheckbutton',padding=(10), state='disable', command=lambda: _buttonCommandCheckButton(fleetAll,valueDict,rEEDIreq,v3,'CCS'),variable=v3[-1]))
+                elif currentYear < valueDict['addSysYear']+2:
+                    v3[-1].set('0')
+                    label12.append(ttk.Checkbutton(frame, style='new.TCheckbutton', padding=(10), state='disable', command=lambda: _buttonCommandCheckButton(fleetAll,valueDict,rEEDIreq,v3,'CCS'),variable=v3[-1]))
                 else:
                     v3[-1].set('0')
                     label12.append(ttk.Checkbutton(frame, style='new.TCheckbutton',padding=(10), command=lambda: _buttonCommandCheckButton(fleetAll,valueDict,rEEDIreq,v3,'CCS'),variable=v3[-1]))
@@ -786,7 +797,7 @@ def scrapRefurbishFunc(fleetAll,numCompany,elapsedYear,currentYear,valueDict,tOp
         else:
             v1.set(str(fleetAll[numCompany]['total']['dcostCnt'][elapsedYear-1]))
         cb1 = ttk.Entry(frame, style='new.TEntry', textvariable=v1)
-        label1 = ttk.Label(frame, style='new.TLabel', text='dcontCnt (-1000 <= dcostCnt <= 1000)', padding=(5, 2))
+        label1 = ttk.Label(frame, style='new.TLabel', text='Additional container fee dC (-1000 <= dC <= 1000)', padding=(5, 2))
         label2 = ttk.Label(frame, style='new.TLabel', text='Nominal shipping cost: 1500 $/container', padding=(5, 2))
         label3 = ttk.Label(frame, style='new.TLabel', text='$', padding=(5, 2))
         labelExpl = ttk.Label(frame, style='new.TLabel', text='Guide: Input additional shipping fee per container, and then click "Complete".', padding=(5, 2))
@@ -1022,18 +1033,30 @@ def orderPhaseFunc(fleetAll,numCompany,valueDict,elapsedYear,tOpSch,tbid,current
 
         # Checkbutton
         v3 = StringVar()
-        v3.set('0') # 初期化
-        cb2 = ttk.Checkbutton(frame, style='new.TCheckbutton', padding=(10), text='WPS', variable=v3)
+        if currentYear >= valueDict['addSysYear']:
+            v3.set('0') # 初期化
+            cb2 = ttk.Checkbutton(frame, style='new.TCheckbutton', padding=(10), text='WPS', variable=v3)
+        else:
+            v3.set('0') # 初期化
+            cb2 = ttk.Checkbutton(frame, state='disable', style='new.TCheckbutton', padding=(10), text='WPS', variable=v3)
 
         # Checkbutton
         v4 = StringVar()
-        v4.set('0') # 初期化
-        cb3 = ttk.Checkbutton(frame, style='new.TCheckbutton', padding=(10), text='SPS', variable=v4)
+        if currentYear >= valueDict['addSysYear']:
+            v4.set('0') # 初期化
+            cb3 = ttk.Checkbutton(frame, style='new.TCheckbutton', padding=(10), text='SPS', variable=v4)
+        else:
+            v4.set('0') # 初期化
+            cb3 = ttk.Checkbutton(frame, state='disable', style='new.TCheckbutton', padding=(10), text='SPS', variable=v4)
 
         # Checkbutton
         v5 = StringVar()
-        v5.set('0') # 初期化
-        cb4 = ttk.Checkbutton(frame, style='new.TCheckbutton', padding=(10), text='CCS', variable=v5)
+        if currentYear >= valueDict['addSysYear']:
+            v5.set('0') # 初期化
+            cb4 = ttk.Checkbutton(frame, style='new.TCheckbutton', padding=(10), text='CCS', variable=v5)
+        else:
+            v5.set('0') # 初期化
+            cb4 = ttk.Checkbutton(frame, state='disable', style='new.TCheckbutton', padding=(10), text='CCS', variable=v5)
 
         # Button
         button1 = ttk.Button(frame, style='new.TButton', text='Another fleet', state='disabled', command=lambda: _buttonCommandAnother(fleetAll,numCompany,tOpSch,tbid,currentYear,elapsedYear,NShipFleet,parameterFile2,parameterFile12,parameterFile3,parameterFile5))
@@ -1073,7 +1096,7 @@ def orderPhaseFunc(fleetAll,numCompany,valueDict,elapsedYear,tOpSch,tbid,current
 
     return fleetAll
 
-def yearlyOperationFunc(fleetAll,numCompany,pureDi,overDi,startYear,elapsedYear,NShipFleet,tOpSch,v,valueDict,parameterFile4,nextIf):
+def yearlyOperationFunc(fleetAll,numCompany,pureDi,overDi,startYear,elapsedYear,NShipFleet,tOpSch,v,valueDict,rSubs,rTax,parameterFile4,nextIf):
     NumFleet = len(fleetAll[numCompany])
 
     j = 0
@@ -1128,12 +1151,14 @@ def yearlyOperationFunc(fleetAll,numCompany,pureDi,overDi,startYear,elapsedYear,
     fleetAll[numCompany]['total']['gTilde'][elapsedYear] = fleetAll[numCompany]['total']['g'][elapsedYear] / fleetAll[numCompany]['total']['cta'][elapsedYear]
     fleetAll[numCompany]['total']['costTilde'][elapsedYear] = fleetAll[numCompany]['total']['costAll'][elapsedYear] / fleetAll[numCompany]['total']['cta'][elapsedYear]
     fleetAll[numCompany]['total']['saleTilde'][elapsedYear] = fleetAll[numCompany]['total']['sale'][elapsedYear] / fleetAll[numCompany]['total']['cta'][elapsedYear]
+    fleetAll[numCompany]['total']['mSubs'][elapsedYear] = rSubs * fleetAll[numCompany]['total']['dcostEco'][elapsedYear]
+    fleetAll[numCompany]['total']['mTax'][elapsedYear] = rTax * fleetAll[numCompany]['total']['g'][elapsedYear]
     return fleetAll
 
-def yearlyOperationPhaseFunc(fleetAll,numCompany,pureDi,overDi,startYear,elapsedYear,NShipFleet,tOpSch,valueDict,parameterFile4):
-    def _surviceSpeedGui(fleetAll,numCompany,pureDi,overDi,startYear,elapsedYear,NShipFleet,tOpSch,valueDict,parameterFile4):
+def yearlyOperationPhaseFunc(fleetAll,numCompany,pureDi,overDi,startYear,elapsedYear,NShipFleet,tOpSch,valueDict,rSubs,rTax,parameterFile4):
+    def _surviceSpeedGui(fleetAll,numCompany,pureDi,overDi,startYear,elapsedYear,NShipFleet,tOpSch,valueDict,rSubs,rTax,parameterFile4):
         
-        def _buttonCommandNext(root,fleetAll,numCompany,pureDi,overDi,startYear,elapsedYear,NShipFleet,tOpSch,valueDict,parameterFile4):
+        def _buttonCommandNext(root,fleetAll,numCompany,pureDi,overDi,startYear,elapsedYear,NShipFleet,tOpSch,valueDict,rSubs,rTax,parameterFile4):
             NumFleet = len(fleetAll[numCompany])
             j = 0
             goAhead = True
@@ -1144,7 +1169,7 @@ def yearlyOperationPhaseFunc(fleetAll,numCompany,pureDi,overDi,startYear,elapsed
                         goAhead = False
                     j += 1
             if goAhead:
-                fleetAll = yearlyOperationFunc(fleetAll,numCompany,pureDi,overDi,startYear,elapsedYear,NShipFleet,tOpSch,v13,valueDict,parameterFile4,True)
+                fleetAll = yearlyOperationFunc(fleetAll,numCompany,pureDi,overDi,startYear,elapsedYear,NShipFleet,tOpSch,v13,valueDict,rSubs,rTax,parameterFile4,True)
                 fleetAll[numCompany]['total']['atOnce'][elapsedYear] = float(vAtOnce.get())
                 root.quit()
                 root.destroy()
@@ -1155,8 +1180,8 @@ def yearlyOperationPhaseFunc(fleetAll,numCompany,pureDi,overDi,startYear,elapsed
             root.quit()
             root.destroy()
 
-        def _buttonCommandCalc(fleetAll,numCompany,pureDi,overDi,startYear,elapsedYear,NShipFleet,tOpSch,valueDict,parameterFile4):
-            fleetAll = yearlyOperationFunc(fleetAll,numCompany,pureDi,overDi,startYear,elapsedYear,NShipFleet,tOpSch,v13,valueDict,parameterFile4,False)
+        def _buttonCommandCalc(fleetAll,numCompany,pureDi,overDi,startYear,elapsedYear,NShipFleet,tOpSch,valueDict,rSubs,rTax,parameterFile4):
+            fleetAll = yearlyOperationFunc(fleetAll,numCompany,pureDi,overDi,startYear,elapsedYear,NShipFleet,tOpSch,v13,valueDict,rSubs,rTax,parameterFile4,False)
             labelRes4['text'] = str('{:.3g}'.format(fleetAll[numCompany]['total']['cta'][elapsedYear]))
             labelRes6['text'] = str('{:.4g}'.format(fleetAll[numCompany]['total']['rocc'][elapsedYear]))
             labelRes8['text'] = str('{:.3g}'.format(fleetAll[numCompany]['total']['costFuel'][elapsedYear]))
@@ -1294,8 +1319,8 @@ def yearlyOperationPhaseFunc(fleetAll,numCompany,pureDi,overDi,startYear,elapsed
         labelExpl2 = ttk.Label(frame, style='new.TLabel', text='Guide: You have no fleet. Click "Next".', padding=(5, 2))
 
         # Button
-        button1 = ttk.Button(frame, style='new.TButton',text='Calculate', state='disabled', command=lambda: _buttonCommandCalc(fleetAll,numCompany,pureDi,overDi,startYear,elapsedYear,NShipFleet,tOpSch,valueDict,parameterFile4))
-        button2 = ttk.Button(frame, style='new.TButton',text='Next', state='disabled', command=lambda: _buttonCommandNext(root,fleetAll,numCompany,pureDi,overDi,startYear,elapsedYear,NShipFleet,tOpSch,valueDict,parameterFile4))
+        button1 = ttk.Button(frame, style='new.TButton',text='Calculate', state='disabled', command=lambda: _buttonCommandCalc(fleetAll,numCompany,pureDi,overDi,startYear,elapsedYear,NShipFleet,tOpSch,valueDict,rSubs,rTax,parameterFile4))
+        button2 = ttk.Button(frame, style='new.TButton',text='Next', state='disabled', command=lambda: _buttonCommandNext(root,fleetAll,numCompany,pureDi,overDi,startYear,elapsedYear,NShipFleet,tOpSch,valueDict,rSubs,rTax,parameterFile4))
         button22 = ttk.Button(frame, style='new.TButton',text='Next', command=lambda: _buttonCommandNext2(root))
         button3 = ttk.Button(frame, style='new.TButton',text='Input', command=lambda: _buttonCommandAtOnce())
 
@@ -1343,7 +1368,7 @@ def yearlyOperationPhaseFunc(fleetAll,numCompany,pureDi,overDi,startYear,elapsed
 
         return fleetAll
 
-    fleetAll = _surviceSpeedGui(fleetAll,numCompany,pureDi,overDi,startYear,elapsedYear,NShipFleet,tOpSch,valueDict,parameterFile4)
+    fleetAll = _surviceSpeedGui(fleetAll,numCompany,pureDi,overDi,startYear,elapsedYear,NShipFleet,tOpSch,valueDict,rSubs,rTax,parameterFile4)
 
     return fleetAll
 
@@ -1575,7 +1600,7 @@ def outputAllCompanyFunc(fleetAll,startYear,elapsedYear,lastYear,tOpSch,unitDict
     return fig
 
 def outputAllCompany2Func(fleetAll,startYear,elapsedYear,keyi,unitDict):
-        
+    plt.rcParams.update({'figure.max_open_warning': 0})
     currentYear = startYear+elapsedYear
     fig, ax = plt.subplots(1, 1, figsize=(7.5, 4.5))
     #plt.subplots_adjust(wspace=0.4, hspace=0.6)

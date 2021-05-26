@@ -110,7 +110,7 @@ def roleplayRun():
             Di = Dasg[numCompany-1]
             if currentYear <= lastYear-2:
                 fleets = rs.orderPhaseFunc(fleets,numCompany,valueDict,elapsedYear,tOpSch,tbid,currentYear,regDec['rEEDIreq'][nRegAct],NShipFleet,parameterFile2,parameterFile12,parameterFile3,parameterFile5)
-            fleets = rs.yearlyOperationPhaseFunc(fleets,numCompany,Di,overDi,startYear,elapsedYear,NShipFleet,tOpSch,valueDict,parameterFile4)
+            fleets = rs.yearlyOperationPhaseFunc(fleets,numCompany,Di,overDi,startYear,elapsedYear,NShipFleet,tOpSch,valueDict,regDec['Subsidy'][nRegAct],regDec['Ctax'][nRegAct],parameterFile4)
             overDi = fleets[numCompany]['total']['overDi'][elapsedYear]
         
         rs.outputGuiFunc(fleets,startYear,elapsedYear,lastYear,tOpSch,unitDict)

@@ -2,6 +2,7 @@ Symbol,Name,Unit,Param. type,Value
 lastYear,,,Constant parameter,2050
 regStart,,,,2025
 regSpan,,,,5
+addSysYear,,,,2028
 atOnce,,kt,,
 kDWT1,1st DWT coefficients,-,Constant parameter,10.69
 kDWT2,2nd DWT coefficients,-,Constant parameter,7024
