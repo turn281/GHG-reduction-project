@@ -56,24 +56,6 @@ def roleplayRun():
     #decisionList.setdefault(2,rs.decisionListFunc(parameterFile10))
     #decisionList.setdefault(3,rs.decisionListFunc(parameterFile11))
 
-
-    '''CAPcnt = np.linspace(8000,24000,1000)
-    wDWT = rs.wDWTFunc(valueDict['kDWT1'],CAPcnt,valueDict['kDWT2'])
-    rEEDIreqCurrent = 0.5
-    Cco2ship = rs.Cco2Func(parameterFile3,'HFO')
-    Cco2aux = rs.Cco2Func(parameterFile3,'Diesel')
-    _, EEDIreq = rs.EEDIreqFunc(valueDict['kEEDI1'],wDWT,valueDict['kEEDI2'],rEEDIreqCurrent)
-    _, _, EEDIatt, vDsgnRed = rs.EEDIattFunc(wDWT,valueDict['wMCR'],valueDict['kMCR1'],valueDict['kMCR2'],valueDict['kMCR3'],valueDict['kPAE1'],valueDict['kPAE2'],valueDict['rCCS'],valueDict['vDsgn'],valueDict['rWPS'],Cco2ship,valueDict['SfcM'],valueDict['SfcA'],valueDict['rSPS'],Cco2aux,EEDIreq,0,0,0)      
-
-    fig, ax = plt.subplots(1, 1, figsize=(7.5, 4.5))
-    ax.plot(CAPcnt,EEDIatt,label='EEDIatt')
-    ax.plot(CAPcnt,EEDIreq,label='EEDIreq')
-    ax.set_xlabel('CAP')
-    ax.set_ylabel('EEXI/EEDI')
-    ax.legend()
-    ax.set_title('vDsgnRed 12 kt')
-    plt.show()'''
-
     # start ship operation
     nRegAct = 0
     nRegDec = 0
@@ -90,29 +72,28 @@ def roleplayRun():
             nRegAct += 1
 
         #'''
-        # scrap & refurbish phase (also decide additional shipping fee per container)
-        dcostTemp = np.zeros(3)
-        dcostCntSum = 0
+        # scrap & refurbish, order and speed decision phase (also decide additional shipping fee per container)
         playOrder = np.array([1,2,3])
+        sumCta = 0
         for numCompany in playOrder:
-            fleets, dcostCntTemp = rs.scrapRefurbishFunc(fleets,numCompany,elapsedYear,currentYear,valueDict,tOpSch,regDec['rEEDIreq'][nRegAct])
-            dcostTemp[numCompany-1] = dcostCntTemp
-            dcostCntSum += - dcostCntTemp - valueDict["dcostCntMin"]
+            fleets = rs.scrapRefurbishFunc(fleets,numCompany,elapsedYear,currentYear,valueDict,tOpSch,regDec['rEEDIreq'][nRegAct])
+            if currentYear <= lastYear-2:
+                fleets = rs.orderPhaseFunc(fleets,numCompany,valueDict,elapsedYear,tOpSch,tbid,currentYear,regDec['rEEDIreq'][nRegAct],NShipFleet,parameterFile2,parameterFile12,parameterFile3,parameterFile5)
+            fleets = rs.decideSpeedFunc(fleets,numCompany,startYear,elapsedYear,NShipFleet,tOpSch,valueDict)
+            sumCta += fleets[numCompany]['total']['maxCta'][elapsedYear]
 
         # demand calculation
         Dtotal = rs.demandScenarioFunc(currentYear,valueDict["kDem1"],valueDict["kDem2"],valueDict["kDem3"],valueDict["kDem4"])
-        Dasg = Dtotal * (- dcostTemp - valueDict["dcostCntMin"]) / dcostCntSum
-        playOrder = rs.playOrderFunc(dcostTemp,playOrder)
+        for numCompany in playOrder:
+            if Dtotal <= valueDict["rDMax"]*sumCta and Dtotal / sumCta > 0.0:
+                fleets[numCompany]['total']['rocc'][elapsedYear] = Dtotal / sumCta
+            elif Dtotal > valueDict["rDMax"]*sumCta:
+                fleets[numCompany]['total']['rocc'][elapsedYear] = valueDict["rDMax"]
         
-        # order & yearly operation phase
-        overDi = 0
+        # yearly operation phase
         for numCompany in playOrder.astype(int):
-            Di = Dasg[numCompany-1]
-            if currentYear <= lastYear-2:
-                fleets = rs.orderPhaseFunc(fleets,numCompany,valueDict,elapsedYear,tOpSch,tbid,currentYear,regDec['rEEDIreq'][nRegAct],NShipFleet,parameterFile2,parameterFile12,parameterFile3,parameterFile5)
-            fleets = rs.yearlyOperationPhaseFunc(fleets,numCompany,Di,overDi,startYear,elapsedYear,NShipFleet,tOpSch,valueDict,regDec['Subsidy'][nRegAct],regDec['Ctax'][nRegAct],parameterFile4)
-            overDi = fleets[numCompany]['total']['overDi'][elapsedYear]
-        
+            fleets = rs.yearlyOperationFunc(fleets,numCompany,startYear,elapsedYear,NShipFleet,tOpSch,valueDict,regDec['Subsidy'][nRegAct],regDec['Ctax'][nRegAct],parameterFile4)
+            
         rs.outputGuiFunc(fleets,startYear,elapsedYear,lastYear,tOpSch,unitDict)
         #'''
     

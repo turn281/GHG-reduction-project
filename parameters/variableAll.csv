@@ -42,6 +42,10 @@ CAPcntMax,,TEU,Constant parameter,24000
 vMin,,kt,Constant parameter,12
 vDsgn,,kt,Constant parameter,23
 dJPNA,,NM,Constant parameter,5000
+costCntMin,,$,Constant parameter,500
+costCntMax,,$,Constant parameter,2500
+aSgmd,,-,Constant parameter,20
+roccNom,,-,Constant parameter,0.7
 costCntNom,,$,Constant parameter,1500
 NShipFleet,,-,Constant parameter,6
 tRegDec,,year,Constant parameter,5
@@ -110,3 +114,5 @@ costShip,,$,Output,
 costFuel,,$,Output,
 costAdd,,$,Output,
 costAll,,$,Output,
+costCnt,,$,,
+balance,,$,,

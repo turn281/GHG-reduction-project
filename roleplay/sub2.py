@@ -1,3 +1,4 @@
+from logging import log
 import numpy as np
 import pandas as pd
 from scipy import interpolate
@@ -16,6 +17,7 @@ import shutil
 import random
 from matplotlib.ticker import MaxNLocator
 from pathlib import Path
+import math
 #from decimal import Decimal, ROUND_HALF_UP
 
 def readinput(filename):
@@ -103,12 +105,14 @@ def fleetPreparationFunc(fleetAll,initialFleetFile,numCompany,startYear,lastYear
     fleetAll[numCompany]['total']['maxCta'] = np.zeros(lastYear-startYear+1)
     fleetAll[numCompany]['total']['rocc'] = np.zeros(lastYear-startYear+1)
     fleetAll[numCompany]['total']['costRfrb'] = np.zeros(lastYear-startYear+1)
-    fleetAll[numCompany]['total']['dcostCnt'] = np.zeros(lastYear-startYear+1)
     fleetAll[numCompany]['total']['dcostEco'] = np.zeros(lastYear-startYear+1)
+    #fleetAll[numCompany]['total']['dCostCnt'] = np.zeros(lastYear-startYear+1)
+    fleetAll[numCompany]['total']['costCnt'] = np.zeros(lastYear-startYear+1)
     fleetAll[numCompany]['total']['nTransCnt'] = np.zeros(lastYear-startYear+1)
     fleetAll[numCompany]['total']['atOnce'] = np.zeros(lastYear-startYear+1)
     fleetAll[numCompany]['total']['mSubs'] = np.zeros(lastYear-startYear+1)
     fleetAll[numCompany]['total']['mTax'] = np.zeros(lastYear-startYear+1)
+    fleetAll[numCompany]['total']['balance'] = np.zeros(lastYear-startYear+1)
     fleetAll[numCompany]['total']['lastOrderFuel'] = 'HFO/Diesel'
     fleetAll[numCompany]['total']['lastOrderCAP'] = 20000
     initialFleets = initialFleetFunc(initialFleetFile)
@@ -834,9 +838,9 @@ def scrapRefurbishFunc(fleetAll,numCompany,elapsedYear,currentYear,valueDict,tOp
             fleetAll[numCompany][keyFleet]['costRfrb'][tOpTemp] = cAdditionalEquipment * fleetAll[numCompany][keyFleet]['costShipBasicHFO']
 
     # decide additional shipping fee per container
-    _dcostCntGui(fleetAll,numCompany,elapsedYear)
+    #_dcostCntGui(fleetAll,numCompany,elapsedYear)
 
-    return fleetAll, fleetAll[numCompany]['total']['dcostCnt'][elapsedYear]
+    return fleetAll
 
 def orderShipFunc(fleetAll,numCompany,fuelName,WPS,SPS,CCS,CAPcnt,tOpSch,tbid,iniT,currentYear,elapsedYear,valueDict,NShipFleet,parameterFile2,parameterFile12,parameterFile3,parameterFile5):
     NumFleet = len(fleetAll[numCompany])
@@ -1085,9 +1089,8 @@ def orderPhaseFunc(fleetAll,numCompany,valueDict,elapsedYear,tOpSch,tbid,current
 
     return fleetAll
 
-def yearlyOperationFunc(fleetAll,numCompany,pureDi,overDi,startYear,elapsedYear,NShipFleet,tOpSch,v,valueDict,rSubs,rTax,parameterFile4,nextIf):
+def yearlyCtaFunc(fleetAll,numCompany,startYear,elapsedYear,NShipFleet,tOpSch,v,valueDict):
     NumFleet = len(fleetAll[numCompany])
-
     j = 0
     maxCta = 0
     currentYear = startYear+elapsedYear
@@ -1098,15 +1101,12 @@ def yearlyOperationFunc(fleetAll,numCompany,pureDi,overDi,startYear,elapsedYear,
             fleetAll[numCompany][keyFleet]['d'][tOpTemp] = dFunc(valueDict["Dyear"],valueDict["Hday"],fleetAll[numCompany][keyFleet]['v'][tOpTemp],valueDict["Rrun"])
             maxCta += NShipFleet * maxCtaFunc(fleetAll[numCompany][keyFleet]['CAPcnt'],fleetAll[numCompany][keyFleet]['d'][tOpTemp])
             j += 1
-    
     fleetAll[numCompany]['total']['maxCta'][elapsedYear] = maxCta
-    Di = overDi + pureDi
-    if Di <= valueDict["rDMax"]*maxCta and Di / maxCta > 0.0:
-        fleetAll[numCompany]['total']['rocc'][elapsedYear] = Di / maxCta
-    elif Di > valueDict["rDMax"]*maxCta:
-        fleetAll[numCompany]['total']['rocc'][elapsedYear] = valueDict["rDMax"]
-        overDi = Di - valueDict["rDMax"]*maxCta
-        fleetAll[numCompany]['total']['overDi'][elapsedYear] = overDi
+    return fleetAll
+
+def yearlyOperationFunc(fleetAll,numCompany,startYear,elapsedYear,NShipFleet,tOpSch,valueDict,rSubs,rTax,parameterFile4):
+    NumFleet = len(fleetAll[numCompany])
+    currentYear = startYear+elapsedYear
     fleetAll[numCompany]['total']['costRfrb'][elapsedYear] = 0
     fleetAll[numCompany]['total']['g'][elapsedYear] = 0
     fleetAll[numCompany]['total']['cta'][elapsedYear] = 0
@@ -1129,25 +1129,26 @@ def yearlyOperationFunc(fleetAll,numCompany,pureDi,overDi,startYear,elapsedYear,
                 
     for keyFleet in range(1,NumFleet):
         if fleetAll[numCompany][keyFleet]['delivery'] <= currentYear and fleetAll[numCompany][keyFleet]['tOp'] < tOpSch:
-            if nextIf:
-                fleetAll[numCompany][keyFleet]['year'][fleetAll[numCompany][keyFleet]['tOp']] = currentYear
-                fleetAll[numCompany][keyFleet]['tOp'] += 1
+            fleetAll[numCompany][keyFleet]['year'][fleetAll[numCompany][keyFleet]['tOp']] = currentYear
+            fleetAll[numCompany][keyFleet]['tOp'] += 1
 
     fleetAll[numCompany]['total']['costAll'][elapsedYear] = fleetAll[numCompany]['total']['costFuel'][elapsedYear] + fleetAll[numCompany]['total']['costShip'][elapsedYear]/tOpSch + fleetAll[numCompany]['total']['costRfrb'][elapsedYear]
     fleetAll[numCompany]['total']['dcostEco'][elapsedYear] = fleetAll[numCompany]['total']['costFuel'][elapsedYear] + (fleetAll[numCompany]['total']['costShip'][elapsedYear]-fleetAll[numCompany]['total']['costShipBasicHFO'][elapsedYear])/tOpSch + fleetAll[numCompany]['total']['costRfrb'][elapsedYear]
     fleetAll[numCompany]['total']['nTransCnt'][elapsedYear] = fleetAll[numCompany]['total']['cta'][elapsedYear] / valueDict['dJPNA']
-    fleetAll[numCompany]['total']['sale'][elapsedYear] = fleetAll[numCompany]['total']['nTransCnt'][elapsedYear] * (fleetAll[numCompany]['total']['dcostCnt'][elapsedYear] + valueDict['costCntNom'])
+    fleetAll[numCompany]['total']['costCnt'][elapsedYear] = (valueDict['costCntMax']-valueDict['costCntMin']) / (1+math.e**(-valueDict['aSgmd']*(fleetAll[numCompany]['total']['rocc'][elapsedYear]-valueDict['roccNom']))) + valueDict['costCntMin']
+    fleetAll[numCompany]['total']['sale'][elapsedYear] = fleetAll[numCompany]['total']['nTransCnt'][elapsedYear] * fleetAll[numCompany]['total']['costCnt'][elapsedYear]
     fleetAll[numCompany]['total']['gTilde'][elapsedYear] = fleetAll[numCompany]['total']['g'][elapsedYear] / fleetAll[numCompany]['total']['cta'][elapsedYear]
     fleetAll[numCompany]['total']['costTilde'][elapsedYear] = fleetAll[numCompany]['total']['costAll'][elapsedYear] / fleetAll[numCompany]['total']['cta'][elapsedYear]
     fleetAll[numCompany]['total']['saleTilde'][elapsedYear] = fleetAll[numCompany]['total']['sale'][elapsedYear] / fleetAll[numCompany]['total']['cta'][elapsedYear]
     fleetAll[numCompany]['total']['mSubs'][elapsedYear] = rSubs * fleetAll[numCompany]['total']['dcostEco'][elapsedYear]
     fleetAll[numCompany]['total']['mTax'][elapsedYear] = rTax * fleetAll[numCompany]['total']['g'][elapsedYear]
+    fleetAll[numCompany]['total']['balance'][elapsedYear] = fleetAll[numCompany]['total']['mTax'][elapsedYear] - fleetAll[numCompany]['total']['mSubs'][elapsedYear]
     return fleetAll
 
-def yearlyOperationPhaseFunc(fleetAll,numCompany,pureDi,overDi,startYear,elapsedYear,NShipFleet,tOpSch,valueDict,rSubs,rTax,parameterFile4):
-    def _surviceSpeedGui(fleetAll,numCompany,pureDi,overDi,startYear,elapsedYear,NShipFleet,tOpSch,valueDict,rSubs,rTax,parameterFile4):
+def decideSpeedFunc(fleetAll,numCompany,startYear,elapsedYear,NShipFleet,tOpSch,valueDict):
+    def _surviceSpeedGui(fleetAll,numCompany,startYear,elapsedYear,NShipFleet,tOpSch,valueDict):
         
-        def _buttonCommandNext(root,fleetAll,numCompany,pureDi,overDi,startYear,elapsedYear,NShipFleet,tOpSch,valueDict,rSubs,rTax,parameterFile4):
+        def _buttonCommandNext(root,fleetAll,numCompany,startYear,elapsedYear,NShipFleet,tOpSch,valueDict):
             NumFleet = len(fleetAll[numCompany])
             j = 0
             goAhead = True
@@ -1158,7 +1159,7 @@ def yearlyOperationPhaseFunc(fleetAll,numCompany,pureDi,overDi,startYear,elapsed
                         goAhead = False
                     j += 1
             if goAhead:
-                fleetAll = yearlyOperationFunc(fleetAll,numCompany,pureDi,overDi,startYear,elapsedYear,NShipFleet,tOpSch,v13,valueDict,rSubs,rTax,parameterFile4,True)
+                fleetAll = yearlyCtaFunc(fleetAll,numCompany,startYear,elapsedYear,NShipFleet,tOpSch,v13,valueDict)
                 fleetAll[numCompany]['total']['atOnce'][elapsedYear] = float(vAtOnce.get())
                 root.quit()
                 root.destroy()
@@ -1169,12 +1170,12 @@ def yearlyOperationPhaseFunc(fleetAll,numCompany,pureDi,overDi,startYear,elapsed
             root.quit()
             root.destroy()
 
-        def _buttonCommandCalc(fleetAll,numCompany,pureDi,overDi,startYear,elapsedYear,NShipFleet,tOpSch,valueDict,rSubs,rTax,parameterFile4):
-            fleetAll = yearlyOperationFunc(fleetAll,numCompany,pureDi,overDi,startYear,elapsedYear,NShipFleet,tOpSch,v13,valueDict,rSubs,rTax,parameterFile4,False)
-            labelRes4['text'] = str('{:.3g}'.format(fleetAll[numCompany]['total']['cta'][elapsedYear]))
-            labelRes6['text'] = str('{:.4g}'.format(fleetAll[numCompany]['total']['rocc'][elapsedYear]))
-            labelRes8['text'] = str('{:.3g}'.format(fleetAll[numCompany]['total']['costFuel'][elapsedYear]))
-            labelRes10['text'] = str('{:.3g}'.format(fleetAll[numCompany]['total']['g'][elapsedYear]))
+        def _buttonCommandCalc(fleetAll,numCompany,startYear,elapsedYear,NShipFleet,tOpSch,valueDict):
+            fleetAll = yearlyCtaFunc(fleetAll,numCompany,startYear,elapsedYear,NShipFleet,tOpSch,v13,valueDict)
+            #labelRes4['text'] = str('{:.3g}'.format(fleetAll[numCompany]['total']['cta'][elapsedYear]))
+            #labelRes6['text'] = str('{:.4g}'.format(fleetAll[numCompany]['total']['rocc'][elapsedYear]))
+            #labelRes8['text'] = str('{:.3g}'.format(fleetAll[numCompany]['total']['costFuel'][elapsedYear]))
+            #labelRes10['text'] = str('{:.3g}'.format(fleetAll[numCompany]['total']['g'][elapsedYear]))
             button2['state'] = 'normal'
             NumFleet = len(fleetAll[numCompany])
             j = 0
@@ -1244,16 +1245,16 @@ def yearlyOperationPhaseFunc(fleetAll,numCompany,pureDi,overDi,startYear,elapsed
         else:
             vAtOnce.set(str(int(fleetAll[numCompany]['total']['atOnce'][elapsedYear-1])))
         labelAtOnce2 = ttk.Entry(frame, style='new.TEntry', textvariable=vAtOnce)
-        labelRes1 = ttk.Label(frame, style='new.TLabel',text='Assigned demand [TEU*NM]:', padding=(5, 2))
-        labelRes2 = ttk.Label(frame, style='new.TLabel',text=str('{:.3g}'.format(pureDi+overDi)), padding=(5, 2))
-        labelRes3 = ttk.Label(frame, style='new.TLabel',text='Cargo trasnsport amount [TEU*NM]:', padding=(5, 2))
-        labelRes4 = ttk.Label(frame, style='new.TLabel',text='None', padding=(5, 2))
-        labelRes5 = ttk.Label(frame, style='new.TLabel',text='Occupancy rate [%]:', padding=(5, 2))
-        labelRes6 = ttk.Label(frame, style='new.TLabel',text='None', padding=(5, 2))
-        labelRes7 = ttk.Label(frame, style='new.TLabel',text='Fuel cost [$]:', padding=(5, 2))
-        labelRes8 = ttk.Label(frame, style='new.TLabel',text='None', padding=(5, 2))
-        labelRes9 = ttk.Label(frame, style='new.TLabel',text='CO2 [ton]:', padding=(5, 2))
-        labelRes10 = ttk.Label(frame, style='new.TLabel',text='None', padding=(5, 2))
+        #labelRes1 = ttk.Label(frame, style='new.TLabel',text='Assigned demand [TEU*NM]:', padding=(5, 2))
+        #labelRes2 = ttk.Label(frame, style='new.TLabel',text=str('{:.3g}'.format(Di)), padding=(5, 2))
+        #labelRes3 = ttk.Label(frame, style='new.TLabel',text='Cargo trasnsport amount [TEU*NM]:', padding=(5, 2))
+        #labelRes4 = ttk.Label(frame, style='new.TLabel',text='None', padding=(5, 2))
+        #labelRes5 = ttk.Label(frame, style='new.TLabel',text='Occupancy rate [%]:', padding=(5, 2))
+        #labelRes6 = ttk.Label(frame, style='new.TLabel',text='None', padding=(5, 2))
+        #labelRes7 = ttk.Label(frame, style='new.TLabel',text='Fuel cost [$]:', padding=(5, 2))
+        #labelRes8 = ttk.Label(frame, style='new.TLabel',text='None', padding=(5, 2))
+        #labelRes9 = ttk.Label(frame, style='new.TLabel',text='CO2 [ton]:', padding=(5, 2))
+        #labelRes10 = ttk.Label(frame, style='new.TLabel',text='None', padding=(5, 2))
         label0 = ttk.Label(frame, style='new.TLabel',text='No.', padding=(5, 2))
         label1 = ttk.Label(frame, style='new.TLabel',text='Fuel type', padding=(5, 2))
         label2 = ttk.Label(frame, style='new.TLabel',text='Capacity [TEU]', padding=(5, 2))
@@ -1308,23 +1309,23 @@ def yearlyOperationPhaseFunc(fleetAll,numCompany,pureDi,overDi,startYear,elapsed
         labelExpl2 = ttk.Label(frame, style='new.TLabel', text='Guide: You have no fleet. Click "Next".', padding=(5, 2))
 
         # Button
-        button1 = ttk.Button(frame, style='new.TButton',text='Calculate', state='disabled', command=lambda: _buttonCommandCalc(fleetAll,numCompany,pureDi,overDi,startYear,elapsedYear,NShipFleet,tOpSch,valueDict,rSubs,rTax,parameterFile4))
-        button2 = ttk.Button(frame, style='new.TButton',text='Next', state='disabled', command=lambda: _buttonCommandNext(root,fleetAll,numCompany,pureDi,overDi,startYear,elapsedYear,NShipFleet,tOpSch,valueDict,rSubs,rTax,parameterFile4))
+        button1 = ttk.Button(frame, style='new.TButton',text='Calculate', state='disabled', command=lambda: _buttonCommandCalc(fleetAll,numCompany,startYear,elapsedYear,NShipFleet,tOpSch,valueDict))
+        button2 = ttk.Button(frame, style='new.TButton',text='Next', state='disabled', command=lambda: _buttonCommandNext(root,fleetAll,numCompany,startYear,elapsedYear,NShipFleet,tOpSch,valueDict))
         button22 = ttk.Button(frame, style='new.TButton',text='Next', command=lambda: _buttonCommandNext2(root))
         button3 = ttk.Button(frame, style='new.TButton',text='Input', command=lambda: _buttonCommandAtOnce())
 
         # Layout
         if len(label8) > 0:
-            labelRes1.grid(row=0, column=1)
-            labelRes2.grid(row=0, column=2)
-            labelRes3.grid(row=0, column=4)
-            labelRes4.grid(row=0, column=5)
-            labelRes5.grid(row=1, column=1)
-            labelRes6.grid(row=1, column=2)
-            labelRes7.grid(row=1, column=4)
-            labelRes8.grid(row=1, column=5)
-            labelRes9.grid(row=2, column=1)
-            labelRes10.grid(row=2, column=2)
+            #labelRes1.grid(row=0, column=1)
+            #labelRes2.grid(row=0, column=2)
+            #labelRes3.grid(row=0, column=1)
+            #labelRes4.grid(row=0, column=2)
+            #labelRes5.grid(row=1, column=1)
+            #labelRes6.grid(row=1, column=2)
+            #labelRes7.grid(row=1, column=4)
+            #labelRes8.grid(row=1, column=5)
+            #labelRes9.grid(row=2, column=1)
+            #labelRes10.grid(row=2, column=2)
             label0.grid(row=3, column=0)
             label1.grid(row=3, column=1)
             label2.grid(row=3, column=2)
@@ -1357,7 +1358,7 @@ def yearlyOperationPhaseFunc(fleetAll,numCompany,pureDi,overDi,startYear,elapsed
 
         return fleetAll
 
-    fleetAll = _surviceSpeedGui(fleetAll,numCompany,pureDi,overDi,startYear,elapsedYear,NShipFleet,tOpSch,valueDict,rSubs,rTax,parameterFile4)
+    fleetAll = _surviceSpeedGui(fleetAll,numCompany,startYear,elapsedYear,NShipFleet,tOpSch,valueDict)
 
     return fleetAll
 
