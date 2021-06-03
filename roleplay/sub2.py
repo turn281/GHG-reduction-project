@@ -829,12 +829,15 @@ def scrapRefurbishFunc(fleetAll,numCompany,elapsedYear,currentYear,valueDict,tOp
         tOpTemp = fleetAll[numCompany][keyFleet]['tOp']
         if fleetAll[numCompany][keyFleet]['delivery'] <= currentYear and fleetAll[numCompany][keyFleet]['tOp'] < tOpSch:
             cAdditionalEquipment = 0
-            if fleetAll[numCompany][keyFleet]['WPS']:
+            if fleetAll[numCompany][keyFleet]['lastWPS'] != fleetAll[numCompany][keyFleet]['WPS'] and fleetAll[numCompany][keyFleet]['WPS']:
                 cAdditionalEquipment += valueDict['dcostWPS']
-            elif fleetAll[numCompany][keyFleet]['SPS']:
+            elif fleetAll[numCompany][keyFleet]['lastSPS'] != fleetAll[numCompany][keyFleet]['SPS'] and fleetAll[numCompany][keyFleet]['SPS']:
                 cAdditionalEquipment += valueDict['dcostSPS']
-            elif fleetAll[numCompany][keyFleet]['CCS']:
+            elif fleetAll[numCompany][keyFleet]['lastCCS'] != fleetAll[numCompany][keyFleet]['CCS'] and fleetAll[numCompany][keyFleet]['CCS']:
                 cAdditionalEquipment += valueDict['dcostCCS']
+            fleetAll[numCompany][keyFleet]['lastWPS'] = fleetAll[numCompany][keyFleet]['WPS']
+            fleetAll[numCompany][keyFleet]['lastSPS'] = fleetAll[numCompany][keyFleet]['SPS']
+            fleetAll[numCompany][keyFleet]['lastCCS'] = fleetAll[numCompany][keyFleet]['CCS']
             fleetAll[numCompany][keyFleet]['costRfrb'][tOpTemp] = cAdditionalEquipment * fleetAll[numCompany][keyFleet]['costShipBasicHFO']
 
     # decide additional shipping fee per container
@@ -849,6 +852,9 @@ def orderShipFunc(fleetAll,numCompany,fuelName,WPS,SPS,CCS,CAPcnt,tOpSch,tbid,in
     fleetAll[numCompany][NumFleet]['WPS'] = WPS
     fleetAll[numCompany][NumFleet]['SPS'] = SPS
     fleetAll[numCompany][NumFleet]['CCS'] = CCS
+    fleetAll[numCompany][NumFleet]['lastWPS'] = WPS
+    fleetAll[numCompany][NumFleet]['lastSPS'] = SPS
+    fleetAll[numCompany][NumFleet]['lastCCS'] = CCS
     fleetAll[numCompany][NumFleet]['CAPcnt'] = float(CAPcnt)
     fleetAll[numCompany][NumFleet]['wDWT'] = wDWTFunc(valueDict["kDWT1"],fleetAll[numCompany][NumFleet]['CAPcnt'],valueDict["kDWT2"])
     fleetAll[numCompany][NumFleet]['wFLD'] = wFLDFunc(valueDict["kFLD1"],fleetAll[numCompany][NumFleet]['wDWT'],valueDict["kFLD2"])
