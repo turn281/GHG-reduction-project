@@ -4,14 +4,14 @@ regStart,,,,2025
 regSpan,,,,5
 addSysYear,,,,2028
 atOnce,,kt,,
-kDWT1,1st DWT coefficients,-,Constant parameter,10.69
-kDWT2,2nd DWT coefficients,-,Constant parameter,7024
-kFLD1,1st FLD coefficient,-,Constant parameter,1.28
-kFLD2,2nd FLD coefficient,-,Constant parameter,2376
+kDWT1,1st DWT coefficients,-,Constant parameter,10.65338296
+kDWT2,2nd DWT coefficients,-,Constant parameter,7340.169512
+kFLD1,1st FLD coefficient,-,Constant parameter,1.28236496
+kFLD2,2nd FLD coefficient,-,Constant parameter,2355.350776
 Dyear,Days in a year,day,Constant parameter,365
 Hday,Hours in a day,hour,Constant parameter,24
 Rrun,Running rate (operational days/year),-,Constant parameter,0.8
-kShip1,1st ship fuel coefficient,-,Constant parameter,0.000099
+kShip1,1st ship fuel coefficient,-,Constant parameter,6.87E-05
 kShip2,2nd ship fuel coefficient,-,Constant parameter,0.65
 CNM2km,Conversion coefficient (NM to km),-,Constant parameter,1.852
 rWPS,Fuel reduction rate of wind propulsion system,-,Constant parameter,0.15
@@ -33,7 +33,7 @@ dcostCCS,Additional cost by CCS,$,Constant parameter,0.35
 kDem1,,-,Constant parameter,0.612224477
 kDem2,,-,Constant parameter,-2410.243165
 kDem3,,-,Constant parameter,2372173.603
-kDem4,,-,Constant parameter,6.69
+kDem4,,-,Constant parameter,5.73097493
 dcostCntMin,,$,Constant parameter,-1000
 dcostCntMax,,$,Constant parameter,1000
 rDMax,,-,Constant parameter,0.9
@@ -51,8 +51,8 @@ NShipFleet,,-,Constant parameter,6
 tRegDec,,year,Constant parameter,5
 kEEDI1,,-,Constant parameter,174.22
 kEEDI2,,-,Constant parameter,-0.201
-kMCR1,,-,Constant parameter,0.58
-kMCR2,,-,Constant parameter,414.68
+kMCR1,,-,Constant parameter,0.577596468
+kMCR2,,-,Constant parameter,414.6769242
 kMCR3,,-,Constant parameter,51465.71
 wMCR,,ton,Constant parameter,88385.29
 kPAE1,,-,Constant parameter,0.025

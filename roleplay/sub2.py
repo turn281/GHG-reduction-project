@@ -1019,7 +1019,7 @@ def orderPhaseFunc(fleetAll,numCompany,valueDict,elapsedYear,tOpSch,tbid,current
         labelExpl = ttk.Label(frame, style='new.TLabel', text='Guide: When you want to order a fleet, select the setting and click "another fleet" or "complete". Ohterwise, click "No order".', padding=(5, 2))
 
         # List box
-        if currentYear < valueDict['addSysYear']+2:
+        if currentYear < valueDict['addSysYear']:
             fuelTypeList = ['HFO/Diesel','LNG']
         else:
             fuelTypeList = ['HFO/Diesel','LNG','NH3','H2']
