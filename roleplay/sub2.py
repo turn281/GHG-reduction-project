@@ -121,7 +121,7 @@ def fleetPreparationFunc(fleetAll,initialFleetFile,numCompany,startYear,lastYear
         orderYear = initialFleets[i]['year'] - tbid
         iniT = startYear - initialFleets[i]['year']
         iniCAPcnt = initialFleets[i]['TEU']
-        fleetAll = orderShipFunc(fleetAll,numCompany,'HFO',0,0,0,iniCAPcnt,tOpSch,tbid,iniT,orderYear,elapsedYear,valueDict,NShipFleet,parameterFile2,parameterFile12,parameterFile3,parameterFile5)
+        fleetAll = orderShipFunc(fleetAll,numCompany,'HFO',0,0,0,iniCAPcnt,tOpSch,tbid,iniT,orderYear,elapsedYear,valueDict,NShipFleet,True,parameterFile2,parameterFile12,parameterFile3,parameterFile5)
     return fleetAll
 
 def unitCostFuelFunc(filename,fuelName,year):
@@ -845,7 +845,7 @@ def scrapRefurbishFunc(fleetAll,numCompany,elapsedYear,currentYear,valueDict,tOp
 
     return fleetAll
 
-def orderShipFunc(fleetAll,numCompany,fuelName,WPS,SPS,CCS,CAPcnt,tOpSch,tbid,iniT,currentYear,elapsedYear,valueDict,NShipFleet,parameterFile2,parameterFile12,parameterFile3,parameterFile5):
+def orderShipFunc(fleetAll,numCompany,fuelName,WPS,SPS,CCS,CAPcnt,tOpSch,tbid,iniT,currentYear,elapsedYear,valueDict,NShipFleet,ifIni,parameterFile2,parameterFile12,parameterFile3,parameterFile5):
     NumFleet = len(fleetAll[numCompany])
     fleetAll[numCompany].setdefault(NumFleet,{})
     fleetAll[numCompany][NumFleet]['fuelName'] = fuelName
@@ -869,7 +869,7 @@ def orderShipFunc(fleetAll,numCompany,fuelName,WPS,SPS,CCS,CAPcnt,tOpSch,tbid,in
     fleetAll[numCompany][NumFleet]['delivery'] = currentYear+tbid
     fleetAll[numCompany][NumFleet]['tOp'] = iniT
     fleetAll[numCompany][NumFleet]['costShipBasicHFO'], fleetAll[numCompany][NumFleet]['costShipBasic'], fleetAll[numCompany][NumFleet]['costShipAdd'], fleetAll[numCompany][NumFleet]['costShip'] = costShipFunc(valueDict["kShipBasic1"], fleetAll[numCompany][NumFleet]["CAPcnt"], valueDict["kShipBasic2"], fleetAll[numCompany][NumFleet]['rShipBasic'], valueDict["dcostWPS"], valueDict["dcostSPS"], valueDict["dcostCCS"], fleetAll[numCompany][NumFleet]['WPS'], fleetAll[numCompany][NumFleet]['SPS'], fleetAll[numCompany][NumFleet]['CCS'])
-    if iniT == 0:
+    if iniT == 0 and not ifIni:
         fleetAll[numCompany]['total']['costShip'][elapsedYear+2] += NShipFleet * fleetAll[numCompany][NumFleet]['costShip']
         fleetAll[numCompany]['total']['costShipBasicHFO'][elapsedYear+2] += NShipFleet * fleetAll[numCompany][NumFleet]['costShipBasicHFO']
     fleetAll[numCompany][NumFleet]['v'] = np.zeros(tOpSch)
@@ -924,7 +924,7 @@ def orderPhaseFunc(fleetAll,numCompany,valueDict,elapsedYear,tOpSch,tbid,current
                     fuelName = 'HFO'
                 else:
                     fuelName = v1.get()
-                fleetAll = orderShipFunc(fleetAll,numCompany,fuelName,int(v3.get()),int(v4.get()),int(v5.get()),float(v2.get()),tOpSch,tbid,0,currentYear,elapsedYear,valueDict,NShipFleet,parameterFile2,parameterFile12,parameterFile3,parameterFile5)
+                fleetAll = orderShipFunc(fleetAll,numCompany,fuelName,int(v3.get()),int(v4.get()),int(v5.get()),float(v2.get()),tOpSch,tbid,0,currentYear,elapsedYear,valueDict,NShipFleet,False,parameterFile2,parameterFile12,parameterFile3,parameterFile5)
                 fleetAll[numCompany]['total']['lastOrderFuel'] = v1.get()
                 fleetAll[numCompany]['total']['lastOrderCAP'] = v2.get()
                 cb1.delete(0,"end")
@@ -951,7 +951,7 @@ def orderPhaseFunc(fleetAll,numCompany,valueDict,elapsedYear,tOpSch,tbid,current
                     fuelName = 'HFO'
                 else:
                     fuelName = v1.get()
-                fleetAll = orderShipFunc(fleetAll,numCompany,fuelName,int(v3.get()),int(v4.get()),int(v5.get()),float(v2.get()),tOpSch,tbid,0,currentYear,elapsedYear,valueDict,NShipFleet,parameterFile2,parameterFile12,parameterFile3,parameterFile5)
+                fleetAll = orderShipFunc(fleetAll,numCompany,fuelName,int(v3.get()),int(v4.get()),int(v5.get()),float(v2.get()),tOpSch,tbid,0,currentYear,elapsedYear,valueDict,NShipFleet,False,parameterFile2,parameterFile12,parameterFile3,parameterFile5)
                 fleetAll[numCompany]['total']['lastOrderFuel'] = v1.get()
                 fleetAll[numCompany]['total']['lastOrderCAP'] = v2.get()
                 root.quit()
