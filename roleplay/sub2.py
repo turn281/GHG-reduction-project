@@ -1311,11 +1311,11 @@ def decideSpeedFunc(fleetAll,numCompany,startYear,elapsedYear,NShipFleet,tOpSch,
                 label13.append(ttk.Entry(frame, style='new.TEntry',textvariable=v13[-1]))
                 label14.append(ttk.Label(frame, style='new.TLabel',text=str(int(fleetAll[numCompany][keyFleet]['vDsgnRed'][tOpTemp])), padding=(5, 2)))
 
-        labelExpl = ttk.Label(frame, style='new.TLabel', text='Guide: Input a service speed for all fleets at first and click "Input", and then change each speed if you want. After inputting all values, click "Calculate" and "Next".', padding=(5, 2))
+        labelExpl = ttk.Label(frame, style='new.TLabel', text='Guide: Input a service speed for all fleets at first and click "Input", and then change each speed if you want. After inputting all values, click "Check" and "Next".', padding=(5, 2))
         labelExpl2 = ttk.Label(frame, style='new.TLabel', text='Guide: You have no fleet. Click "Next".', padding=(5, 2))
 
         # Button
-        button1 = ttk.Button(frame, style='new.TButton',text='Calculate', state='disabled', command=lambda: _buttonCommandCalc(fleetAll,numCompany,startYear,elapsedYear,NShipFleet,tOpSch,valueDict))
+        button1 = ttk.Button(frame, style='new.TButton',text='Check', state='disabled', command=lambda: _buttonCommandCalc(fleetAll,numCompany,startYear,elapsedYear,NShipFleet,tOpSch,valueDict))
         button2 = ttk.Button(frame, style='new.TButton',text='Next', state='disabled', command=lambda: _buttonCommandNext(root,fleetAll,numCompany,startYear,elapsedYear,NShipFleet,tOpSch,valueDict))
         button22 = ttk.Button(frame, style='new.TButton',text='Next', command=lambda: _buttonCommandNext2(root))
         button3 = ttk.Button(frame, style='new.TButton',text='Input', command=lambda: _buttonCommandAtOnce())
