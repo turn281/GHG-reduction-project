@@ -109,10 +109,15 @@ def fleetPreparationFunc(fleetAll,initialFleetFile,numCompany,startYear,lastYear
     #fleetAll[numCompany]['total']['dCostCnt'] = np.zeros(lastYear-startYear+1)
     fleetAll[numCompany]['total']['costCnt'] = np.zeros(lastYear-startYear+1)
     fleetAll[numCompany]['total']['nTransCnt'] = np.zeros(lastYear-startYear+1)
-    fleetAll[numCompany]['total']['atOnce'] = np.zeros(lastYear-startYear+1)
+    fleetAll[numCompany]['total']['atOnce'] = 23
     fleetAll[numCompany]['total']['mSubs'] = np.zeros(lastYear-startYear+1)
     fleetAll[numCompany]['total']['mTax'] = np.zeros(lastYear-startYear+1)
     fleetAll[numCompany]['total']['balance'] = np.zeros(lastYear-startYear+1)
+    fleetAll[numCompany]['total']['demand'] = np.zeros(lastYear-startYear+1)
+    fleetAll[numCompany]['total']['profit'] = np.zeros(lastYear-startYear+1)
+    fleetAll[numCompany]['total']['profitSum'] = np.zeros(lastYear-startYear+1)
+    fleetAll[numCompany]['total']['gSum'] = np.zeros(lastYear-startYear+1)
+    fleetAll[numCompany]['total']['Idx'] = np.zeros(lastYear-startYear+1)
     fleetAll[numCompany]['total']['lastOrderFuel'] = 'HFO/Diesel'
     fleetAll[numCompany]['total']['lastOrderCAP'] = 20000
     initialFleets = initialFleetFunc(initialFleetFile)
@@ -1138,8 +1143,8 @@ def yearlyOperationFunc(fleetAll,numCompany,startYear,elapsedYear,NShipFleet,tOp
             fleetAll[numCompany][keyFleet]['year'][fleetAll[numCompany][keyFleet]['tOp']] = currentYear
             fleetAll[numCompany][keyFleet]['tOp'] += 1
 
-    fleetAll[numCompany]['total']['costAll'][elapsedYear] = fleetAll[numCompany]['total']['costFuel'][elapsedYear] + fleetAll[numCompany]['total']['costShip'][elapsedYear]/tOpSch + fleetAll[numCompany]['total']['costRfrb'][elapsedYear]
-    fleetAll[numCompany]['total']['dcostEco'][elapsedYear] = fleetAll[numCompany]['total']['costFuel'][elapsedYear] + (fleetAll[numCompany]['total']['costShip'][elapsedYear]-fleetAll[numCompany]['total']['costShipBasicHFO'][elapsedYear])/tOpSch + fleetAll[numCompany]['total']['costRfrb'][elapsedYear]
+    fleetAll[numCompany]['total']['costAll'][elapsedYear] = fleetAll[numCompany]['total']['costFuel'][elapsedYear] + fleetAll[numCompany]['total']['costShip'][elapsedYear] + fleetAll[numCompany]['total']['costRfrb'][elapsedYear]
+    fleetAll[numCompany]['total']['dcostEco'][elapsedYear] = fleetAll[numCompany]['total']['costFuel'][elapsedYear] + fleetAll[numCompany]['total']['costShip'][elapsedYear]-fleetAll[numCompany]['total']['costShipBasicHFO'][elapsedYear] + fleetAll[numCompany]['total']['costRfrb'][elapsedYear]
     fleetAll[numCompany]['total']['nTransCnt'][elapsedYear] = fleetAll[numCompany]['total']['cta'][elapsedYear] / valueDict['dJPNA']
     fleetAll[numCompany]['total']['costCnt'][elapsedYear] = (valueDict['costCntMax']-valueDict['costCntMin']) / (1+math.e**(-valueDict['aSgmd']*(fleetAll[numCompany]['total']['rocc'][elapsedYear]-valueDict['roccNom']))) + valueDict['costCntMin']
     fleetAll[numCompany]['total']['sale'][elapsedYear] = fleetAll[numCompany]['total']['nTransCnt'][elapsedYear] * fleetAll[numCompany]['total']['costCnt'][elapsedYear]
@@ -1149,6 +1154,10 @@ def yearlyOperationFunc(fleetAll,numCompany,startYear,elapsedYear,NShipFleet,tOp
     fleetAll[numCompany]['total']['mSubs'][elapsedYear] = rSubs * fleetAll[numCompany]['total']['dcostEco'][elapsedYear]
     fleetAll[numCompany]['total']['mTax'][elapsedYear] = rTax * fleetAll[numCompany]['total']['g'][elapsedYear]
     fleetAll[numCompany]['total']['balance'][elapsedYear] = fleetAll[numCompany]['total']['mTax'][elapsedYear] - fleetAll[numCompany]['total']['mSubs'][elapsedYear]
+    fleetAll[numCompany]['total']['profit'][elapsedYear] = fleetAll[numCompany]['total']['sale'][elapsedYear] - fleetAll[numCompany]['total']['costAll'][elapsedYear] - fleetAll[numCompany]['total']['balance'][elapsedYear]
+    fleetAll[numCompany]['total']['profitSum'][elapsedYear] += fleetAll[numCompany]['total']['profit'][elapsedYear]
+    fleetAll[numCompany]['total']['gSum'][elapsedYear] += fleetAll[numCompany]['total']['g'][elapsedYear]
+    fleetAll[numCompany]['total']['Idx'][elapsedYear] = fleetAll[numCompany]['total']['profitSum'][elapsedYear] / fleetAll[numCompany]['total']['gSum'][elapsedYear]
     return fleetAll
 
 def decideSpeedFunc(fleetAll,numCompany,startYear,elapsedYear,NShipFleet,tOpSch,valueDict):
@@ -1166,7 +1175,7 @@ def decideSpeedFunc(fleetAll,numCompany,startYear,elapsedYear,NShipFleet,tOpSch,
                     j += 1
             if goAhead:
                 fleetAll = yearlyCtaFunc(fleetAll,numCompany,startYear,elapsedYear,NShipFleet,tOpSch,v13,valueDict)
-                fleetAll[numCompany]['total']['atOnce'][elapsedYear] = float(vAtOnce.get())
+                fleetAll[numCompany]['total']['atOnce'] = float(vAtOnce.get())
                 root.quit()
                 root.destroy()
             else:
@@ -1198,10 +1207,11 @@ def decideSpeedFunc(fleetAll,numCompany,startYear,elapsedYear,NShipFleet,tOpSch,
             for keyFleet in range(1,NumFleet):
                 if fleetAll[numCompany][keyFleet]['delivery'] <= currentYear and fleetAll[numCompany][keyFleet]['tOp'] < tOpSch:
                     tOpTemp = fleetAll[numCompany][keyFleet]['tOp']
-                    if fleetAll[numCompany][keyFleet]['v'][tOpTemp-1] == 0:
-                        v13[j].set(str(int(min([float(vAtOnce.get()),fleetAll[numCompany][keyFleet]['vDsgnRed'][tOpTemp]]))))
-                    else:
-                        v13[j].set(str(int(min([float(vAtOnce.get()),fleetAll[numCompany][keyFleet]['v'][tOpTemp-1]]))))
+                    #if fleetAll[numCompany][keyFleet]['v'][tOpTemp-1] == 0:
+                    #    v13[j].set(str(int(min([float(vAtOnce.get()),fleetAll[numCompany][keyFleet]['vDsgnRed'][tOpTemp]]))))
+                    #else:
+                    #    v13[j].set(str(int(min([float(vAtOnce.get()),fleetAll[numCompany][keyFleet]['v'][tOpTemp-1]]))))
+                    v13[j].set(str(int(min([float(vAtOnce.get()),fleetAll[numCompany][keyFleet]['vDsgnRed'][tOpTemp]]))))
                     j += 1
             button1['state'] = 'normal'
 
@@ -1249,7 +1259,7 @@ def decideSpeedFunc(fleetAll,numCompany,startYear,elapsedYear,NShipFleet,tOpSch,
         if elapsedYear == 0:
             vAtOnce.set('23')
         else:
-            vAtOnce.set(str(int(fleetAll[numCompany]['total']['atOnce'][elapsedYear-1])))
+            vAtOnce.set(str(int(fleetAll[numCompany]['total']['atOnce'])))
         labelAtOnce2 = ttk.Entry(frame, style='new.TEntry', textvariable=vAtOnce)
         #labelRes1 = ttk.Label(frame, style='new.TLabel',text='Assigned demand [TEU*NM]:', padding=(5, 2))
         #labelRes2 = ttk.Label(frame, style='new.TLabel',text=str('{:.3g}'.format(Di)), padding=(5, 2))
@@ -1303,11 +1313,11 @@ def decideSpeedFunc(fleetAll,numCompany,startYear,elapsedYear,NShipFleet,tOpSch,
                     label12.append(ttk.Label(frame, style='new.TLabel',text='No', padding=(5, 2)))
                 tOpTemp = fleetAll[numCompany][keyFleet]['tOp']
                 v13.append(StringVar())
-                #if fleetAll[numCompany][keyFleet]['v'][tOpTemp-1] == 0:
-                #    v13[-1].set(str(fleetAll[numCompany][keyFleet]['vDsgnRed'][tOpTemp]))
-                #else:
-                #    v13[-1].set(str(fleetAll[numCompany][keyFleet]['v'][tOpTemp-1]))
-                v13[-1].set('None')
+                if fleetAll[numCompany][keyFleet]['v'][tOpTemp-1] == 0:
+                    v13[-1].set(str(int(fleetAll[numCompany][keyFleet]['vDsgnRed'][tOpTemp])))
+                else:
+                    v13[-1].set(str(int(fleetAll[numCompany][keyFleet]['v'][tOpTemp-1])))
+                #v13[-1].set('None')
                 label13.append(ttk.Entry(frame, style='new.TEntry',textvariable=v13[-1]))
                 label14.append(ttk.Label(frame, style='new.TLabel',text=str(int(fleetAll[numCompany][keyFleet]['vDsgnRed'][tOpTemp])), padding=(5, 2)))
 
@@ -1441,6 +1451,147 @@ def outputGuiFunc(fleetAll,startYear,elapsedYear,lastYear,tOpSch,unitDict):
 
     # root
     mainloop()
+
+def outputGui2Func(fleetAll,valueDict,startYear,elapsedYear,lastYear,tOpSch,unitDict):
+    def _eachFrameCO2(frame,fig,keyi,ifTotal):
+        def _buttonCommandShow(totalOrTilde):
+            if totalOrTilde == 'Total':
+                frameTotal[keyi].tkraise()
+            else:
+                frameComp[keyi].tkraise()
+
+        frameEach = frame[keyi]
+        frameEach.grid(row=0, column=1, pady=0,sticky="nsew")
+
+        # Canvas
+        canvas = FigureCanvasTkAgg(fig[keyi], master=frameEach)
+        canvas.draw()
+        canvas.get_tk_widget().place(relx=0.03, rely=0.1)
+
+        # Button
+        v1 = StringVar()
+        button1 = ttk.Combobox(frameEach,textvariable=v1,values=['Total','Each company'])
+        if ifTotal:
+            button1.set('Total')
+        else:
+            button1.set('Each company')
+        button1.place(relx=0.55, rely=0.9)
+
+        button2 = Button(master=frameEach, text="Show", command=lambda: _buttonCommandShow(v1.get()))
+        button2.place(relx=0.8, rely=0.9)
+
+    def _eachFrameProfit(frame,fig,keyi):
+        frameEach = frame[keyi]
+        frameEach.grid(row=0, column=0, pady=0,sticky="nsew")
+
+        # Canvas
+        canvas = FigureCanvasTkAgg(fig[keyi], master=frameEach)
+        canvas.draw()
+        canvas.get_tk_widget().place(relx=0.03, rely=0.1)
+
+    def _eachFrameIndex(frame,fig,keyi):
+        frameEach = frame[keyi]
+        frameEach.grid(row=1, column=0, pady=0,sticky="nsew")
+
+        # Canvas
+        canvas = FigureCanvasTkAgg(fig[keyi], master=frameEach)
+        canvas.draw()
+        canvas.get_tk_widget().place(relx=0.03, rely=0.1)
+
+    def _eachFrameSel(frame,fig,keyi,keyList,ifSelTotal):
+        def _buttonCommandShow(keyi,ifTotal):
+            if ifTotal == 'Total':
+                frameSelTotal[keyi].tkraise()
+            else:
+                frameSel[keyi].tkraise()
+        
+        def _buttonCommandNext(root,fig):
+            for keyi in keyList:
+                if type(fleetAll[1]['total'][keyi]) is np.ndarray:
+                    fig[keyi].clf()
+                    figTotal[keyi].clf()
+                    plt.close(fig[keyi])
+            root.quit()     # stops mainloop
+            root.destroy()  # this is necessary on Windows to prevent
+
+        frameEach = frame[keyi]
+        frameEach.grid(row=1, column=1, pady=0, sticky="nsew")
+
+        # Canvas
+        canvas = FigureCanvasTkAgg(fig[keyi], master=frameEach)
+        canvas.draw()
+        canvas.get_tk_widget().place(relx=0.03, rely=0.1)
+
+        # List box
+        v1 = StringVar()
+        lb = ttk.Combobox(frameEach,textvariable=v1,values=keyList)
+        lb.set(keyi)
+        lb.place(relx=0.55, rely=0.9)
+
+        # Button
+        v2 = StringVar()
+        button1 = ttk.Combobox(frameEach,textvariable=v2,values=['Total','Each company'])
+        if ifSelTotal:
+            button1.set('Total')
+        else:
+            button1.set('Each company')
+        button1.place(relx=0.3, rely=0.9)
+        button2 = Button(master=frameEach, text="Show", command=lambda: _buttonCommandShow(v1.get(),v2.get()))
+        button2.place(relx=0.8, rely=0.9)
+
+        buttonNext = Button(master=root, text="Next Year", command=lambda: _buttonCommandNext(root,fig))
+        buttonNext.place(relx=0.9, rely=0.9)
+      
+    # Tkinter Class
+    root = Tk()
+    root.title('Result in '+str(startYear+elapsedYear))
+    width = root.winfo_screenwidth()-400
+    height = root.winfo_screenheight()-80
+    placeX = 0
+    placeY = 0
+    widgetSize = str(int(width))+'x'+str(int(height))+'+'+str(int(placeX))+'+'+str(int(placeY))
+    root.geometry(widgetSize)
+
+    fig = {}
+    frameComp = {}
+    frameTotal = {}
+    frameSel = {}
+    frameSelTotal = {}
+    figTotal = {}
+    removeList = []
+    keyList = list(fleetAll[1]['total'].keys())
+    figWidth,figHeight = width/2-50, height/2
+    for keyi in keyList:
+        if type(fleetAll[1]['total'][keyi]) is np.ndarray:
+            fig[keyi] = outputAllCompany2Func(fleetAll,valueDict,startYear,elapsedYear,keyi,unitDict,figWidth/100-1,figHeight/100-1)
+            figTotal[keyi] = outputAllCompanyTotalFunc(fleetAll,valueDict,startYear,elapsedYear,keyi,unitDict,figWidth/100-1,figHeight/100-1)
+            frameComp[keyi] = ttk.Frame(root, height=figHeight, width=figWidth)
+            frameTotal[keyi] = ttk.Frame(root, height=figHeight, width=figWidth)
+            frameSel[keyi] = ttk.Frame(root, height=figHeight, width=figWidth)
+            frameSelTotal[keyi] = ttk.Frame(root, height=figHeight, width=figWidth)
+        else:
+            removeList.append(keyi)
+
+    for keyi in removeList:
+        keyList.remove(keyi)
+
+    _eachFrameCO2(frameComp,fig,'g',False)
+    _eachFrameCO2(frameTotal,figTotal,'g',True)
+
+    _eachFrameProfit(frameComp,fig,'profit')
+
+    _eachFrameIndex(frameComp,fig,'Idx')
+
+    for keyi in keyList:
+        if type(fleetAll[1]['total'][keyi]) is np.ndarray:
+            _eachFrameSel(frameSel,fig,keyi,keyList,False)
+            _eachFrameSel(frameSelTotal,figTotal,keyi,keyList,True)
+    #frame[keyList[0]].tkraise()
+
+    # root
+    mainloop()
+
+    return fleetAll
 
 def outputEachCompanyFunc(fleetAll,numCompany,startYear,elapsedYear,lastYear,tOpSch,decisionListName):
     fig, ax = plt.subplots(2, 2, figsize=(10.0, 10.0))
@@ -1595,11 +1746,12 @@ def outputAllCompanyFunc(fleetAll,startYear,elapsedYear,lastYear,tOpSch,unitDict
 
     return fig
 
-def outputAllCompany2Func(fleetAll,startYear,elapsedYear,keyi,unitDict):
+def outputAllCompany2Func(fleetAll,valueDict,startYear,elapsedYear,keyi,unitDict,figWidth,figHeight):
     plt.rcParams.update({'figure.max_open_warning': 0})
     currentYear = startYear+elapsedYear
-    fig, ax = plt.subplots(1, 1, figsize=(7.5, 4.5))
+    fig, ax = plt.subplots(1, 1, figsize=(figWidth, figHeight))
     #plt.subplots_adjust(wspace=0.4, hspace=0.6)
+    ticArr = np.array([2020,2025,2030,2035,2040,2045,2050])
     if elapsedYear > 0:
         year = fleetAll['year'][:elapsedYear+1]
         for numCompany in range(1,4):
@@ -1612,16 +1764,74 @@ def outputAllCompany2Func(fleetAll,startYear,elapsedYear,keyi,unitDict):
             ax.plot(year,fleetAll[numCompany]['total'][keyi][:elapsedYear+1],color=color, marker=".",label="Company"+str(numCompany))
             ax.set_title(keyi)
             ax.set_xlabel('Year')
-            ax.legend()
             ax.ticklabel_format(style="sci",  axis="y",scilimits=(0,0))
             ax.set_ylabel(unitDict[keyi])
             #ax.title.set_size(10)
             #ax.xaxis.label.set_size(10)
             #ax.get_xaxis().get_major_formatter().set_useOffset(False)
             #ax.get_xaxis().set_major_locator(MaxNLocator(integer=True))
-            ax.set_xticks(np.array([2020,2025,2030,2035,2040,2045,2050]))
+            ax.set_xticks(ticArr)
             #ax.yaxis.label.set_size(10)
     else:
+        for numCompany in range(1,4):
+            if numCompany == 1:
+                color = 'tomato'
+            elif numCompany == 2:
+                color = 'gold'
+            elif numCompany == 3:
+                color = 'royalblue'
+            ax.scatter(startYear,fleetAll[numCompany]['total'][keyi][0],color=color,label="Company"+str(numCompany))
+            ax.set_title(keyi)
+            ax.set_xlabel('Year')
+            ax.ticklabel_format(style="sci",  axis="y",scilimits=(0,0))
+            ax.set_ylabel(unitDict[keyi])
+            #ax.title.set_size(10)
+            #ax.xaxis.label.set_size(10)
+            #ax.set_xticks(np.array([startYear-1,startYear,startYear+1]))
+            ax.set_xticks(np.array([startYear]))
+            #ax.yaxis.label.set_size(10)
+    if keyi == 'g':
+        IMOgoal = np.full(ticArr.shape,valueDict['IMOgoal']/3)
+        color = 'olivedrab'
+        ax.plot(ticArr,IMOgoal,color=color, marker=".",label="IMO goal")
+    y_min, y_max = ax.get_ylim()
+    ax.set_ylim(0, y_max)
+    ax.legend()
+    return fig
+
+def outputAllCompanyTotalFunc(fleetAll,valueDict,startYear,elapsedYear,keyi,unitDict,figWidth,figHeight):
+    plt.rcParams.update({'figure.max_open_warning': 0})
+    currentYear = startYear+elapsedYear
+    fig, ax = plt.subplots(1, 1, figsize=(figWidth, figHeight))
+    #plt.subplots_adjust(wspace=0.4, hspace=0.6)
+    ticArr = np.array([2020,2025,2030,2035,2040,2045,2050])
+    if elapsedYear >= 0:
+        year = fleetAll['year'][:elapsedYear+1]
+        for numCompany in range(1,4):
+            if numCompany == 1:
+                color = 'tomato'
+            elif numCompany == 2:
+                color = 'gold'
+            elif numCompany == 3:
+                color = 'royalblue'
+            #ax.plot(year,fleetAll[numCompany]['total'][keyi][:elapsedYear+1],color=color, marker=".",label="Company"+str(numCompany))
+            if numCompany == 1:
+                barArray = fleetAll[numCompany]['total'][keyi][:elapsedYear+1]
+                ax.bar(year, barArray, color=color, label="Company"+str(numCompany))
+            else:
+                ax.bar(year, fleetAll[numCompany]['total'][keyi][:elapsedYear+1], bottom=barArray, color=color, label="Company"+str(numCompany))
+                barArray += fleetAll[numCompany]['total'][keyi][:elapsedYear+1]
+            ax.set_title(keyi)
+            ax.set_xlabel('Year')
+            ax.ticklabel_format(style="sci",  axis="y",scilimits=(0,0))
+            ax.set_ylabel(unitDict[keyi])
+            #ax.title.set_size(10)
+            #ax.xaxis.label.set_size(10)
+            #ax.get_xaxis().get_major_formatter().set_useOffset(False)
+            #ax.get_xaxis().set_major_locator(MaxNLocator(integer=True))
+            ax.set_xticks(ticArr)
+            #ax.yaxis.label.set_size(10)
+    '''else:
         for numCompany in range(1,4):
             ax.scatter(startYear,fleetAll[numCompany]['total'][keyi][0],label="Company"+str(numCompany))
             ax.set_title(keyi)
@@ -1633,7 +1843,14 @@ def outputAllCompany2Func(fleetAll,startYear,elapsedYear,keyi,unitDict):
             #ax.xaxis.label.set_size(10)
             #ax.set_xticks(np.array([startYear-1,startYear,startYear+1]))
             ax.set_xticks(np.array([startYear]))
-            #ax.yaxis.label.set_size(10)
+            #ax.yaxis.label.set_size(10)'''
+    if keyi == 'g':
+        IMOgoal = np.full(ticArr.shape,valueDict['IMOgoal'])
+        color = 'olivedrab'
+        ax.plot(ticArr,IMOgoal,color=color, marker=".",label="IMO goal")
+    y_min, y_max = ax.get_ylim()
+    ax.set_ylim(0, y_max)
+    ax.legend()
     return fig
 
 def outputCsvFunc(fleetAll,startYear,elapsedYear,lastYear,tOpSch):

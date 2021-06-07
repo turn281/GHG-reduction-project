@@ -71,7 +71,6 @@ def roleplayRun():
         if currentYear == regYear[nRegAct]+2:
             nRegAct += 1
 
-        #'''
         # scrap & refurbish, order and speed decision phase (also decide additional shipping fee per container)
         playOrder = np.array([1,2,3])
         sumCta = 0
@@ -85,6 +84,7 @@ def roleplayRun():
         # demand calculation
         Dtotal = rs.demandScenarioFunc(currentYear,valueDict["kDem1"],valueDict["kDem2"],valueDict["kDem3"],valueDict["kDem4"])
         for numCompany in playOrder:
+            fleets[numCompany]['total']['demand'][elapsedYear] = Dtotal
             if Dtotal <= valueDict["rDMax"]*sumCta and Dtotal / sumCta > 0.0:
                 fleets[numCompany]['total']['rocc'][elapsedYear] = Dtotal / sumCta
             elif Dtotal > valueDict["rDMax"]*sumCta:
@@ -93,9 +93,14 @@ def roleplayRun():
         # yearly operation phase
         for numCompany in playOrder.astype(int):
             fleets = rs.yearlyOperationFunc(fleets,numCompany,startYear,elapsedYear,NShipFleet,tOpSch,valueDict,regDec['Subsidy'][nRegAct],regDec['Ctax'][nRegAct],parameterFile4)
-            
-        rs.outputGuiFunc(fleets,startYear,elapsedYear,lastYear,tOpSch,unitDict)
         #'''
+
+        
+        fleets = rs.outputGui2Func(fleets,valueDict,startYear,elapsedYear,lastYear,tOpSch,unitDict)
+        #rs.outputGuiFunc(fleets,startYear,elapsedYear,lastYear,tOpSch,unitDict)
+        
+        
+        
     
     rs.outputCsvFunc(fleets,startYear,elapsedYear,lastYear,tOpSch)
 

@@ -60,6 +60,7 @@ kPAE2,,-,Constant parameter,250
 rMCR,,-,,0.75
 SfcM,,g/kWh,,190
 SfcA,,g/kWh,,215
+IMOgoal,,ton,,7.00E+06
 wDWT,Deadweight tonnage,ton,State variable,
 wFLD,Full load displacement,ton,State variable,
 d,Distance,NM,State variable,
@@ -116,3 +117,8 @@ costAdd,,$,Output,
 costAll,,$,Output,
 costCnt,,$,,
 balance,,$,,
+demand,,TEU $\cdot$ NM,,
+profit,,$,,
+profitSum,,$,,
+gSum,,ton,,
+Idx,,ton / $,,
