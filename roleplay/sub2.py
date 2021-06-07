@@ -18,6 +18,7 @@ import random
 from matplotlib.ticker import MaxNLocator
 from pathlib import Path
 import math
+import copy
 #from decimal import Decimal, ROUND_HALF_UP
 
 def readinput(filename):
@@ -109,7 +110,7 @@ def fleetPreparationFunc(fleetAll,initialFleetFile,numCompany,startYear,lastYear
     #fleetAll[numCompany]['total']['dCostCnt'] = np.zeros(lastYear-startYear+1)
     fleetAll[numCompany]['total']['costCnt'] = np.zeros(lastYear-startYear+1)
     fleetAll[numCompany]['total']['nTransCnt'] = np.zeros(lastYear-startYear+1)
-    fleetAll[numCompany]['total']['atOnce'] = 23
+    fleetAll[numCompany]['total']['atOnce'] = np.zeros(lastYear-startYear+1)
     fleetAll[numCompany]['total']['mSubs'] = np.zeros(lastYear-startYear+1)
     fleetAll[numCompany]['total']['mTax'] = np.zeros(lastYear-startYear+1)
     fleetAll[numCompany]['total']['balance'] = np.zeros(lastYear-startYear+1)
@@ -1175,7 +1176,7 @@ def decideSpeedFunc(fleetAll,numCompany,startYear,elapsedYear,NShipFleet,tOpSch,
                     j += 1
             if goAhead:
                 fleetAll = yearlyCtaFunc(fleetAll,numCompany,startYear,elapsedYear,NShipFleet,tOpSch,v13,valueDict)
-                fleetAll[numCompany]['total']['atOnce'] = float(vAtOnce.get())
+                fleetAll[numCompany]['total']['atOnce'][elapsedYear] = float(vAtOnce.get())
                 root.quit()
                 root.destroy()
             else:
@@ -1259,7 +1260,7 @@ def decideSpeedFunc(fleetAll,numCompany,startYear,elapsedYear,NShipFleet,tOpSch,
         if elapsedYear == 0:
             vAtOnce.set('23')
         else:
-            vAtOnce.set(str(int(fleetAll[numCompany]['total']['atOnce'])))
+            vAtOnce.set(str(int(fleetAll[numCompany]['total']['atOnce'][elapsedYear-1])))
         labelAtOnce2 = ttk.Entry(frame, style='new.TEntry', textvariable=vAtOnce)
         #labelRes1 = ttk.Label(frame, style='new.TLabel',text='Assigned demand [TEU*NM]:', padding=(5, 2))
         #labelRes2 = ttk.Label(frame, style='new.TLabel',text=str('{:.3g}'.format(Di)), padding=(5, 2))
@@ -1815,12 +1816,13 @@ def outputAllCompanyTotalFunc(fleetAll,valueDict,startYear,elapsedYear,keyi,unit
             elif numCompany == 3:
                 color = 'royalblue'
             #ax.plot(year,fleetAll[numCompany]['total'][keyi][:elapsedYear+1],color=color, marker=".",label="Company"+str(numCompany))
+            tempArr = copy.deepcopy(fleetAll[numCompany]['total'][keyi][:elapsedYear+1])
             if numCompany == 1:
-                barArray = fleetAll[numCompany]['total'][keyi][:elapsedYear+1]
+                barArray = tempArr
                 ax.bar(year, barArray, color=color, label="Company"+str(numCompany))
             else:
-                ax.bar(year, fleetAll[numCompany]['total'][keyi][:elapsedYear+1], bottom=barArray, color=color, label="Company"+str(numCompany))
-                barArray += fleetAll[numCompany]['total'][keyi][:elapsedYear+1]
+                ax.bar(year, tempArr, bottom=barArray, color=color, label="Company"+str(numCompany))
+                barArray += tempArr
             ax.set_title(keyi)
             ax.set_xlabel('Year')
             ax.ticklabel_format(style="sci",  axis="y",scilimits=(0,0))
