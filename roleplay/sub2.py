@@ -1454,7 +1454,7 @@ def outputGuiFunc(fleetAll,startYear,elapsedYear,lastYear,tOpSch,unitDict):
     mainloop()
 
 def outputGui2Func(fleetAll,valueDict,startYear,elapsedYear,lastYear,tOpSch,unitDict):
-    def _eachFrameCO2(frame,fig,keyi,ifTotal,canvas):
+    def _eachFrameCO2(frame,fig,keyi,ifTotal):
         def _buttonCommandShow(totalOrTilde):
             if totalOrTilde == 'Total':
                 frameTotal[keyi].tkraise()
@@ -1465,9 +1465,9 @@ def outputGui2Func(fleetAll,valueDict,startYear,elapsedYear,lastYear,tOpSch,unit
         frameEach.grid(row=0, column=1, pady=0,sticky="nsew")
 
         # Canvas
-        canvas.append(FigureCanvasTkAgg(fig[keyi], master=frameEach))
-        canvas[-1].draw()
-        canvas[-1].get_tk_widget().place(relx=0.03, rely=0.1)
+        canvas = FigureCanvasTkAgg(fig[keyi], master=frameEach)
+        canvas.draw()
+        canvas.get_tk_widget().place(relx=0.03, rely=0.1)
 
         # Button
         v1 = StringVar()
@@ -1476,30 +1476,30 @@ def outputGui2Func(fleetAll,valueDict,startYear,elapsedYear,lastYear,tOpSch,unit
             button1.set('Total')
         else:
             button1.set('Each company')
-        button1.place(relx=0.55, rely=0.9)
+        button1.place(relx=0.4, rely=0.9)
 
         button2 = Button(master=frameEach, text="Show", command=lambda: _buttonCommandShow(v1.get()))
         button2.place(relx=0.8, rely=0.9)
 
-    def _eachFrameProfit(frame,fig,keyi,canvas):
+    def _eachFrameProfit(frame,fig,keyi):
         frameEach = frame[keyi]
         frameEach.grid(row=0, column=0, pady=0,sticky="nsew")
 
         # Canvas
-        canvas.append(FigureCanvasTkAgg(fig[keyi], master=frameEach))
-        canvas[-1].draw()
-        canvas[-1].get_tk_widget().place(relx=0.03, rely=0.1)
+        canvas = FigureCanvasTkAgg(fig[keyi], master=frameEach)
+        canvas.draw()
+        canvas.get_tk_widget().place(relx=0.03, rely=0.1)
 
-    def _eachFrameIndex(frame,fig,keyi,canvas):
+    def _eachFrameIndex(frame,fig,keyi):
         frameEach = frame[keyi]
         frameEach.grid(row=1, column=0, pady=0,sticky="nsew")
 
         # Canvas
-        canvas.append(FigureCanvasTkAgg(fig[keyi], master=frameEach))
-        canvas[-1].draw()
-        canvas[-1].get_tk_widget().place(relx=0.03, rely=0.1)
+        canvas = FigureCanvasTkAgg(fig[keyi], master=frameEach)
+        canvas.draw()
+        canvas.get_tk_widget().place(relx=0.03, rely=0.1)
 
-    def _eachFrameSel(frame,fig,keyi,keyList,ifSelTotal,canvas):
+    def _eachFrameSel(frame,fig,keyi,keyList,ifSelTotal):
         def _buttonCommandShow(keyi,ifTotal):
             if ifTotal == 'Total':
                 frameSelTotal[keyi].tkraise()
@@ -1521,15 +1521,15 @@ def outputGui2Func(fleetAll,valueDict,startYear,elapsedYear,lastYear,tOpSch,unit
         frameEach.grid(row=1, column=1, pady=0, sticky="nsew")
 
         # Canvas
-        canvas.append(FigureCanvasTkAgg(fig[keyi], master=frameEach))
-        canvas[-1].draw()
-        canvas[-1].get_tk_widget().place(relx=0.03, rely=0.1)
+        canvas = FigureCanvasTkAgg(fig[keyi], master=frameEach)
+        canvas.draw()
+        canvas.get_tk_widget().place(relx=0.03, rely=0.1)
 
         # List box
         v1 = StringVar()
         lb = ttk.Combobox(frameEach,textvariable=v1,values=keyList)
         lb.set(keyi)
-        lb.place(relx=0.55, rely=0.9)
+        lb.place(relx=0.4, rely=0.9)
 
         # Button
         v2 = StringVar()
@@ -1538,7 +1538,7 @@ def outputGui2Func(fleetAll,valueDict,startYear,elapsedYear,lastYear,tOpSch,unit
             button1.set('Total')
         else:
             button1.set('Each company')
-        button1.place(relx=0.3, rely=0.9)
+        button1.place(relx=0.1, rely=0.9)
         button2 = Button(master=frameEach, text="Show", command=lambda: _buttonCommandShow(v1.get(),v2.get()))
         button2.place(relx=0.8, rely=0.9)
 
@@ -1578,19 +1578,18 @@ def outputGui2Func(fleetAll,valueDict,startYear,elapsedYear,lastYear,tOpSch,unit
     for keyi in removeList:
         keyList.remove(keyi)
     
-    canvas = []
 
-    _eachFrameCO2(frameComp,fig,'g',False,canvas)
-    _eachFrameCO2(frameTotal,figTotal,'g',True,canvas)
+    _eachFrameCO2(frameComp,fig,'g',False)
+    _eachFrameCO2(frameTotal,figTotal,'g',True)
 
-    _eachFrameProfit(frameComp,fig,'profit',canvas)
+    _eachFrameProfit(frameComp,fig,'profit')
 
-    _eachFrameIndex(frameComp,fig,'Idx',canvas)
+    _eachFrameIndex(frameComp,fig,'Idx')
 
     for keyi in keyList:
         if type(fleetAll[1]['total'][keyi]) is np.ndarray:
-            _eachFrameSel(frameSel,fig,keyi,keyList,False,canvas)
-            _eachFrameSel(frameSelTotal,figTotal,keyi,keyList,True,canvas)
+            _eachFrameSel(frameSel,fig,keyi,keyList,False)
+            _eachFrameSel(frameSelTotal,figTotal,keyi,keyList,True)
     #frame[keyList[0]].tkraise()
 
     # root
