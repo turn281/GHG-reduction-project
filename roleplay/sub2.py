@@ -1512,8 +1512,6 @@ def outputGui2Func(fleetAll,valueDict,startYear,elapsedYear,lastYear,tOpSch,unit
                     fig[keyi].clf()
                     figTotal[keyi].clf()
                     plt.close(fig[keyi])
-            '''for i in canvas:
-                i.delete("all")'''
             root.quit()     # stops mainloop
             root.destroy()  # this is necessary on Windows to prevent
 

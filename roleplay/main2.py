@@ -63,7 +63,7 @@ def roleplayRun():
         currentYear = startYear+elapsedYear
         fleets['year'][elapsedYear] = currentYear
 
-        '''
+        #'''
         # requlator's decision phase
         if currentYear == regYear[nRegAct]:
             nRegDec += 1
@@ -94,7 +94,6 @@ def roleplayRun():
         for numCompany in playOrder.astype(int):
             fleets = rs.yearlyOperationFunc(fleets,numCompany,startYear,elapsedYear,NShipFleet,tOpSch,valueDict,regDec['Subsidy'][nRegAct],regDec['Ctax'][nRegAct],parameterFile4)
         #'''
-
         
         fleets = rs.outputGui2Func(fleets,valueDict,startYear,elapsedYear,lastYear,tOpSch,unitDict)
         #rs.outputGuiFunc(fleets,startYear,elapsedYear,lastYear,tOpSch,unitDict)
