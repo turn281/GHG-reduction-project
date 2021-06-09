@@ -1476,7 +1476,7 @@ def outputGui2Func(fleetAll,valueDict,startYear,elapsedYear,lastYear,tOpSch,unit
             button1.set('Total')
         else:
             button1.set('Each company')
-        button1.place(relx=0.4, rely=0.9)
+        button1.place(relx=0.45, rely=0.9)
 
         button2 = Button(master=frameEach, text="Show", command=lambda: _buttonCommandShow(v1.get()))
         button2.place(relx=0.8, rely=0.9)
@@ -1529,7 +1529,7 @@ def outputGui2Func(fleetAll,valueDict,startYear,elapsedYear,lastYear,tOpSch,unit
         v1 = StringVar()
         lb = ttk.Combobox(frameEach,textvariable=v1,values=keyList)
         lb.set(keyi)
-        lb.place(relx=0.4, rely=0.9)
+        lb.place(relx=0.45, rely=0.9)
 
         # Button
         v2 = StringVar()
@@ -1538,7 +1538,7 @@ def outputGui2Func(fleetAll,valueDict,startYear,elapsedYear,lastYear,tOpSch,unit
             button1.set('Total')
         else:
             button1.set('Each company')
-        button1.place(relx=0.1, rely=0.9)
+        button1.place(relx=0.02, rely=0.9)
         button2 = Button(master=frameEach, text="Show", command=lambda: _buttonCommandShow(v1.get(),v2.get()))
         button2.place(relx=0.8, rely=0.9)
 
