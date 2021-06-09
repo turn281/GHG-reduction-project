@@ -63,7 +63,7 @@ def roleplayRun():
         currentYear = startYear+elapsedYear
         fleets['year'][elapsedYear] = currentYear
 
-        #'''
+        '''
         # requlator's decision phase
         if currentYear == regYear[nRegAct]:
             nRegDec += 1
