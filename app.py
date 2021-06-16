@@ -23,7 +23,7 @@ def index():
 
 @app.route('/post', methods=['POST', 'GET'])
 def post():
-    title = "こんにちは"
+    title = "Hi"
     if request.method == 'POST':
         name = request.form['name']
         return render_template('index.html', name=name, title=title)
