@@ -466,7 +466,7 @@ def regDecFunc(regDec,nReg,currentYear):
         if nReg == 0:
             v2.set('0') # 初期化
         else:
-            v2.set(str(int(10000*regDec['Ctax'][nReg-1]))) # 初期化
+            v2.set(str(int(regDec['Ctax'][nReg-1]))) # 初期化
         cb2 = ttk.Entry(frame, style='new.TEntry', textvariable=v2)
         label2 = ttk.Label(frame, style='new.TLabel', text='Carbon tax [$/ton]', padding=(5, 2))
         #label22 = ttk.Label(frame, style='new.TLabel', text='% <= 100%', padding=(5, 2))
