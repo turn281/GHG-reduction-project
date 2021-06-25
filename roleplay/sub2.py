@@ -411,16 +411,16 @@ def regDecFunc(regDec,nReg,currentYear):
     def _regDecGui2(regDec,nReg,currentYear):
 
         def _buttonCommand(regDec,nReg,root):
-            if float(v1.get()) <= 100 and float(v2.get()) <= 100 and float(v1.get()) >= 0 and float(v2.get()) >= 0:
+            if float(v1.get()) <= 100 and float(v1.get()) >= 0 and float(v2.get()) >= 0:
                 regDec['Subsidy'][nReg] = float(v1.get()) / 100
-                regDec['Ctax'][nReg] = float(v2.get()) / 100
+                regDec['Ctax'][nReg] = float(v2.get())
                 root.quit()
                 root.destroy()
             else:
                 button['state'] = 'disabled'
 
         def _buttonCommandCheck():
-            if float(v1.get()) <= 100 and float(v2.get()) <= 100 and float(v1.get()) >= 0 and float(v2.get()) >= 0:
+            if float(v1.get()) <= 100 and float(v1.get()) >= 0 and float(v2.get()) >= 0:
                 button['state'] = 'normal'
             else:
                 button['state'] = 'disabled'
@@ -452,7 +452,7 @@ def regDecFunc(regDec,nReg,currentYear):
         if nReg == 0:
             v1.set('0') # 初期化
         else:
-            v1.set(str(100*regDec['Subsidy'][nReg-1])) # 初期化
+            v1.set(str(int(100*regDec['Subsidy'][nReg-1]))) # 初期化
         cb1 = ttk.Entry(frame, style='new.TEntry', textvariable=v1)
         label1 = ttk.Label(frame, style='new.TLabel', text='Subsidy rate', padding=(5, 2))
         label11 = ttk.Label(frame, style='new.TLabel', text='% <= 100%', padding=(5, 2))
@@ -466,11 +466,11 @@ def regDecFunc(regDec,nReg,currentYear):
         if nReg == 0:
             v2.set('0') # 初期化
         else:
-            v2.set(str(int(100*regDec['Ctax'][nReg-1]))) # 初期化
+            v2.set(str(int(10000*regDec['Ctax'][nReg-1]))) # 初期化
         cb2 = ttk.Entry(frame, style='new.TEntry', textvariable=v2)
-        label2 = ttk.Label(frame, style='new.TLabel', text='Carbon tax rate', padding=(5, 2))
-        label22 = ttk.Label(frame, style='new.TLabel', text='% <= 100%', padding=(5, 2))
-        label222 = ttk.Label(frame, style='new.TLabel', text='0% <=', padding=(5, 2))
+        label2 = ttk.Label(frame, style='new.TLabel', text='Carbon tax [$/ton]', padding=(5, 2))
+        #label22 = ttk.Label(frame, style='new.TLabel', text='% <= 100%', padding=(5, 2))
+        label222 = ttk.Label(frame, style='new.TLabel', text='0 <=', padding=(5, 2))
 
         # Button
         button = ttk.Button(frame, style='new.TButton', text='Next', state='disabled', command=lambda: _buttonCommand(regDec,nReg,root))
@@ -481,7 +481,7 @@ def regDecFunc(regDec,nReg,currentYear):
         cb1.grid(row=0, column=2)
         label111.grid(row=0, column=1)
         label1.grid(row=0, column=0)
-        label22.grid(row=1, column=3)
+        #label22.grid(row=1, column=3)
         cb2.grid(row=1, column=2)
         label222.grid(row=1, column=1)
         label2.grid(row=1, column=0)
