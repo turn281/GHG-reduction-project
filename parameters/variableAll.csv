@@ -40,7 +40,7 @@ rDMax,,-,Constant parameter,0.9
 CAPcntMin,,TEU,Constant parameter,8000
 CAPcntMax,,TEU,Constant parameter,24000
 vMin,,kt,Constant parameter,12
-vDsgn,,kt,Constant parameter,23
+vDsgn,,kt,Constant parameter,20
 dJPNA,,NM,Constant parameter,5000
 costCntMin,,$,Constant parameter,500
 costCntMax,,$,Constant parameter,2500
@@ -60,7 +60,7 @@ kPAE2,,-,Constant parameter,250
 rMCR,,-,,0.75
 SfcM,,g/kWh,,190
 SfcA,,g/kWh,,215
-IMOgoal,,ton,,7.00E+06
+IMOgoal,,ton,,6998656.522
 wDWT,Deadweight tonnage,ton,State variable,
 wFLD,Full load displacement,ton,State variable,
 d,Distance,NM,State variable,

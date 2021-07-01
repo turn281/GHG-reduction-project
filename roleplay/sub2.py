@@ -101,6 +101,7 @@ def fleetPreparationFunc(fleetAll,initialFleetFile,numCompany,startYear,lastYear
     fleetAll[numCompany]['total']['costShipBasicHFO'] = np.zeros(lastYear-startYear+1)
     fleetAll[numCompany]['total']['costShip'] = np.zeros(lastYear-startYear+1)
     fleetAll[numCompany]['total']['costFuel'] = np.zeros(lastYear-startYear+1)
+    fleetAll[numCompany]['total']['dcostFuel'] = np.zeros(lastYear-startYear+1)
     fleetAll[numCompany]['total']['costAdd'] = np.zeros(lastYear-startYear+1)
     fleetAll[numCompany]['total']['costAll'] = np.zeros(lastYear-startYear+1)
     fleetAll[numCompany]['total']['maxCta'] = np.zeros(lastYear-startYear+1)
@@ -1138,6 +1139,7 @@ def yearlyOperationFunc(fleetAll,numCompany,startYear,elapsedYear,NShipFleet,tOp
             fleetAll[numCompany]['total']['g'][elapsedYear] += NShipFleet * fleetAll[numCompany][keyFleet]['g'][tOpTemp]
             fleetAll[numCompany]['total']['cta'][elapsedYear] += NShipFleet * fleetAll[numCompany][keyFleet]['cta'][tOpTemp]
             fleetAll[numCompany]['total']['costFuel'][elapsedYear] += NShipFleet * fleetAll[numCompany][keyFleet]['costFuel'][tOpTemp]
+            fleetAll[numCompany]['total']['dcostFuel'][elapsedYear] += NShipFleet * fleetAll[numCompany][keyFleet]['dcostFuel'][tOpTemp]
                 
     for keyFleet in range(1,NumFleet):
         if fleetAll[numCompany][keyFleet]['delivery'] <= currentYear and fleetAll[numCompany][keyFleet]['tOp'] < tOpSch:
@@ -1145,7 +1147,7 @@ def yearlyOperationFunc(fleetAll,numCompany,startYear,elapsedYear,NShipFleet,tOp
             fleetAll[numCompany][keyFleet]['tOp'] += 1
 
     fleetAll[numCompany]['total']['costAll'][elapsedYear] = fleetAll[numCompany]['total']['costFuel'][elapsedYear] + fleetAll[numCompany]['total']['costShip'][elapsedYear] + fleetAll[numCompany]['total']['costRfrb'][elapsedYear]
-    fleetAll[numCompany]['total']['dcostEco'][elapsedYear] = fleetAll[numCompany]['total']['costFuel'][elapsedYear] + fleetAll[numCompany]['total']['costShip'][elapsedYear]-fleetAll[numCompany]['total']['costShipBasicHFO'][elapsedYear] + fleetAll[numCompany]['total']['costRfrb'][elapsedYear]
+    fleetAll[numCompany]['total']['dcostEco'][elapsedYear] = fleetAll[numCompany]['total']['dcostFuel'][elapsedYear] + fleetAll[numCompany]['total']['costShip'][elapsedYear]-fleetAll[numCompany]['total']['costShipBasicHFO'][elapsedYear] + fleetAll[numCompany]['total']['costRfrb'][elapsedYear]
     fleetAll[numCompany]['total']['nTransCnt'][elapsedYear] = fleetAll[numCompany]['total']['cta'][elapsedYear] / valueDict['dJPNA']
     fleetAll[numCompany]['total']['costCnt'][elapsedYear] = (valueDict['costCntMax']-valueDict['costCntMin']) / (1+math.e**(-valueDict['aSgmd']*(fleetAll[numCompany]['total']['rocc'][elapsedYear]-valueDict['roccNom']))) + valueDict['costCntMin']
     fleetAll[numCompany]['total']['sale'][elapsedYear] = fleetAll[numCompany]['total']['nTransCnt'][elapsedYear] * fleetAll[numCompany]['total']['costCnt'][elapsedYear]
@@ -1258,7 +1260,7 @@ def decideSpeedFunc(fleetAll,numCompany,startYear,elapsedYear,NShipFleet,tOpSch,
         labelAtOnce = ttk.Label(frame, style='new.TLabel', text='Input all service speeds at once (12<=) [kt]:', padding=(5, 2))
         vAtOnce = StringVar()
         if elapsedYear == 0:
-            vAtOnce.set('23')
+            vAtOnce.set('18')
         else:
             vAtOnce.set(str(int(fleetAll[numCompany]['total']['atOnce'][elapsedYear-1])))
         labelAtOnce2 = ttk.Entry(frame, style='new.TEntry', textvariable=vAtOnce)
@@ -1315,7 +1317,8 @@ def decideSpeedFunc(fleetAll,numCompany,startYear,elapsedYear,NShipFleet,tOpSch,
                 tOpTemp = fleetAll[numCompany][keyFleet]['tOp']
                 v13.append(StringVar())
                 if fleetAll[numCompany][keyFleet]['v'][tOpTemp-1] == 0:
-                    v13[-1].set(str(int(fleetAll[numCompany][keyFleet]['vDsgnRed'][tOpTemp])))
+                    #v13[-1].set(str(int(fleetAll[numCompany][keyFleet]['vDsgnRed'][tOpTemp])))
+                    v13[-1].set(str(int(18)))
                 else:
                     v13[-1].set(str(int(fleetAll[numCompany][keyFleet]['v'][tOpTemp-1])))
                 #v13[-1].set('None')
