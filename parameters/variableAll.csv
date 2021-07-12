@@ -1,4 +1,8 @@
 Symbol,Name,Unit,Param. type,Value
+startYear,,,,2021
+tOpSch,,,,20
+NShipFleet,,,,6
+tbid,,,,2
 lastYear,,,Constant parameter,2050
 regStart,,,,2025
 regSpan,,,,5

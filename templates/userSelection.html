@@ -1,0 +1,97 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <title>GHG Reduction Simulator</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js" integrity="sha512-bLT0Qm9VnAYZDflyKcBaQ2gg0hSYNQrJ8RilYldYQ1FxQYoCLtUjuuRuZo+fjqhx/qtq/1itJ0C2ejDxltZVFg==" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/3.0.4/socket.io.js" integrity="sha512-aMGMvNYu8Ue4G+fHa359jcPb1u+ytAF+P2SCb+PxrjCdO3n3ZTxJ30zuH39rimUggmTwmh2u7wvQsDTHESnmfQ==" crossorigin="anonymous"></script>
+    <script type="text/javascript" charset="utf-8">
+        $(document).ready(function() {
+            // Connect to the Socket.IO server.
+            // The connection URL has the following format, relative to the current page:
+            //     http[s]://<domain>:<port>[/<namespace>]
+
+            var socket = io();
+
+            let Nuser = {{ Nuser | tojson }};
+            socket.on('connect', function() {
+                socket.emit('connect_event', {no: Nuser});
+            });
+
+            socket.on('my_response_connect', function(msg, cb) {
+                $('#log').append('<br>' + $('<div/>').text('User ' + msg.no + ' is connected.').html());
+                if (cb)
+                    cb();
+            });
+
+            let table = document.createElement('table');
+            socket.on('my_response_userSelection', function(msg, cb) {
+                var rows = table.rows.length;
+                for (var i=0; i<rows; i++) {
+                    if (table.rows[i].cells[0].innerHTML == 'Player' + msg.no) {
+                        table.rows[i].cells[1].innerHTML = msg.type;
+                        table.rows[i].cells[2].innerHTML = msg.name;
+                        return
+                    }
+                }
+                var newRow = table.insertRow(-1);
+                var newCell1 = newRow.insertCell(-1);
+                newCell1.innerHTML = 'Player' + msg.no;
+                var newCell2 = newRow.insertCell(-1);
+                newCell2.innerHTML = msg.type;
+                var newCell3 = newRow.insertCell(-1);
+                newCell3.innerHTML = msg.name;
+                document.getElementById('maintable').appendChild(table);
+                //$('#log2').append('<br>' + $('<div/>').text(socket.id).html());
+            });
+
+            socket.on('redirect', function(data) {
+                window.location = data.url;
+            });
+
+            // Handlers for the different forms in the page.
+            // These accept data from the user and send it to the server in a
+            // variety of ways
+            $('form#broadcast').submit(function(event) {
+                socket.emit('my_broadcast_event', {data: $('#broadcast_data').val()});
+                return false;
+            });
+            $('form#userSelection').submit(function(event) {
+                socket.emit('userSelection_event', {type: document.getElementById("userSelection").radio.value, name: $('#name').val(), no: Nuser});
+                return false;
+            });
+            $('form#userSelected').submit(function(event) {
+                socket.emit('userSelected_event', {type: document.getElementById("userSelection").radio.value, name: $('#name').val(), no: Nuser});
+                return false;
+            });
+        });
+    </script>
+</head>
+<body>
+    <h1>GHG Reduction Simulator</h1>
+    Choice a role you'll play.
+    <form action="#" id="userSelection" method="POST" placeholder="Message">
+        <div>
+            <label for="ifReg">Regulator : </label>
+            <input type="radio" id="ifReg" name="radio" class="radio" value="Regulator">
+        </div>
+        <div>
+            <label for="ifShp">Shipping company : </label>
+            <input type="radio" id="ifShp" name="radio" class="radio" value="Shipping Company">
+        </div>
+        <div>
+            <label for="name">Name : </label>
+            <input type="text" id="name" name="name">
+        </div>
+        <div>
+            <input type="submit" value="Apply">
+        </div>
+    </form>
+    <form action="/userSelected" id="userSelected" method="POST">
+        <div>
+            <input type="submit" value="Next">
+        </div>
+    </form>
+    <div id ='maintable'></div>
+    <div id="log2"></div>
+</body>
+</html>

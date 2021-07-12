@@ -12,10 +12,7 @@ import sys
 
 #def roleplayRun(decisionListName1,decisionListName2,decisionListName3):
 def roleplayRun():
-    tOpSch = 20
-    startYear = 2021
-    NShipFleet = 6
-    tbid = 2
+    
     path = str(Path(__file__).parent)
 
     if os.name == 'nt':
@@ -37,6 +34,10 @@ def roleplayRun():
     parameterFile12 = path+"eqLHVaux.csv"
 
     valueDict, unitDict = rs.readinput(parameterFile1)
+    tOpSch = valueDict['tOpSch']
+    startYear = valueDict['startYear']
+    NShipFleet = valueDict['NShipFleet']
+    tbid = valueDict['tbid']
     regYear = np.linspace(valueDict['regStart'],valueDict['lastYear'],int((valueDict['lastYear']-valueDict['regStart'])//valueDict['regSpan']+1))
     #regYear = np.linspace(2021,valueDict['lastYear'],int((valueDict['lastYear']-valueDict['regStart'])//valueDict['regSpan']+1))
 
