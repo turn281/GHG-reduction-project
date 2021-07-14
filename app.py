@@ -14,6 +14,7 @@ import matplotlib as mpl
 import matplotlib.pyplot as plt
 import os
 import sys
+import roleplay.sub2 as rs
 
 async_mode = None
 thread = None
@@ -22,9 +23,21 @@ app = Flask(__name__)
 app.config['SECRET_KEY'] = 'secret!'
 socketio = SocketIO(app, async_mode=async_mode)
 
-# Main
+# My Functions
 def background_thread():
     count = 0
+
+# My Classes
+class MyEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, np.integer):
+            return int(obj)
+        elif isinstance(obj, np.floating):
+            return float(obj)
+        elif isinstance(obj, np.ndarray):
+            return obj.tolist()
+        else:
+            return super(MyEncoder, self).default(obj)
 
 # prepare path for parameter files
 path = str(Path(__file__).parent)
@@ -59,12 +72,15 @@ initialFleets = [parameterFile6,parameterFile7,parameterFile8]
 fleets = {'year': np.zeros(lastYear-startYear+1)}
 
 # prepare regulator decision
+nRegAct = 0
+nRegDec = 0
 regDec = rs.regPreFunc(len(regYear)+1)
 
 NshipComp = 0
 Nregulator = 0
 Nuser = 0
 userDict = {}
+regulatorIDs = []
 
 # Routing
 @app.route('/')
@@ -89,6 +105,13 @@ def userSelection_event(message):
 def userSelected_event(message):
     global fleets
     global userDict
+    global NshipComp
+    global Nregulator
+    global tOpSch
+    global startYear
+    global regulatorIDs
+    global regDec
+    global nRegAct
     userID = request.sid
     userNo = int(message['no'])
     userType = message['type']
@@ -97,20 +120,53 @@ def userSelected_event(message):
     userDict[userID]['userNo'] = userNo
     userDict[userID]['userType'] = userType
     userDict[userID]['userName'] = userName
-    emit('redirect', {'url': url_for('userSelected', userID=request.sid)})
-    
-@app.route('/userSelected/<string:userID>')
-def userSelected(userID):
-    global fleets
-    global NshipComp
-    global Nregulator
-    if userDict[userID]['userType'] == 'Regulator':
+    userDict[userID]['elapsedYear'] = 0
+    if userType == 'Regulator':
+        regulatorIDs.append(userID)
         Nregulator += 1
-        return render_template('regulator.html', name=userDict[userID]['userName'])
-    elif userDict[userID]['userType'] == 'Shipping Company':
+        userDict[userID]['Nregulator'] = Nregulator
+        userDict[userID]['NshipComp'] = 0
+        emit('my_response_selected_regulator', {'type': userType, 'name': userName, 'no': userNo, 'elpsyear': userDict[userID]['elapsedYear']})
+    elif userType == 'Shipping Company':
         NshipComp += 1
+        userDict[userID]['NshipComp'] = NshipComp
+        userDict[userID]['Nregulator'] = 0
         fleets = rs.fleetPreparationFunc(fleets,np.random.choice(initialFleets),NshipComp,startYear,lastYear,0,tOpSch,tbid,valueDict,NShipFleet,parameterFile2,parameterFile12,parameterFile3,parameterFile5)
-        return render_template('shipComp.html', name=userDict[userID]['userName'], fleets=fleets)
+        for keyFleet in range(1,len(fleets[NshipComp])):
+            if fleets[NshipComp][keyFleet]['delivery'] <= startYear and fleets[NshipComp][keyFleet]['tOp'] < tOpSch:
+                tOpTemp = fleets[NshipComp][keyFleet]['tOp']
+                rEEDIreqCurrent = rs.rEEDIreqCurrentFunc(fleets[NshipComp][keyFleet]['wDWT'],regDec['rEEDIreq'][nRegAct])
+                fleets[NshipComp][keyFleet]['EEDIref'][tOpTemp], fleets[NshipComp][keyFleet]['EEDIreq'][tOpTemp] = rs.EEDIreqFunc(valueDict['kEEDI1'],fleets[NshipComp][keyFleet]['wDWT'],valueDict['kEEDI2'],rEEDIreqCurrent)
+                fleets[NshipComp][keyFleet]['MCRM'][tOpTemp], fleets[NshipComp][keyFleet]['PA'][tOpTemp], fleets[NshipComp][keyFleet]['EEDIatt'][tOpTemp], fleets[NshipComp][keyFleet]['vDsgnRed'][tOpTemp] = rs.EEDIattFunc(fleets[NshipComp][keyFleet]['wDWT'],valueDict['wMCR'],valueDict['kMCR1'],valueDict['kMCR2'],valueDict['kMCR3'],valueDict['kPAE1'],valueDict['kPAE2'],valueDict['rCCS'],valueDict['vDsgn'],valueDict['rWPS'],fleets[NshipComp][keyFleet]['Cco2ship'],valueDict['SfcM'],valueDict['SfcA'],valueDict['rSPS'],fleets[NshipComp][keyFleet]['Cco2aux'],fleets[NshipComp][keyFleet]['EEDIreq'][tOpTemp],fleets[NshipComp][keyFleet]['WPS'],fleets[NshipComp][keyFleet]['SPS'],fleets[NshipComp][keyFleet]['CCS'])
+        emit('my_response_selected_shipComp', {'type': userType, 'name': userName, 'no': userNo, 'elpsyear': userDict[userID]['elapsedYear'], 'fleets': json.dumps(fleets,cls=MyEncoder), 'tOpSch': tOpSch, 'currentYear': userDict[userID]['elapsedYear']+startYear,  'regulatorIDs': json.dumps(regulatorIDs,cls=MyEncoder)})
+    
+#emit('redirect',{url_for()})
+
+@socketio.event
+def cbs_event(message):
+    global fleets
+    global userDict
+    global Nregulator
+    global tOpSch
+    global startYear
+    global regulatorIDs
+    global regDec
+    global nRegAct
+    userID = request.sid
+    userNo = userDict[userID]['userNo']
+    userType = userDict[userID]['userType']
+    userName = userDict[userID]['userName']
+    NshipComp = userDict[userID]['NshipComp']
+    for keyFleet in range(1,len(fleets[NshipComp])):
+        if fleets[NshipComp][keyFleet]['delivery'] <= startYear and fleets[NshipComp][keyFleet]['tOp'] < tOpSch:
+            fleets[NshipComp][keyFleet]['WPS'] = message[str(keyFleet)]['WPS']
+            fleets[NshipComp][keyFleet]['SPS'] = message[str(keyFleet)]['SPS']
+            fleets[NshipComp][keyFleet]['CCS'] = message[str(keyFleet)]['CCS']
+            tOpTemp = fleets[NshipComp][keyFleet]['tOp']
+            rEEDIreqCurrent = rs.rEEDIreqCurrentFunc(fleets[NshipComp][keyFleet]['wDWT'],regDec['rEEDIreq'][nRegAct])
+            fleets[NshipComp][keyFleet]['EEDIref'][tOpTemp], fleets[NshipComp][keyFleet]['EEDIreq'][tOpTemp] = rs.EEDIreqFunc(valueDict['kEEDI1'],fleets[NshipComp][keyFleet]['wDWT'],valueDict['kEEDI2'],rEEDIreqCurrent)
+            fleets[NshipComp][keyFleet]['MCRM'][tOpTemp], fleets[NshipComp][keyFleet]['PA'][tOpTemp], fleets[NshipComp][keyFleet]['EEDIatt'][tOpTemp], fleets[NshipComp][keyFleet]['vDsgnRed'][tOpTemp] = rs.EEDIattFunc(fleets[NshipComp][keyFleet]['wDWT'],valueDict['wMCR'],valueDict['kMCR1'],valueDict['kMCR2'],valueDict['kMCR3'],valueDict['kPAE1'],valueDict['kPAE2'],valueDict['rCCS'],valueDict['vDsgn'],valueDict['rWPS'],fleets[NshipComp][keyFleet]['Cco2ship'],valueDict['SfcM'],valueDict['SfcA'],valueDict['rSPS'],fleets[NshipComp][keyFleet]['Cco2aux'],fleets[NshipComp][keyFleet]['EEDIreq'][tOpTemp],fleets[NshipComp][keyFleet]['WPS'],fleets[NshipComp][keyFleet]['SPS'],fleets[NshipComp][keyFleet]['CCS'])
+    emit('my_response_refurbish', {'type': userType, 'name': userName, 'no': userNo, 'elpsyear': userDict[userID]['elapsedYear'], 'fleets': json.dumps(fleets,cls=MyEncoder), 'tOpSch': tOpSch, 'currentYear': userDict[userID]['elapsedYear']+startYear,  'regulatorIDs': json.dumps(regulatorIDs,cls=MyEncoder)})
 
 '''@socketio.event
 def my_event(message):

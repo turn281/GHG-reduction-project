@@ -10,6 +10,11 @@
             // The connection URL has the following format, relative to the current page:
             //     http[s]://<domain>:<port>[/<namespace>]
 
+            function cbChanged() {
+                var a = document.getElementById('cbWPS').checked;
+                socket.emit('cbWPS_event', {val: a});
+            }
+
             var socket = io();
 
             let Nuser = {{ Nuser | tojson }};
@@ -40,11 +45,148 @@
                 newCell2.innerHTML = msg.type;
                 var newCell3 = newRow.insertCell(-1);
                 newCell3.innerHTML = msg.name;
-                document.getElementById('maintable').appendChild(table);
+                document.getElementById('userTable').appendChild(table);
                 //$('#log2').append('<br>' + $('<div/>').text(socket.id).html());
             });
 
+            
+            socket.on('my_response_selected_regulator', function(msg, cb) {
+                document.getElementById("comment1").remove();
+                document.getElementById("userSelection").remove();
+                document.getElementById("userSelected").remove();
+                document.getElementById("userTable").remove();
+                $('#log2').append('<br>' + $('<div/>').text('You are ' + msg.type + ' ' + msg.name + '?').html());
+                if (cb)
+                    cb();
+            });
+
+            let fleetTable = document.createElement('table');
+            var newRow = fleetTable.insertRow(-1);
+            var newCell1 = newRow.insertCell(-1);
+            newCell1.innerHTML = 'No.';
+            var newCell2 = newRow.insertCell(-1);
+            newCell2.innerHTML = 'Delivery year';
+            var newCell3 = newRow.insertCell(-1);
+            newCell3.innerHTML = 'Fuel type';
+            var newCell4 = newRow.insertCell(-1);
+            newCell4.innerHTML = 'Capacity [TEU]';
+            var newCell5 = newRow.insertCell(-1);
+            newCell5.innerHTML = 'WPS';
+            var newCell6 = newRow.insertCell(-1);
+            newCell6.innerHTML = 'SPS';
+            var newCell7 = newRow.insertCell(-1);
+            newCell7.innerHTML = 'CCS';
+            var newCell8 = newRow.insertCell(-1);
+            newCell8.innerHTML = 'Maximum speed [kt]';
+            var newCell9 = newRow.insertCell(-1);
+            newCell9.innerHTML = 'EEXIreq [g/(ton*NM)]';
+            var newCell10 = newRow.insertCell(-1);
+            newCell10.innerHTML = 'EEXIatt [g/(ton*NM)]';
+            var newCell11 = newRow.insertCell(-1);
+            newCell11.innerHTML = 'Scrap';
+            var newCell12 = newRow.insertCell(-1);
+            newCell12.innerHTML = 'Service speed [kt]';
+            socket.on('my_response_selected_shipComp', function(msg, cb) {
+                document.getElementById("comment1").remove();
+                document.getElementById("userSelection").remove();
+                document.getElementById("userSelected").remove();
+                document.getElementById("userTable").remove();
+                //$('#log2').append('<br>' + $('<div/>').text(msg.type + ' ' + msg.name + ' in ' + msg.elpsyear).html());
+                //$('#log2').append('<br>' + $('<div/>').text(JSON.parse(msg.fleets)['1']['total']['g']).html());
+                let fleets = JSON.parse(msg.fleets)
+                let NumFleet = Object.keys(fleets[msg.no]).length
+                for (var keyFleet=1; keyFleet<NumFleet; keyFleet++) {
+                    var tOpTemp = fleets[msg.no][keyFleet]['tOp']
+                    if (fleets[msg.no][keyFleet]['delivery'] <= msg.currentYear & tOpTemp < msg.tOpSch) {
+                        var newRow = fleetTable.insertRow(-1);
+                        var newCell1 = newRow.insertCell(-1);
+                        newCell1.innerHTML = keyFleet;
+                        var newCell2 = newRow.insertCell(-1);
+                        newCell2.innerHTML = fleets[msg.no][keyFleet]['delivery'];
+                        var newCell3 = newRow.insertCell(-1);
+                        newCell3.innerHTML = fleets[msg.no][keyFleet]['fuelName'];
+                        var newCell4 = newRow.insertCell(-1);
+                        newCell4.innerHTML = fleets[msg.no][keyFleet]['CAPcnt'];
+                        var newCell5 = newRow.insertCell(-1);
+                        newCell5.innerHTML = '<input type="checkbox" class="cbs" id="cbwps'+keyFleet+'">';
+                        var newCell6 = newRow.insertCell(-1);
+                        newCell6.innerHTML = '<input type="checkbox" class="cbs" id="cbsps'+keyFleet+'">';
+                        var newCell7 = newRow.insertCell(-1);
+                        newCell7.innerHTML = '<input type="checkbox" class="cbs" id="cbccs'+keyFleet+'">';
+                        var newCell8 = newRow.insertCell(-1);
+                        newCell8.innerHTML = fleets[msg.no][keyFleet]['vDsgnRed'][tOpTemp];
+                        var newCell9 = newRow.insertCell(-1);
+                        var EEDIreq = fleets[msg.no][keyFleet]['EEDIreq'][tOpTemp];
+                        newCell9.innerHTML = Math.floor( EEDIreq * Math.pow( 10, 2 ) ) / Math.pow( 10, 2 );
+                        var newCell10 = newRow.insertCell(-1);
+                        var EEDIatt = fleets[msg.no][keyFleet]['EEDIatt'][tOpTemp];
+                        newCell10.innerHTML = Math.floor( EEDIatt * Math.pow( 10, 2 ) ) / Math.pow( 10, 2 );;
+                        var newCell11 = newRow.insertCell(-1);
+                        newCell11.innerHTML = '<input type="checkbox" id="scrap">';
+                        var newCell12 = newRow.insertCell(-1);
+                        newCell12.innerHTML = '<input type="text" id="speed">';
+                    }
+                }
+                document.getElementById('fleetTable').appendChild(fleetTable);
+            });
+
+            $(document).on('change', '.cbs', function(){
+                //window.alert(this.checked);
+                var sysDict = {};
+                var rows = fleetTable.rows.length
+                for (var i=1; i<rows; i++) {
+                    //for (var j=4; j<7; j++) {
+                    //    if (fleetTable.rows[i].cells[j].innerHTML.checked) {
+                    //        window.alert('checked'+i+j);
+                    //    }
+                    //}
+                    var keyFleet = fleetTable.rows[i].cells[0].innerHTML
+                    sysDict[i] = {}
+                    if (document.getElementById('cbwps'+keyFleet).checked) {
+                        sysDict[i].WPS = 1;
+                    } else {
+                        sysDict[i].WPS = 0;
+                    }
+                    if (document.getElementById('cbsps'+keyFleet).checked) {
+                        sysDict[i].SPS = 1;
+                    } else {
+                        sysDict[i].SPS = 0;
+                    }
+                    if (document.getElementById('cbccs'+keyFleet).checked) {
+                        sysDict[i].CCS = 1;
+                    } else {
+                        sysDict[i].CCS = 0;
+                    }
+                }
+                socket.emit('cbs_event', sysDict);
+            });
+
+            socket.on('my_response_refurbish', function(msg, cb) {
+                let fleets = JSON.parse(msg.fleets)
+                let NumFleet = Object.keys(fleets[msg.no]).length
+                var numAlive = 0
+                for (var keyFleet=1; keyFleet<NumFleet; keyFleet++) {
+                    var tOpTemp = fleets[msg.no][keyFleet]['tOp']
+                    if (fleets[msg.no][keyFleet]['delivery'] <= msg.currentYear & tOpTemp < msg.tOpSch) {
+                        fleetTable.rows[numAlive+1].cells[7].innerHTML = fleets[msg.no][keyFleet]['vDsgnRed'][tOpTemp];
+                        var EEDIreq = fleets[msg.no][keyFleet]['EEDIreq'][tOpTemp];
+                        fleetTable.rows[numAlive+1].cells[8].innerHTML = Math.floor( EEDIreq * Math.pow( 10, 2 ) ) / Math.pow( 10, 2 );
+                        var EEDIatt = fleets[msg.no][keyFleet]['EEDIatt'][tOpTemp];
+                        fleetTable.rows[numAlive+1].cells[9].innerHTML = Math.floor( EEDIatt * Math.pow( 10, 2 ) ) / Math.pow( 10, 2 );
+                        numAlive += 1
+                    }
+                }
+            });
+
+            //let regulatorIDs = JSON.parse(msg.regulatorIDs)
+            //let regulatorIDsLen = Object.keys(regulatorIDs).length
+            //for(var i=1; i<regulatorIDsLen; i++){
+                //socket.to(regulatorIDs[i]).emit('shipComp_ope_event', {data: JSON.parse(msg.regulatorIDs)});
+            //}
+            
+
             socket.on('redirect', function(data) {
+                $('#log2').append('<br>' + $('<div/>').text('Oh2').html());
                 window.location = data.url;
             });
 
@@ -63,12 +205,22 @@
                 socket.emit('userSelected_event', {type: document.getElementById("userSelection").radio.value, name: $('#name').val(), no: Nuser});
                 return false;
             });
+            //$('.cbs').change(function(event) {
+            //    if ($(this).is(":checked")) {
+            //        $('#log2').append('<br>' + $('<div/>').text('Oh2').html());
+            //        socket.emit('cbs_event', {val: 'clicked'});
+            //    }
+            //});
+        });
+        
+        $(document).on('change', '#cbWPS', function(){
+            socket.emit('cbs_event', {val: cb.checked});
         });
     </script>
 </head>
 <body>
     <h1>GHG Reduction Simulator</h1>
-    Choice a role you'll play.
+    <div id ='comment1'>Choice a role you'll play.</div>
     <form action="#" id="userSelection" method="POST" placeholder="Message">
         <div>
             <label for="ifReg">Regulator : </label>
@@ -91,7 +243,8 @@
             <input type="submit" value="Next">
         </div>
     </form>
-    <div id ='maintable'></div>
+    <div id ='userTable'></div>
+    <div id ='fleetTable'></div>
     <div id="log2"></div>
 </body>
 </html>
