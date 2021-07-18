@@ -34,8 +34,8 @@ def roleplayRun():
     parameterFile12 = path+"eqLHVaux.csv"
 
     valueDict, unitDict = rs.readinput(parameterFile1)
-    tOpSch = valueDict['tOpSch']
-    startYear = valueDict['startYear']
+    tOpSch = int(valueDict['tOpSch'])
+    startYear = int(valueDict['startYear'])
     NShipFleet = valueDict['NShipFleet']
     tbid = valueDict['tbid']
     regYear = np.linspace(valueDict['regStart'],valueDict['lastYear'],int((valueDict['lastYear']-valueDict['regStart'])//valueDict['regSpan']+1))
